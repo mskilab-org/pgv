@@ -1,0 +1,715 @@
+{
+  "metadata": [
+    {
+      "chromosome": "chr1",
+      "startPoint": 1,
+      "endPoint": 248956422,
+      "color": "#1f77b4"
+    },
+    {
+      "chromosome": "chr2",
+      "startPoint": 1,
+      "endPoint": 242193529,
+      "color": "#ff7f0e"
+    },
+    {
+      "chromosome": "chr3",
+      "startPoint": 1,
+      "endPoint": 198295559,
+      "color": "#2ca02c"
+    },
+    {
+      "chromosome": "chr4",
+      "startPoint": 1,
+      "endPoint": 190214555,
+      "color": "#d62728"
+    },
+    {
+      "chromosome": "chr5",
+      "startPoint": 1,
+      "endPoint": 181538259,
+      "color": "#9467bd"
+    },
+    {
+      "chromosome": "chr6",
+      "startPoint": 1,
+      "endPoint": 170805979,
+      "color": "#8c564b"
+    },
+    {
+      "chromosome": "chr7",
+      "startPoint": 1,
+      "endPoint": 159345973,
+      "color": "#e377c2"
+    },
+    {
+      "chromosome": "chr8",
+      "startPoint": 1,
+      "endPoint": 145138636,
+      "color": "#7f7f7f"
+    },
+    {
+      "chromosome": "chr9",
+      "startPoint": 1,
+      "endPoint": 138394717,
+      "color": "#bcbd22"
+    },
+    {
+      "chromosome": "chr10",
+      "startPoint": 1,
+      "endPoint": 133797422,
+      "color": "#17becf"
+    },
+    {
+      "chromosome": "chr11",
+      "startPoint": 1,
+      "endPoint": 135086622,
+      "color": "#393b79"
+    },
+    {
+      "chromosome": "chr12",
+      "startPoint": 1,
+      "endPoint": 133275309,
+      "color": "#5254a3"
+    },
+    {
+      "chromosome": "chr13",
+      "startPoint": 1,
+      "endPoint": 114364328,
+      "color": "#6b6ecf"
+    },
+    {
+      "chromosome": "chr14",
+      "startPoint": 1,
+      "endPoint": 107043718,
+      "color": "#9c9ede"
+    },
+    {
+      "chromosome": "chr15",
+      "startPoint": 1,
+      "endPoint": 101991189,
+      "color": "#637939"
+    },
+    {
+      "chromosome": "chr16",
+      "startPoint": 1,
+      "endPoint": 90338345,
+      "color": "#8ca252"
+    },
+    {
+      "chromosome": "chr17",
+      "startPoint": 1,
+      "endPoint": 83257441,
+      "color": "#b5cf6b"
+    },
+    {
+      "chromosome": "chr18",
+      "startPoint": 1,
+      "endPoint": 80373285,
+      "color": "#cedb9c"
+    },
+    {
+      "chromosome": "chr19",
+      "startPoint": 1,
+      "endPoint": 58617616,
+      "color": "#8c6d31"
+    },
+    {
+      "chromosome": "chr20",
+      "startPoint": 1,
+      "endPoint": 64444167,
+      "color": "#bd9e39"
+    },
+    {
+      "chromosome": "chr21",
+      "startPoint": 1,
+      "endPoint": 46709983,
+      "color": "#e7ba52"
+    },
+    {
+      "chromosome": "chr22",
+      "startPoint": 1,
+      "endPoint": 50818468,
+      "color": "#e7cb94"
+    },
+    {
+      "chromosome": "chrX",
+      "startPoint": 1,
+      "endPoint": 156040895,
+      "color": "#843c39"
+    },
+    {
+      "chromosome": "chrY",
+      "startPoint": 1,
+      "endPoint": 56887909,
+      "color": "#40a35a"
+    }
+  ],
+  "sequences": {
+    "T": "#E6E431",
+    "A": "#5157FB",
+    "G": "#1DBE21",
+    "C": "#DE0A17",
+    "backbone": "#AD26FA"
+  },
+  "coveragePointsThreshold": 30000,
+  "scatterPlot": {
+    "title": "Coverage"
+  },
+  "barPlot": {
+    "title": "RPKM"
+  },
+  "intervalsPanelHeightRatio": 0.60,
+  "countries": {
+    "Algeria": {
+      "latitude": 28,
+      "longitude": 3,
+      "fill": "#7AB77C"
+    },
+    "Argentina": {
+      "latitude": -37.0523,
+      "longitude": -64.8691,
+      "fill": "#E68835"
+    },
+    "Australia": {
+      "latitude": -24.7761,
+      "longitude": 134.755,
+      "fill": "#529AB7"
+    },
+    "Austria": {
+      "latitude": 47.5162,
+      "longitude": 14.5501,
+      "fill": "#B7BD4B"
+    },
+    "Bahrain": {
+      "latitude": 26.0667,
+      "longitude": 50.5577,
+      "fill": "#482AB6"
+    },
+    "Bangladesh": {
+      "latitude": 24.5064,
+      "longitude": 90.0415,
+      "fill": "#3F56CE"
+    },
+    "Belgium": {
+      "latitude": 50.7077,
+      "longitude": 4.6777,
+      "fill": "#96BD60"
+    },
+    "Belize": {
+      "latitude": 16.826,
+      "longitude": -88.7601,
+      "fill": "#E04A29"
+    },
+    "Benin": {
+      "latitude": 9.961,
+      "longitude": 2.3274,
+      "fill": "#69B091"
+    },
+    "Bosnia and Herzegovina": {
+      "latitude": 43.9159,
+      "longitude": 17.6791,
+      "fill": "#C0BA47"
+    },
+    "Brazil": {
+      "latitude": -10.3333,
+      "longitude": -53.2,
+      "fill": "#E67A32"
+    },
+    "Brunei": {
+      "latitude": 4.5353,
+      "longitude": 114.7277,
+      "fill": "#4784C8"
+    },
+    "Bulgaria": {
+      "latitude": 42.7824,
+      "longitude": 25.1937,
+      "fill": "#DBAC3D"
+    },
+    "Cambodia": {
+      "latitude": 13,
+      "longitude": 105,
+      "fill": "#4374CD"
+    },
+    "Canada": {
+      "latitude": 61.0667,
+      "longitude": -107.9917,
+      "fill": "#DB2823"
+    },
+    "Chile": {
+      "latitude": -31.7613,
+      "longitude": -71.3188,
+      "fill": "#E67F33"
+    },
+    "China": {
+      "latitude": 33.3943,
+      "longitude": 104.6898,
+      "fill": "#4270CE"
+    },
+    "Colombia": {
+      "latitude": 2.8931,
+      "longitude": -73.7845,
+      "fill": "#E56B2F"
+    },
+    "Costa Rica": {
+      "latitude": 10.0379,
+      "longitude": -83.8188,
+      "fill": "#E1552B"
+    },
+    "Crimea": {
+      "latitude": 45.2835,
+      "longitude": 34.2008,
+      "fill": "#E69537"
+    },
+    "Croatia": {
+      "latitude": 45.1,
+      "longitude": 15.2,
+      "fill": "#BABC4A"
+    },
+    "Cuba": {
+      "latitude": 23.0131,
+      "longitude": -80.8329,
+      "fill": "#DD3325"
+    },
+    "Cyprus": {
+      "latitude": 34.9658,
+      "longitude": 33.1718,
+      "fill": "#E49838"
+    },
+    "Czech Republic": {
+      "latitude": 49.8175,
+      "longitude": 15.473,
+      "fill": "#BDBB48"
+    },
+    "Democratic Republic of the Congo": {
+      "latitude": -4.0383,
+      "longitude": 21.7587,
+      "fill": "#5BA6A6"
+    },
+    "Denmark": {
+      "latitude": 56.2639,
+      "longitude": 9.5018,
+      "fill": "#A6BE54"
+    },
+    "Dominican Republic": {
+      "latitude": 19.0974,
+      "longitude": -70.3028,
+      "fill": "#DE3E27"
+    },
+    "Ecuador": {
+      "latitude": -1.0541,
+      "longitude": -78.1489,
+      "fill": "#E67130"
+    },
+    "Egypt": {
+      "latitude": 26.8206,
+      "longitude": 30.8025,
+      "fill": "#77B67F"
+    },
+    "Finland": {
+      "latitude": 61.7517,
+      "longitude": 26.1864,
+      "fill": "#DFA43B"
+    },
+    "France": {
+      "latitude": 46.2276,
+      "longitude": 2.2137,
+      "fill": "#92BC63"
+    },
+    "Gambia": {
+      "latitude": 13.5,
+      "longitude": -15.5,
+      "fill": "#6EB389"
+    },
+    "Georgia": {
+      "latitude": 41.9894,
+      "longitude": 43.5975,
+      "fill": "#4F1FAB"
+    },
+    "Germany": {
+      "latitude": 51.1657,
+      "longitude": 10.4515,
+      "fill": "#AABD52"
+    },
+    "Ghana": {
+      "latitude": 7.8114,
+      "longitude": -1.0893,
+      "fill": "#64AD98"
+    },
+    "Greece": {
+      "latitude": 39,
+      "longitude": 22,
+      "fill": "#D3B23F"
+    },
+    "Guam": {
+      "latitude": 13.4649,
+      "longitude": 144.792,
+      "fill": "#539CB3"
+    },
+    "Guatemala": {
+      "latitude": 15.6356,
+      "longitude": -89.8988,
+      "fill": "#E14F2A"
+    },
+    "Hong Kong": {
+      "latitude": 22.3964,
+      "longitude": 114.1095,
+      "fill": "#447DCC"
+    },
+    "Hungary": {
+      "latitude": 47,
+      "longitude": 20,
+      "fill": "#CCB742"
+    },
+    "Iceland": {
+      "latitude": 64.9061,
+      "longitude": -18.4826,
+      "fill": "#82BA71"
+    },
+    "India": {
+      "latitude": 21.0774,
+      "longitude": 78.724,
+      "fill": "#3F47C9"
+    },
+    "Indonesia": {
+      "latitude": -0.8976,
+      "longitude": 114.1816,
+      "fill": "#4680CA"
+    },
+    "Iran": {
+      "latitude": 34.5732,
+      "longitude": 51.876,
+      "fill": "#4432BD"
+    },
+    "Ireland": {
+      "latitude": 52.865,
+      "longitude": -7.979,
+      "fill": "#89BB6B"
+    },
+    "Israel": {
+      "latitude": 31.2177,
+      "longitude": 34.9031,
+      "fill": "#5E1D9D"
+    },
+    "Italy": {
+      "latitude": 43.3828,
+      "longitude": 12.1836,
+      "fill": "#ADBD50"
+    },
+    "Jamaica": {
+      "latitude": 18.1096,
+      "longitude": -77.2975,
+      "fill": "#DF4428"
+    },
+    "Japan": {
+      "latitude": 35.6854,
+      "longitude": 139.7531,
+      "fill": "#4E95BD"
+    },
+    "Jordan": {
+      "latitude": 31.1667,
+      "longitude": 36.9416,
+      "fill": "#531EA6"
+    },
+    "Kazakhstan": {
+      "latitude": 48.8863,
+      "longitude": 67.2837,
+      "fill": "#403EC6"
+    },
+    "Kenya": {
+      "latitude": 0.0236,
+      "longitude": 37.9062,
+      "fill": "#5DA8A3"
+    },
+    "Kuwait": {
+      "latitude": 29.453,
+      "longitude": 47.4472,
+      "fill": "#4A27B2"
+    },
+    "Latvia": {
+      "latitude": 56.7997,
+      "longitude": 25.4414,
+      "fill": "#DDAA3C"
+    },
+    "Lebanon": {
+      "latitude": 33.946,
+      "longitude": 35.8686,
+      "fill": "#581DA2"
+    },
+    "Luxembourg": {
+      "latitude": 49.7554,
+      "longitude": 6.1195,
+      "fill": "#9CBE5B"
+    },
+    "Madagascar": {
+      "latitude": -18.925,
+      "longitude": 46.4416,
+      "fill": "#57A1AD"
+    },
+    "Malaysia": {
+      "latitude": 4.2642,
+      "longitude": 102.2224,
+      "fill": "#3F63CF"
+    },
+    "Mali": {
+      "latitude": 16.37,
+      "longitude": -2.29,
+      "fill": "#74B582"
+    },
+    "Mexico": {
+      "latitude": 19.4325,
+      "longitude": -99.1332,
+      "fill": "#DE3926"
+    },
+    "Moldova": {
+      "latitude": 47.288,
+      "longitude": 28.5671,
+      "fill": "#E29E39"
+    },
+    "Mongolia": {
+      "latitude": 47.5048,
+      "longitude": 102.9977,
+      "fill": "#4067CF"
+    },
+    "Montenegro": {
+      "latitude": 42.9869,
+      "longitude": 19.5181,
+      "fill": "#CAB843"
+    },
+    "Morocco": {
+      "latitude": 32.5498,
+      "longitude": -5.4808,
+      "fill": "#7CB878"
+    },
+    "Myanmar": {
+      "latitude": 20.6009,
+      "longitude": 96.2876,
+      "fill": "#3E5ACF"
+    },
+    "Nepal": {
+      "latitude": 28,
+      "longitude": 84,
+      "fill": "#3F51CC"
+    },
+    "Netherlands": {
+      "latitude": 52.1326,
+      "longitude": 5.2913,
+      "fill": "#99BD5D"
+    },
+    "New Zealand": {
+      "latitude": -41.5001,
+      "longitude": 172.8344,
+      "fill": "#5097BA"
+    },
+    "Nigeria": {
+      "latitude": 10,
+      "longitude": 8,
+      "fill": "#6CB28D"
+    },
+    "North Macedonia": {
+      "latitude": 41.6171,
+      "longitude": 21.7168,
+      "fill": "#D1B340"
+    },
+    "Norway": {
+      "latitude": 61.3109,
+      "longitude": 8.737,
+      "fill": "#A3BE57"
+    },
+    "Oman": {
+      "latitude": 20.5656,
+      "longitude": 56.861,
+      "fill": "#4039C4"
+    },
+    "Pakistan": {
+      "latitude": 30,
+      "longitude": 70,
+      "fill": "#3F43C7"
+    },
+    "Panama": {
+      "latitude": 8.9833,
+      "longitude": -79.5166,
+      "fill": "#E25A2C"
+    },
+    "Peru": {
+      "latitude": -9.6505,
+      "longitude": -75.3282,
+      "fill": "#E67631"
+    },
+    "Philippines": {
+      "latitude": 11.3831,
+      "longitude": 123.5219,
+      "fill": "#4A8BC3"
+    },
+    "Poland": {
+      "latitude": 52.0977,
+      "longitude": 19.0258,
+      "fill": "#C3BA46"
+    },
+    "Portugal": {
+      "latitude": 39.5405,
+      "longitude": -8.1747,
+      "fill": "#85BA6E"
+    },
+    "Romania": {
+      "latitude": 45.9432,
+      "longitude": 24.9668,
+      "fill": "#D8AE3E"
+    },
+    "Russia": {
+      "latitude": 64.6863,
+      "longitude": 97.7453,
+      "fill": "#E68C36"
+    },
+    "Saudi Arabia": {
+      "latitude": 25,
+      "longitude": 45,
+      "fill": "#4D23AE"
+    },
+    "Senegal": {
+      "latitude": 14.5,
+      "longitude": -14.25,
+      "fill": "#71B486"
+    },
+    "Serbia": {
+      "latitude": 43.7459,
+      "longitude": 20.8489,
+      "fill": "#CFB541"
+    },
+    "Sierra Leone": {
+      "latitude": 8.64,
+      "longitude": -11.84,
+      "fill": "#67AE94"
+    },
+    "Singapore": {
+      "latitude": 1.3442,
+      "longitude": 103.8675,
+      "fill": "#416CCE"
+    },
+    "Slovakia": {
+      "latitude": 48.6667,
+      "longitude": 19.5,
+      "fill": "#C6B944"
+    },
+    "Slovenia": {
+      "latitude": 45.8133,
+      "longitude": 14.4808,
+      "fill": "#B1BD4E"
+    },
+    "South Africa": {
+      "latitude": -28.8166,
+      "longitude": 24.9916,
+      "fill": "#559FB0"
+    },
+    "South Korea": {
+      "latitude": 36.6092,
+      "longitude": 127.9179,
+      "fill": "#4C91BF"
+    },
+    "Spain": {
+      "latitude": 40.4637,
+      "longitude": -3.7492,
+      "fill": "#8CBB69"
+    },
+    "Sri Lanka": {
+      "latitude": 7.8731,
+      "longitude": 80.7718,
+      "fill": "#3F4CCB"
+    },
+    "Suriname": {
+      "latitude": 4.1413,
+      "longitude": -56.0771,
+      "fill": "#E4662E"
+    },
+    "Sweden": {
+      "latitude": 59.675,
+      "longitude": 14.5209,
+      "fill": "#B4BD4C"
+    },
+    "Switzerland": {
+      "latitude": 46.8182,
+      "longitude": 8.2275,
+      "fill": "#A0BE59"
+    },
+    "Taiwan": {
+      "latitude": 23.8169,
+      "longitude": 121.0314,
+      "fill": "#4887C6"
+    },
+    "Thailand": {
+      "latitude": 14.8972,
+      "longitude": 100.8327,
+      "fill": "#3F5FD0"
+    },
+    "Timor-Leste": {
+      "latitude": -8.8094,
+      "longitude": 125.9095,
+      "fill": "#4B8EC1"
+    },
+    "Tunisia": {
+      "latitude": 33.6541,
+      "longitude": 9.0651,
+      "fill": "#7FB975"
+    },
+    "Turkey": {
+      "latitude": 39.0467,
+      "longitude": 36.7671,
+      "fill": "#E69036"
+    },
+    "USA": {
+      "latitude": 38.917,
+      "longitude": -98.8914,
+      "fill": "#DC2E24"
+    },
+    "Uganda": {
+      "latitude": 1.8613,
+      "longitude": 32.5515,
+      "fill": "#60AA9F"
+    },
+    "Ukraine": {
+      "latitude": 49.4872,
+      "longitude": 31.2718,
+      "fill": "#E39B39"
+    },
+    "United Arab Emirates": {
+      "latitude": 23.5467,
+      "longitude": 54.0651,
+      "fill": "#4236C0"
+    },
+    "United Kingdom": {
+      "latitude": 54.2428,
+      "longitude": -2.0887,
+      "fill": "#8FBC66"
+    },
+    "Uruguay": {
+      "latitude": -33,
+      "longitude": -56,
+      "fill": "#E68334"
+    },
+    "Venezuela": {
+      "latitude": 7.8389,
+      "longitude": -65.9164,
+      "fill": "#E3602D"
+    },
+    "Vietnam": {
+      "latitude": 16.1667,
+      "longitude": 107.8333,
+      "fill": "#4379CD"
+    },
+    "Zambia": {
+      "latitude": -14.5186,
+      "longitude": 27.5599,
+      "fill": "#59A4AA"
+    },
+    "Barbados": {
+      "latitude": "13.1883343",
+      "longitude": "-59.6052948",
+      "fill": "#154875"
+    },
+    "Puerto Rico": {
+      "latitude": "18.2089747",
+      "longitude": "-67.1462837",
+      "fill": "#4d49d6"
+    }
+  }
+}
