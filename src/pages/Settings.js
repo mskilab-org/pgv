@@ -6,7 +6,7 @@ const { Header, Content, Footer } = Layout;
 class Settings extends Component {
   render() {
     return (
-      <Layout>
+      <Layout style={{ height: "100vh" }}>
         <Header style={{ position: "fixed", zIndex: 1, width: "100%" }}>
           <div className="logo" />
           <Menu theme="dark" mode="horizontal" defaultSelectedKeys={["2"]}>

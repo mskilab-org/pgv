@@ -6,18 +6,7 @@ const { Header, Content, Footer } = Layout;
 class Home extends Component {
   render() {
     return (
-      <Layout>
-        <Header style={{ position: "fixed", zIndex: 1, width: "100%" }}>
-          <div className="logo" />
-          <Menu theme="dark" mode="horizontal" defaultSelectedKeys={["1"]}>
-            <Menu.Item key="1">Home</Menu.Item>
-            <Menu.Item key="2">Settings</Menu.Item>
-          </Menu>
-        </Header>
-        <Content
-          className="site-layout"
-          style={{ padding: "0 50px", marginTop: 64 }}
-        >
+          <div>
           <Breadcrumb style={{ margin: "16px 0" }}>
             <Breadcrumb.Item>Home</Breadcrumb.Item>
             <Breadcrumb.Item>List</Breadcrumb.Item>
@@ -29,11 +18,8 @@ class Home extends Component {
           >
             Home
           </div>
-        </Content>
-        <Footer style={{ textAlign: "center" }}>
-          Ant Design ©2018 Created by Ant UED
-        </Footer>
-      </Layout>
+        </div>
+       
     );
   }
 }
