@@ -7,7 +7,7 @@ const AppHolder = styled.div`
 
     .ant-full-content {
       position: relative;
-      margin: 24px;
+      margin-top: 0px;
       flex: auto;
       min-height: 0;
     }

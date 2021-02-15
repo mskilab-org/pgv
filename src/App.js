@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router } from "react-router-dom";
+import { Router } from "react-router-dom";
 import { Layout, ConfigProvider } from "antd";
 import { store, history } from "./redux/store";
 import { I18nextProvider } from "react-i18next";
@@ -21,19 +21,19 @@ function App() {
     <ConfigProvider locale={en_US}>
       <Provider store={store}>
         <I18nextProvider i18n={i18n}>
-          <AppHolder>
-            <Layout className="ant-full-layout">
-              <Topbar />
-              <Content className="ant-full-content">
-                <Router history={history}>
+          <Router history={history}>
+            <AppHolder>
+              <Layout className="ant-full-layout">
+                <Topbar />
+                <Content className="ant-full-content">
                   <PublicRoutes />
-                </Router>
-              </Content>
-              <Footer className="ant-full-footer">
-                {siteConfig.footerText}
-              </Footer>
-            </Layout>
-          </AppHolder>
+                </Content>
+                <Footer className="ant-full-footer">
+                  {siteConfig.footerText}
+                </Footer>
+              </Layout>
+            </AppHolder>
+          </Router>
         </I18nextProvider>
       </Provider>
     </ConfigProvider>

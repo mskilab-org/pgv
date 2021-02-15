@@ -5,4 +5,5 @@ import appActions from './app/actions';
 export default () =>
   new Promise(() => {
     store.dispatch(appActions.getSettings());
+    store.dispatch(appActions.getDatafiles());
   });

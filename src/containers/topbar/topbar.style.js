@@ -15,6 +15,7 @@ const TopbarWrapper = styled.div`
       background-color: #fff;
       box-shadow: 0 1px 4px 0 rgb(0 21 41 / 12%);
       transition: background 0.3s, width 0.2s;
+      z-index: 1000;
       .ant-pro-top-nav-header-main {
         display: flex;
         height: 100%;

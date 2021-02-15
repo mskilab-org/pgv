@@ -1,1 +1,23 @@
-{ "menu": "t"}
+{
+  "menu": {
+    "home": {
+      "title": "Dashboard"
+    },
+    "data-selection": {
+        "title": "Data Selection"
+    }
+  },
+  "containers": {
+    "data-selection": {
+      "section1": {
+        "title": "Filters",
+        "label1": "Categories",
+        "placeholder1": "Browse Categories",
+        "label2": "Title",
+        "placeholder2": "Search text",
+        "button1": "Search",
+        "button2": "Reset"
+      }
+    }
+  }
+}
