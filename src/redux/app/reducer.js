@@ -1,4 +1,4 @@
-import actions from './actions';
+import actions from "./actions";
 import * as d3 from "d3";
 
 export default function appReducer(state = {}, action) {
@@ -23,10 +23,22 @@ export default function appReducer(state = {}, action) {
     case actions.GET_DATAFILES:
       return { ...state, loading: true };
     case actions.DATAFILES_RECEIVED:
-      let files = action.datafiles.map((d,i) => { return {datafile: d.datafile, tags: d.description.split(';')}});
-      let tagsAll = files.map(d => d.tags).flat();
-      let tags = [...d3.rollup(tagsAll, g => g.length, d => d)].sort((a,b) => d3.descending(a[1], b[1])); 
+      let files = action.datafiles.map((d, i) => {
+        return { datafile: d.datafile.replace(".json", ""), tags: d.description.split(";") };
+      });
+      let tagsAll = files.map((d) => d.tags).flat();
+      let tags = [
+        ...d3.rollup(
+          tagsAll,
+          (g) => g.length,
+          (d) => d
+        ),
+      ].sort((a, b) => d3.descending(a[1], b[1]));
       return { ...state, datafiles: files, tags: tags, loading: false };
+    case actions.GET_DATA:
+      return { ...state, loading: true };
+    case actions.DATA_RECEIVED:
+      return { ...state, data: action.data, datafile: action.datafile, loading: false };
     default:
       return state;
   }

@@ -13,9 +13,15 @@ function* fetchDatafiles() {
   yield put({ type: actions.DATAFILES_RECEIVED, datafiles: res });
 }
 
+function* fetchData({file}) {
+  const json = yield axios.get(`/data/${file}.json`).then((response) => response);
+  yield put({ type: actions.DATA_RECEIVED, datafile: file, data: json.data });
+}
+
 function* actionWatcher() {
   yield takeEvery(actions.GET_SETTINGS, fetchSettings);
   yield takeEvery(actions.GET_DATAFILES, fetchDatafiles);
+  yield takeEvery(actions.GET_DATA, fetchData);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

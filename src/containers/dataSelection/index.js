@@ -1,24 +1,31 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
-import { Row, Col, Card, Form, Input, Select, Button, Space } from "antd";
+import { Row, Col } from "antd";
+import * as d3 from "d3";
 import DataSelectionWrapper from "./index.style";
 import { withTranslation } from "react-i18next";
-import { AiOutlineSearch } from "react-icons/ai";
+import FiltersPanel from "../../components/filtersPanel";
 import HomeHeader from "../../components/header";
+import FiltersResults from "../../components/filtersResults";
 
-const { Option } = Select;
 
 class DataSelection extends Component {
-  formRef = React.createRef();
-  onFinish = (values) => {
-    console.log(values);
+
+  state = {dataRecords: []}
+
+  onSearch = (values) => {
+    let filtered = this.props.datafiles;
+    if (values && values.tags && values.tags.length > 0) {
+    filtered = this.props.datafiles.filter(d => d.tags.filter(e => values.tags.includes(e)).length === values.tags.length);
+    }
+    filtered = filtered.sort((a,b) => d3.ascending(a.datafile, b.datafile));
+    this.setState({dataRecords: filtered});
   };
-  onReset = () => {
-    this.formRef.current && this.formRef.current.resetFields();
-  };
+
   render() {
-    const { t, datafiles, tags, loading } = this.props;
+    const { tags, loading } = this.props;
+
     return (
       <DataSelectionWrapper>
         <div className="ant-ds-header-container">
@@ -27,63 +34,13 @@ class DataSelection extends Component {
         <div className="ant-ds-content-container">
           <Row gutter={0} className="ant-ds-filter-container">
             <Col className="gutter-row" span={24}>
-              <Card
-                size="small"
-                title={t("containers.data-selection.section1.title")}
-              >
-                <Form
-                  layout="inline"
-                  ref={this.formRef}
-                  initialValues={{}}
-                  onFinish={this.onFinish}
-                >
-                  <Form.Item
-                    name="categories"
-                    label={t("containers.data-selection.section1.label1")}
-                  >
-                    <Select
-                      mode="multiple"
-                      className="categories-select"
-                      allowClear={true}
-                      loading={loading}
-                      placeholder={t("containers.data-selection.section1.placeholder1")}
-                      dropdownMatchSelectWidth={false}
-                    >
-                      {tags.map((d) => (
-                        <Option key={d[0]}>{d[0]} - {d[1]}</Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                  <Form.Item
-                    name="title"
-                    label={t("containers.data-selection.section1.label2")}
-                  >
-                    <Input placeholder={t("containers.data-selection.section1.placeholder2")}/>
-                  </Form.Item>
-                  <Form.Item>
-                  <Space>
-                    <Button type="primary" htmlType="submit">
-                      <span role="img" className="anticon">
-                        <AiOutlineSearch />
-                      </span>
-                      <span>
-                        {t("containers.data-selection.section1.button1")}
-                      </span>
-                    </Button>
-                    <Button
-                      htmlType="button"
-                      onClick={this.onReset}
-                    >
-                      {t("containers.data-selection.section1.button2")}
-                    </Button>
-                    </Space>
-                  </Form.Item>
-                </Form>
-              </Card>
+              <FiltersPanel {...{tags, loading, onSearch: this.onSearch}}/>
             </Col>
           </Row>
-          <Row gutter={0} className="ant-ds-content-container">
-            <Col className="gutter-row" span={24}></Col>
+          <Row gutter={0} className="ant-ds-results-container">
+            <Col className="gutter-row" span={24}>
+              <FiltersResults dataRecords={this.state.dataRecords} loading={loading}/>
+            </Col>
           </Row>
         </div>
       </DataSelectionWrapper>
@@ -92,7 +49,7 @@ class DataSelection extends Component {
 }
 
 DataSelection.propTypes = {
-  tags: PropTypes.object
+  tags: PropTypes.array
 };
 DataSelection.defaultProps = {
   tags: [],

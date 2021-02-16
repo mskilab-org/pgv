@@ -8,16 +8,36 @@
     }
   },
   "containers": {
+    "home": {
+      "category": "{{count}} category",
+      "category_plural":  "{{count}} categories"
+    },
     "data-selection": {
-      "section1": {
-        "title": "Filters",
-        "label1": "Categories",
-        "placeholder1": "Browse Categories",
-        "label2": "Title",
-        "placeholder2": "Search text",
-        "button1": "Search",
-        "button2": "Reset"
+     
+    }
+  },
+  "components": {
+    "filters-panel": {
+      "header": "Search Filters",
+      "tags-section": {
+        "label": "Categories",
+        "placeholder": "Browse Categories",
+        "sample": "{{count}} sample",
+        "sample_plural": "{{count}} samples"
+      },
+      "text-section": {
+        "label": "Title",
+        "placeholder": "Search text"
+      },
+      "buttons-section": {
+        "submit": "Search",
+        "reset": "Reset"
       }
+    },
+    "filters-results":{
+      "header": "Search Results",
+      "badge": "{{count}} matched sample",
+      "badge_plural": "{{count}} matched samples"
     }
   }
 }

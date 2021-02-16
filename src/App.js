@@ -1,5 +1,5 @@
 import React from "react";
-import { Router } from "react-router-dom";
+import { BrowserRouter as Router } from "react-router-dom";
 import { Layout, ConfigProvider } from "antd";
 import { store, history } from "./redux/store";
 import { I18nextProvider } from "react-i18next";

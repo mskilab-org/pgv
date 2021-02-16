@@ -8,10 +8,9 @@ const Wrapper = styled.div`
 }
 .ant-ds-content-container {
   margin: 24px;
-  .ant-ds-filter-container {
-    .categories-select {
-      width: 300px;
-    }
+  .ant-ds-results-container {
+    margin-top: 24px;
+    margin-bottom: 24px;
   }
 }
 `;

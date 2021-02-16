@@ -5,6 +5,9 @@ const Wrapper = styled.div`
     background: white;
     padding: 0px;
     margin: 0px 24px;
+    .site-page-content {
+      margin-bottom: 24px;
+    }
   }
 `;
 

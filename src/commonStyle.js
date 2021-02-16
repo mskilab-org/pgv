@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 const AppHolder = styled.div`
   .ant-full-layout {
-    height: 100vh;
+    min-height: 100vh;
     box-sizing: border-box;
 
     .ant-full-content {
