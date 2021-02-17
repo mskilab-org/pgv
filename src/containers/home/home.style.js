@@ -9,6 +9,10 @@ const HomeWrapper = styled.div`
   .ant-home-content-container {
     margin: 24px;
   }
+  .ant-panel-container {
+    margin-top: 24px;
+    margin-botton: 24px;
+  }
 `;
 
 export default HomeWrapper;

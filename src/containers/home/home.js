@@ -9,6 +9,11 @@ import HomeWrapper from "./home.style";
 import Header from "../../components/header";
 import Legend from "../../components/legend";
 import appAction from "../../redux/app/actions";
+import MapPanel from "../../components/mapPanel";
+import PhylogramPanel from "../../components/phylogramPanel";
+import PcaPanel from "../../components/pcaPanel";
+import GenesPanel from "../../components/genesPanel";
+import GenomePanel from "../../components/genomePanel";
 
 const { getData } = appAction;
 
@@ -28,13 +33,36 @@ class Home extends Component {
           <Header title={datafile} subTitle={t("containers.home.category", {count: selectedDataFile && selectedDataFile.tags.length})} tags={selectedDataFile && selectedDataFile.tags}/>
         </div>
         <div className="ant-home-content-container">
-          <Row gutter={0} className="ant-home-legend-container">
+          <Row className="ant-panel-container ant-home-legend-container">
             <Col className="gutter-row" span={24}>
               <ContainerDimensions>
                 {({ width }) => {
                   return <Legend {...{ width }} />;
                 }}
               </ContainerDimensions>
+            </Col>
+          </Row>
+          <Row gutter={24} className="ant-panel-container ant-home-map-panel-container">
+            <Col className="gutter-row" span={12}>
+              <PhylogramPanel/>
+            </Col>
+            <Col className="gutter-row" span={12}>
+              <MapPanel/>
+            </Col>
+          </Row>
+          <Row className="ant-panel-container ant-home-map-panel-container">
+            <Col className="gutter-row" span={24}>
+              <PcaPanel/>
+            </Col>
+          </Row>
+          <Row className="ant-panel-container ant-home-map-panel-container">
+            <Col className="gutter-row" span={24}>
+              <GenesPanel/>
+            </Col>
+          </Row>
+          <Row className="ant-panel-container ant-home-map-panel-container">
+            <Col className="gutter-row" span={24}>
+              <GenomePanel/>
             </Col>
           </Row>
         </div>

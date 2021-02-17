@@ -38,6 +38,21 @@
       "header": "Search Results",
       "badge": "{{count}} matched sample",
       "badge_plural": "{{count}} matched samples"
+    },
+    "map-panel": {
+      "header": "Geography"
+    },
+    "phylogram-panel": {
+      "header": "Phylogeny"
+    },
+    "pca-panel": {
+      "header": "PCA Graph"
+    },
+    "genes-panel": {
+      "header": "Genes"
+    },
+    "genome-panel": {
+      "header": "Genome Graph"
     }
   }
 }
