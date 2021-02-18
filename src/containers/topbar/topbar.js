@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import { PropTypes } from "prop-types";
+import { connect } from "react-redux";
 import { Link } from "react-router-dom";
 import { withTranslation } from "react-i18next";
 import { Layout, Menu } from "antd";
@@ -10,37 +12,48 @@ import logo from "../../assets/images/logo.png";
 const { Header } = Layout;
 
 class Topbar extends Component {
+  state = {
+    current: 'dashboard',
+  };
+
+  handleClick = e => {
+    this.setState({ current: e.key });
+  };
+
   render() {
-    const { t } = this.props;
+    const { current } = this.state;
+    const { t, file } = this.props;
+    let params = file && `?file=${file}`;
+
     return (
       <TopbarWrapper>
         <Header className="ant-pro-top-menu">
           <div className="ant-pro-top-nav-header light">
             <div className="ant-pro-top-nav-header-main ">
               <div className="ant-pro-top-nav-header-main-left">
-                <div className="ant-pro-top-nav-header-logo" id="logo">
-                  <Link to="/">
+                <div className="ant-pro-top-nav-header-logo" id="logo" onClick={() => this.handleClick({key: 'dashboard'})}>
+                  <Link to={`/${params}`}>
                     <img src={logo} alt="logo" />
                     <h1>{siteConfig.siteName}</h1>
                   </Link>
                 </div>
               </div>
               <div className="ant-pro-top-nav-header-menu">
-                <Menu mode="horizontal" defaultSelectedKeys={["2"]}>
-                  <Menu.Item key="1">
-                    <Link to="/data-selection">
+                <Menu mode="horizontal" onClick={this.handleClick} selectedKeys={[current]}>
+                  <Menu.Item key="data-selection">
+                    <Link to={`/data-selection/${params}`}>
                       <span role="img" className="anticon anticon-dashboard">
-                        <AiOutlineDashboard />
+                        <AiOutlineTable />
                       </span>
                       <span className="ant-pro-menu-item-title">
                         {t("menu.data-selection.title")}
                       </span>
                     </Link>
                   </Menu.Item>
-                  <Menu.Item key="2">
-                    <Link to="/">
+                  <Menu.Item key="dashboard">
+                    <Link to={`/${params}`}>
                       <span role="img" className="anticon anticon-dashboard">
-                        <AiOutlineTable />
+                        <AiOutlineDashboard />
                       </span>
                       <span className="ant-pro-menu-item-title">
                         {t("menu.home.title")}
@@ -59,5 +72,13 @@ class Topbar extends Component {
     );
   }
 }
-
-export default withTranslation("common")(Topbar);
+Topbar.propTypes = {
+  file: PropTypes.string
+};
+Topbar.defaultProps = {
+};
+const mapDispatchToProps = {};
+const mapStateToProps = (state) => ({
+  file: state.App.file,
+});
+export default connect(mapStateToProps, mapDispatchToProps)(withTranslation("common")(Topbar));

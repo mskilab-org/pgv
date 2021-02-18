@@ -13,15 +13,15 @@ function* fetchDatafiles() {
   yield put({ type: actions.DATAFILES_RECEIVED, datafiles: res });
 }
 
-function* fetchData({file}) {
+function* fetchGenome({file}) {
   const json = yield axios.get(`/data/${file}.json`).then((response) => response);
-  yield put({ type: actions.DATA_RECEIVED, datafile: file, data: json.data });
+  yield put({ type: actions.GENOME_RECEIVED, file: file, genome: json.data });
 }
 
 function* actionWatcher() {
   yield takeEvery(actions.GET_SETTINGS, fetchSettings);
   yield takeEvery(actions.GET_DATAFILES, fetchDatafiles);
-  yield takeEvery(actions.GET_DATA, fetchData);
+  yield takeEvery(actions.GET_GENOME, fetchGenome);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

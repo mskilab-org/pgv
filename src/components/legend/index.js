@@ -1,8 +1,9 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
+import { connect } from "react-redux";
 import * as d3 from "d3";
 import Wrapper from "./index.style";
-import { connect } from "react-redux";
+
 
 const margins = {
   legend: { padding: 5, height: 100, bar: 30, style: {fill: "steelblue", stroke: "black", fillOpacity: 0.8 }},

@@ -25,11 +25,11 @@ class FilterResults extends Component {
               renderItem={(item, i) => (
                 <Item>
                   <Meta
-                    key={item.datafile}
+                    key={item.file}
                     avatar={<Avatar size={32}>{i + 1}</Avatar>}
                     title={
-                      <Link to={`/?datafile=${item.datafile}`}>
-                        <h2>{item.datafile}</h2>
+                      <Link to={`/?file=${item.file}`}>
+                        <h2>{item.file}</h2>
                       </Link>
                     }
                     description={

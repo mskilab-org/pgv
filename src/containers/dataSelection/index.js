@@ -6,7 +6,7 @@ import * as d3 from "d3";
 import DataSelectionWrapper from "./index.style";
 import { withTranslation } from "react-i18next";
 import FiltersPanel from "../../components/filtersPanel";
-import HomeHeader from "../../components/header";
+import HomeHeader from "../../components/headerPanel";
 import FiltersResults from "../../components/filtersResults";
 
 

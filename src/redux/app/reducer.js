@@ -24,7 +24,7 @@ export default function appReducer(state = {}, action) {
       return { ...state, loading: true };
     case actions.DATAFILES_RECEIVED:
       let files = action.datafiles.map((d, i) => {
-        return { datafile: d.datafile.replace(".json", ""), tags: d.description.split(";") };
+        return { filename: d.filename, file: d.filename.replace(".json", ""), tags: d.description.split(";") };
       });
       let tagsAll = files.map((d) => d.tags).flat();
       let tags = [
@@ -35,10 +35,11 @@ export default function appReducer(state = {}, action) {
         ),
       ].sort((a, b) => d3.descending(a[1], b[1]));
       return { ...state, datafiles: files, tags: tags, loading: false };
-    case actions.GET_DATA:
+    case actions.GET_GENOME:
       return { ...state, loading: true };
-    case actions.DATA_RECEIVED:
-      return { ...state, data: action.data, datafile: action.datafile, loading: false };
+    case actions.GENOME_RECEIVED:
+      const datafile = state.datafiles.find(d => d.file === action.file);
+      return { ...state, datafile, genome: action.genome, file: action.file, loading: false };
     default:
       return state;
   }
