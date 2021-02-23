@@ -3,11 +3,10 @@ import { PropTypes } from "prop-types";
 import { withTranslation } from "react-i18next";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
-import ContainerDimensions from "react-container-dimensions";
 import { Row, Col } from "antd";
 import HomeWrapper from "./home.style";
-import Header from "../../components/headerPanel";
-import Legend from "../../components/legend";
+import HeaderPanel from "../../components/headerPanel";
+import LegendPanel from "../../components/legendPanel";
 import MapPanel from "../../components/mapPanel";
 import PhylogramPanel from "../../components/phylogramPanel";
 import PcaPanel from "../../components/pcaPanel";
@@ -16,13 +15,12 @@ import GenomePanel from "../../components/genomePanel";
 
 class Home extends Component {
 
-
   render() {
 
     return (
       <HomeWrapper>
         <div className="ant-home-header-container">
-          <Header/>
+          <HeaderPanel/>
         </div>
         <div className="ant-home-content-container">
           <Row gutter={24} className="ant-panel-container ant-home-map-panel-container">
@@ -40,11 +38,7 @@ class Home extends Component {
           </Row>
           <Row className="ant-panel-container ant-home-legend-container">
             <Col className="gutter-row" span={24}>
-              <ContainerDimensions>
-                {({ width }) => {
-                  return <Legend {...{ width }} />;
-                }}
-              </ContainerDimensions>
+              <LegendPanel/>
             </Col>
           </Row>
           <Row className="ant-panel-container ant-home-map-panel-container">

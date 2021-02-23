@@ -9,7 +9,7 @@ import appAction from "../../redux/app/actions";
 
 const { getGenome } = appAction;
 
-class Header extends Component {
+class HeaderPanel extends Component {
   state = {
     redirectToReferrer: false,
   };
@@ -27,32 +27,37 @@ class Header extends Component {
 
   componentDidMount() {
     // When we enter through a full page refresh
-    let params = (new URL(decodeURI(document.location))).searchParams;
-    let file = params.get('file');
+    let params = new URL(decodeURI(document.location)).searchParams;
+    let file = params.get("file");
     file && this.props.getGenome(file);
   }
   render() {
     const { t, file, datafile, datafiles } = this.props;
-  
+
     const { redirectToReferrer } = this.state;
-    let params = (new URL(decodeURI(document.location))).searchParams;
-    if (!params.get('file') && redirectToReferrer) {
+    let params = new URL(decodeURI(document.location)).searchParams;
+    if (!params.get("file") && redirectToReferrer) {
       let file = datafiles[0].file;
       this.props.getGenome(file);
       return <Redirect to={`?file=${file}`} />;
     }
-    
-    let description = datafile && t("containers.home.category", {count: datafile && datafile.tags.length});
-    let tags = (datafile && datafile.tags) || []
+
+    let description =
+      datafile &&
+      t("containers.home.category", {
+        count: datafile && datafile.tags.length,
+      });
+    let tags = (datafile && datafile.tags) || [];
     return (
       <Wrapper>
-        <PageHeader className="site-page-header"
+        <PageHeader
+          className="site-page-header"
           title={file}
           subTitle={description}
         >
           <div className="site-page-content">
             <Space wrap={true}>
-              {tags.map((d,i) => (
+              {tags.map((d, i) => (
                 <Tag key={i}>{d}</Tag>
               ))}
             </Space>
@@ -62,15 +67,15 @@ class Header extends Component {
     );
   }
 }
-Header.propTypes = {
+HeaderPanel.propTypes = {
   datafiles: PropTypes.array,
   datafile: PropTypes.object,
   file: PropTypes.string,
 };
-Header.defaultProps = {
+HeaderPanel.defaultProps = {
   datafiles: [],
-  datafile: {file: "", filename: "", tags: []},
-  file: ""
+  datafile: { file: "", filename: "", tags: [] },
+  file: "",
 };
 const mapDispatchToProps = (dispatch) => ({
   getGenome: (file) => dispatch(getGenome(file)),
@@ -80,4 +85,7 @@ const mapStateToProps = (state) => ({
   datafile: state.App.datafile,
   datafiles: state.App.datafiles,
 });
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(withTranslation("common")(Header)));
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withRouter(withTranslation("common")(HeaderPanel)));

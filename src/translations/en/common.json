@@ -4,17 +4,18 @@
       "title": "Dashboard"
     },
     "data-selection": {
-        "title": "Data Selection"
+      "title": "Data Selection"
+    },
+    "settings": {
+      "title": "Settings"
     }
   },
   "containers": {
     "home": {
       "category": "{{count}} category",
-      "category_plural":  "{{count}} categories"
+      "category_plural": "{{count}} categories"
     },
-    "data-selection": {
-     
-    }
+    "data-selection": {}
   },
   "components": {
     "filters-panel": {
@@ -34,13 +35,16 @@
         "reset": "Reset"
       }
     },
-    "filters-results":{
+    "filters-results": {
       "header": "Search Results",
       "badge": "{{count}} matched sample",
       "badge_plural": "{{count}} matched samples"
     },
     "map-panel": {
       "header": "Geography"
+    },
+    "legend-panel": {
+      "header": "Coordinates"
     },
     "phylogram-panel": {
       "header": "Phylogeny"
@@ -53,6 +57,9 @@
     },
     "genome-panel": {
       "header": "Genome Graph"
+    },
+    "settings-panel": {
+      "coordinates": { "label": "Coordinates:" }
     }
   }
 }

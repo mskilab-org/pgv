@@ -6,12 +6,14 @@ export default function appReducer(state = {}, action) {
     case actions.GET_SETTINGS:
       return { ...state, loading: true };
     case actions.SETTINGS_RECEIVED:
-      let genomeLength = action.settings.metadata.reduce(
+      let selectedCoordinate = action.settings.coordinates.default;
+      let selectedCoordinateSet = action.settings.coordinates.sets[selectedCoordinate]
+      let genomeLength = selectedCoordinateSet.reduce(
         (acc, elem) => acc + elem.endPoint,
         0
       );
       let boundary = 0;
-      let chromoBins = action.settings.metadata.reduce((hash, element) => {
+      let chromoBins = selectedCoordinateSet.reduce((hash, element) => {
         let chromo = element;
         chromo.length = chromo.endPoint;
         chromo.startPlace = boundary;
@@ -19,7 +21,7 @@ export default function appReducer(state = {}, action) {
         boundary += chromo.length;
         return hash;
       }, {});
-      return { ...state, genomeLength, chromoBins, loading: false };
+      return { ...state, genomeLength, selectedCoordinate, coordinates: action.settings.coordinates, chromoBins, loading: false };
     case actions.GET_DATAFILES:
       return { ...state, loading: true };
     case actions.DATAFILES_RECEIVED:
@@ -40,6 +42,25 @@ export default function appReducer(state = {}, action) {
     case actions.GENOME_RECEIVED:
       const datafile = state.datafiles.find(d => d.file === action.file);
       return { ...state, datafile, genome: action.genome, file: action.file, loading: false };
+    case actions.UPDATE_COORDINATES:
+      return { ...state, loading: true };
+    case actions.COORDINATES_UPDATED:
+      let newSelectedCoordinate = action.coordinate;
+      let newSelectedCoordinateSet = state.coordinates.sets[newSelectedCoordinate]
+      let newGenomeLength = newSelectedCoordinateSet.reduce(
+        (acc, elem) => acc + elem.endPoint,
+        0
+      );
+      let newBoundary = 0;
+      let newChromoBins = newSelectedCoordinateSet.reduce((hash, element) => {
+        let chromo = element;
+        chromo.length = chromo.endPoint;
+        chromo.startPlace = newBoundary;
+        hash[element.chromosome] = chromo;
+        newBoundary += chromo.length;
+        return hash;
+      }, {});
+      return { ...state, genomeLength: newGenomeLength, selectedCoordinate: newSelectedCoordinate, chromoBins: newChromoBins, loading: false };
     default:
       return state;
   }

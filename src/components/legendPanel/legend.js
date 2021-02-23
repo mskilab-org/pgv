@@ -2,13 +2,16 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import * as d3 from "d3";
-import Wrapper from "./index.style";
-
 
 const margins = {
-  legend: { padding: 5, height: 100, bar: 30, style: {fill: "steelblue", stroke: "black", fillOpacity: 0.8 }},
+  legend: {
+    padding: 0,
+    height: 60,
+    bar: 30,
+    style: { fill: "steelblue", stroke: "black", fillOpacity: 0.8 },
+  },
   chromoBox: { fillOpacity: 0.66 },
-  chromoText: { textAnchor: "middle", fill: "white" }
+  chromoText: { textAnchor: "middle", fill: "white" },
 };
 
 class Legend extends Component {
@@ -23,12 +26,17 @@ class Legend extends Component {
       .scaleLinear()
       .domain([1, genomeLength])
       .range([0, stageWidth]);
-    
+
     return (
-      <Wrapper>
         <div className="ant-wrapper">
           <svg width={width} height={stageHeight} className="legend-container">
-            <g className="chromo-legend" transform={`translate(${[margins.legend.padding, (0.5 * (stageHeight - margins.legend.bar))]})`}>
+            <g
+              className="chromo-legend"
+              transform={`translate(${[
+                margins.legend.padding,
+                0.5 * (stageHeight - margins.legend.bar),
+              ]})`}
+            >
               <rect
                 className="legend-bar"
                 width={stageWidth}
@@ -64,23 +72,22 @@ class Legend extends Component {
             </g>
           </svg>
         </div>
-      </Wrapper>
     );
   }
 }
 Legend.propTypes = {
   chromoBins: PropTypes.object,
   genomeLength: PropTypes.number,
-  width: PropTypes.number.isRequired
+  width: PropTypes.number.isRequired,
 };
 Legend.defaultProps = {
-  chromoBins: {}, 
+  chromoBins: {},
   genomeLength: 0,
-  width: 400
+  width: 400,
 };
 const mapDispatchToProps = {};
 const mapStateToProps = (state) => ({
   genomeLength: state.App.genomeLength,
-  chromoBins: state.App.chromoBins
+  chromoBins: state.App.chromoBins,
 });
 export default connect(mapStateToProps, mapDispatchToProps)(Legend);

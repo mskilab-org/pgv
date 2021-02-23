@@ -3,25 +3,40 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import { Link } from "react-router-dom";
 import { withTranslation } from "react-i18next";
-import { Layout, Menu } from "antd";
-import { AiOutlineDashboard, AiOutlineTable } from "react-icons/ai";
+import { Layout, Menu, Space, Spin, Drawer } from "antd";
+import {
+  AiOutlineDashboard,
+  AiOutlineTable,
+  AiOutlineSetting,
+} from "react-icons/ai";
+import { LoadingOutlined } from "@ant-design/icons";
 import TopbarWrapper from "./topbar.style";
 import { siteConfig } from "../../settings";
+import SettingsPanel from "../../components/settingsPanel";
 import logo from "../../assets/images/logo.png";
 
 const { Header } = Layout;
 
 class Topbar extends Component {
   state = {
-    current: 'dashboard',
+    current: "dashboard",
+    visible: false,
   };
 
-  handleClick = e => {
+  handleClick = (e) => {
     this.setState({ current: e.key });
   };
 
+  handleSettingsClick = () => {
+    this.setState({ visible: true });
+  };
+
+  onSettingsClose = () => {
+    this.setState({ visible: false });
+  };
+
   render() {
-    const { current } = this.state;
+    const { current, visible, loading } = this.state;
     const { t, file } = this.props;
     let params = file && `?file=${file}`;
 
@@ -31,7 +46,11 @@ class Topbar extends Component {
           <div className="ant-pro-top-nav-header light">
             <div className="ant-pro-top-nav-header-main ">
               <div className="ant-pro-top-nav-header-main-left">
-                <div className="ant-pro-top-nav-header-logo" id="logo" onClick={() => this.handleClick({key: 'dashboard'})}>
+                <div
+                  className="ant-pro-top-nav-header-logo"
+                  id="logo"
+                  onClick={() => this.handleClick({ key: "dashboard" })}
+                >
                   <Link to={`/${params}`}>
                     <img src={logo} alt="logo" />
                     <h1>{siteConfig.siteName}</h1>
@@ -39,7 +58,11 @@ class Topbar extends Component {
                 </div>
               </div>
               <div className="ant-pro-top-nav-header-menu">
-                <Menu mode="horizontal" onClick={this.handleClick} selectedKeys={[current]}>
+                <Menu
+                  mode="horizontal"
+                  onClick={this.handleClick}
+                  selectedKeys={[current]}
+                >
                   <Menu.Item key="data-selection">
                     <Link to={`/data-selection/${params}`}>
                       <span role="img" className="anticon anticon-dashboard">
@@ -63,7 +86,32 @@ class Topbar extends Component {
                 </Menu>
               </div>
               <div className="ant-pro-top-nav-header-main-right">
-                <div className="ant-pro-top-nav-header-main-right-container"></div>
+                <div className="ant-pro-top-nav-header-main-right-container">
+                  <Space align="center">
+                    <div className="ant-pro-loader-container">
+                      {loading && <Spin
+                        indicator={
+                          <LoadingOutlined style={{ fontSize: 16 }} spin />
+                        }
+                      />}
+                    </div>
+                    <div
+                      className="ant-pro-option-container ant-pro-settings-container"
+                      onClick={this.handleSettingsClick}
+                    >
+                      <AiOutlineSetting />
+                    </div>
+                  </Space>
+                </div>
+                <Drawer
+                  title={t("menu.settings.title")}
+                  placement="right"
+                  closable={true}
+                  onClose={this.onSettingsClose}
+                  visible={visible}
+                >
+                  <SettingsPanel/>
+                </Drawer>
               </div>
             </div>
           </div>
@@ -73,12 +121,15 @@ class Topbar extends Component {
   }
 }
 Topbar.propTypes = {
-  file: PropTypes.string
+  file: PropTypes.string,
 };
-Topbar.defaultProps = {
-};
+Topbar.defaultProps = {};
 const mapDispatchToProps = {};
 const mapStateToProps = (state) => ({
   file: state.App.file,
+  loading: state.App.loading
 });
-export default connect(mapStateToProps, mapDispatchToProps)(withTranslation("common")(Topbar));
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withTranslation("common")(Topbar));

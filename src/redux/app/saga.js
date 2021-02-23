@@ -18,10 +18,15 @@ function* fetchGenome({file}) {
   yield put({ type: actions.GENOME_RECEIVED, file: file, genome: json.data });
 }
 
+function* updateCoordinates({coordinate}) {
+  yield put({ type: actions.COORDINATES_UPDATED, coordinate: coordinate });
+}
+
 function* actionWatcher() {
   yield takeEvery(actions.GET_SETTINGS, fetchSettings);
   yield takeEvery(actions.GET_DATAFILES, fetchDatafiles);
   yield takeEvery(actions.GET_GENOME, fetchGenome);
+  yield takeEvery(actions.UPDATE_COORDINATES, updateCoordinates);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

@@ -20,6 +20,7 @@ const TopbarWrapper = styled.div`
         display: flex;
         height: 100%;
         padding-left: 16px;
+        padding-right: 16px;
         .ant-pro-top-nav-header-main-left {
           display: flex;
           min-width: 192px;
@@ -54,9 +55,18 @@ const TopbarWrapper = styled.div`
           }
         }
         .ant-pro-top-nav-header-main-right {
-          min-width: 0px;
+          min-width: 32px;
           .ant-pro-top-nav-header-main-right-container {
-            padding-right: 8px;
+            .ant-pro-loader-container {
+              font-size: 16px;
+            }
+            .ant-pro-option-container {
+              margin-top: 3px;
+              padding: 0 12px;
+              color: rgba(0,0,0,.75);
+              font-size: 16px;
+              cursor: pointer;
+            }
           }
         }
       }
