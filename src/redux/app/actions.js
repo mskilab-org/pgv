@@ -9,15 +9,10 @@ const actions = {
   DATAFILES_RECEIVED: "DATAFILES_RECEIVED",
   GET_GENOME: "GET_GENOME",
   GENOME_RECEIVED: "GENOME_RECEIVED",
+  UPDATE_NAVIGATION: "UPDATE_NAVIGATION",
+  NAVIGATION_UPDATED: "NAVIGATION_UPDATED",
   getSettings: () => ({
     type: actions.GET_SETTINGS,
-  }),
-  getDatafiles: () => ({
-    type: actions.GET_DATAFILES,
-  }),
-  getGenome: (file) => ({
-    type: actions.GET_GENOME,
-    file: file
   }),
   updateCoordinates: (coordinate) => ({
     type: actions.UPDATE_COORDINATES,
@@ -27,7 +22,18 @@ const actions = {
     type: actions.UPDATE_VISIBILITY,
     panel: panel,
     visible: visible
-  }) 
+  }),
+  getDatafiles: () => ({
+    type: actions.GET_DATAFILES,
+  }),
+  getGenome: (file) => ({
+    type: actions.GET_GENOME,
+    file: file
+  }),
+  updateNavigation: (currentPage) => ({
+    type: actions.UPDATE_NAVIGATION,
+    currentPage: currentPage
+  })
 };
 
 export default actions;

@@ -26,12 +26,17 @@ function* updateVisibility({panel, visible}) {
   yield put({ type: actions.VISIBILITY_UPDATED, panel: panel, visible: visible });
 }
 
+function* updateNavigation({currentPage}) {
+  yield put({ type: actions.NAVIGATION_UPDATED, currentPage: currentPage});
+}
+
 function* actionWatcher() {
   yield takeEvery(actions.GET_SETTINGS, fetchSettings);
   yield takeEvery(actions.GET_DATAFILES, fetchDatafiles);
   yield takeEvery(actions.GET_GENOME, fetchGenome);
   yield takeEvery(actions.UPDATE_COORDINATES, updateCoordinates);
   yield takeEvery(actions.UPDATE_VISIBILITY, updateVisibility);
+  yield takeEvery(actions.UPDATE_NAVIGATION, updateNavigation);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

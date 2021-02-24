@@ -14,17 +14,18 @@ import TopbarWrapper from "./topbar.style";
 import { siteConfig } from "../../settings";
 import SettingsPanel from "../../components/settingsPanel";
 import logo from "../../assets/images/logo.png";
+import appActions from "../../redux/app/actions";
 
+const { updateNavigation } = appActions;
 const { Header } = Layout;
 
 class Topbar extends Component {
   state = {
-    current: "dashboard",
-    visible: false,
+    visible: false
   };
 
   handleClick = (e) => {
-    this.setState({ current: e.key });
+    this.props.updateNavigation(e.key);
   };
 
   handleSettingsClick = () => {
@@ -36,8 +37,8 @@ class Topbar extends Component {
   };
 
   render() {
-    const { current, visible } = this.state;
-    const { t, file, loading } = this.props;
+    const { visible } = this.state;
+    const { t, file, loading, currentPage } = this.props;
     let params = file && `?file=${file}`;
 
     return (
@@ -61,7 +62,7 @@ class Topbar extends Component {
                 <Menu
                   mode="horizontal"
                   onClick={this.handleClick}
-                  selectedKeys={[current]}
+                  selectedKeys={[currentPage]}
                 >
                   <Menu.Item key="data-selection">
                     <Link to={`/data-selection/${params}`}>
@@ -123,11 +124,16 @@ class Topbar extends Component {
 Topbar.propTypes = {
   file: PropTypes.string,
 };
-Topbar.defaultProps = {};
-const mapDispatchToProps = {};
+Topbar.defaultProps = {
+  currentPage: ""
+};
+const mapDispatchToProps = (dispatch) => ({
+  updateNavigation: (currentPage) => dispatch(updateNavigation(currentPage))
+});
 const mapStateToProps = (state) => ({
   file: state.App.file,
-  loading: state.App.loading
+  loading: state.App.loading,
+  currentPage: state.App.currentPage
 });
 export default connect(
   mapStateToProps,

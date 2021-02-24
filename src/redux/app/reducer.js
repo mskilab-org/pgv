@@ -67,6 +67,10 @@ export default function appReducer(state = {}, action) {
       let panels = {...state.panels};
       panels[action.panel].visible = action.visible;
       return { ...state, panels: panels, loading: false}
+    case actions.UPDATE_NAVIGATION:
+      return { ...state, loading: true };
+    case actions.NAVIGATION_UPDATED:
+      return { ...state, currentPage: action.currentPage, loading: false}
     default:
       return state;
   }

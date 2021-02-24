@@ -6,8 +6,9 @@ import { withRouter, Redirect } from "react-router-dom";
 import { PageHeader, Space, Tag } from "antd";
 import Wrapper from "./index.style";
 import appAction from "../../redux/app/actions";
+import { path } from "d3";
 
-const { getGenome } = appAction;
+const { getGenome, updateNavigation } = appAction;
 
 class HeaderPanel extends Component {
   state = {
@@ -29,7 +30,14 @@ class HeaderPanel extends Component {
     // When we enter through a full page refresh
     let params = new URL(decodeURI(document.location)).searchParams;
     let file = params.get("file");
+    console.log(new URL(decodeURI(document.location)))
     file && this.props.getGenome(file);
+    let pathname = new URL(decodeURI(document.location)).pathname; 
+    if (pathname === '/data-selection/') {
+      this.props.updateNavigation("data-selection");
+    } else if (pathname === '/') {
+      this.props.updateNavigation("dashboard");
+    }
   }
   render() {
     const { t, file, datafile, datafiles } = this.props;
@@ -39,6 +47,7 @@ class HeaderPanel extends Component {
     if (!params.get("file") && redirectToReferrer) {
       let file = datafiles[0].file;
       this.props.getGenome(file);
+      this.props.updateNavigation("dashboard");
       return <Redirect to={`?file=${file}`} />;
     }
 
@@ -79,6 +88,7 @@ HeaderPanel.defaultProps = {
 };
 const mapDispatchToProps = (dispatch) => ({
   getGenome: (file) => dispatch(getGenome(file)),
+  updateNavigation: (currentPage) => dispatch(updateNavigation(currentPage))
 });
 const mapStateToProps = (state) => ({
   file: state.App.file,
