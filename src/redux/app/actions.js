@@ -3,6 +3,8 @@ const actions = {
   SETTINGS_RECEIVED: "SETTINGS_RECEIVED",
   UPDATE_COORDINATES: "UPDATE_COORDINATES",
   COORDINATES_UPDATED: "COORDINATES_UPDATED",
+  UPDATE_VISIBILITY: "UPDATE_VISIBILITY",
+  VISIBILITY_UPDATED: "VISIBILITY_UPDATED",
   GET_DATAFILES: "GET_DATAFILES",
   DATAFILES_RECEIVED: "DATAFILES_RECEIVED",
   GET_GENOME: "GET_GENOME",
@@ -20,6 +22,11 @@ const actions = {
   updateCoordinates: (coordinate) => ({
     type: actions.UPDATE_COORDINATES,
     coordinate: coordinate
+  }),
+  updateVisibility: (panel, visible) => ({
+    type: actions.UPDATE_VISIBILITY,
+    panel: panel,
+    visible: visible
   }) 
 };
 

@@ -21,7 +21,7 @@ export default function appReducer(state = {}, action) {
         boundary += chromo.length;
         return hash;
       }, {});
-      return { ...state, genomeLength, selectedCoordinate, coordinates: action.settings.coordinates, chromoBins, loading: false };
+      return { ...state, genomeLength, selectedCoordinate, coordinates: action.settings.coordinates, chromoBins, panels: action.settings.panels, loading: false };
     case actions.GET_DATAFILES:
       return { ...state, loading: true };
     case actions.DATAFILES_RECEIVED:
@@ -61,6 +61,12 @@ export default function appReducer(state = {}, action) {
         return hash;
       }, {});
       return { ...state, genomeLength: newGenomeLength, selectedCoordinate: newSelectedCoordinate, chromoBins: newChromoBins, loading: false };
+    case actions.UPDATE_VISIBILITY:
+      return { ...state, loading: true };
+    case actions.VISIBILITY_UPDATED:
+      let panels = {...state.panels};
+      panels[action.panel].visible = action.visible;
+      return { ...state, panels: panels, loading: false}
     default:
       return state;
   }

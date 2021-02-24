@@ -40,13 +40,13 @@
       "badge": "{{count}} matched sample",
       "badge_plural": "{{count}} matched samples"
     },
-    "map-panel": {
+    "geography-panel": {
       "header": "Geography"
     },
     "legend-panel": {
       "header": "Coordinates"
     },
-    "phylogram-panel": {
+    "phylogeny-panel": {
       "header": "Phylogeny"
     },
     "pca-panel": {
@@ -59,7 +59,10 @@
       "header": "Genome Graph"
     },
     "settings-panel": {
-      "coordinates": { "label": "Coordinates:" }
+      "coordinates": { "label": "Coordinates" },
+      "panels": {
+        "label": "Visible Panels"
+      }
     }
   }
 }

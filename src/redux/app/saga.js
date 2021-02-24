@@ -22,11 +22,16 @@ function* updateCoordinates({coordinate}) {
   yield put({ type: actions.COORDINATES_UPDATED, coordinate: coordinate });
 }
 
+function* updateVisibility({panel, visible}) {
+  yield put({ type: actions.VISIBILITY_UPDATED, panel: panel, visible: visible });
+}
+
 function* actionWatcher() {
   yield takeEvery(actions.GET_SETTINGS, fetchSettings);
   yield takeEvery(actions.GET_DATAFILES, fetchDatafiles);
   yield takeEvery(actions.GET_GENOME, fetchGenome);
   yield takeEvery(actions.UPDATE_COORDINATES, updateCoordinates);
+  yield takeEvery(actions.UPDATE_VISIBILITY, updateVisibility);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

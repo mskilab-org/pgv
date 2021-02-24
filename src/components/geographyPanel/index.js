@@ -2,10 +2,10 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { Card, Space } from "antd";
 import { withTranslation } from "react-i18next";
-import { GrTree } from "react-icons/gr";
+import { GoGlobe } from "react-icons/go";
 import Wrapper from "./index.style";
 
-class PhylogramPanel extends Component {
+class GeographyPanel extends Component {
   render() {
     const { t } = this.props;
     return (
@@ -15,10 +15,10 @@ class PhylogramPanel extends Component {
           title={
             <Space>
               <span role="img" className="anticon anticon-dashboard">
-                <GrTree />
+                <GoGlobe />
               </span>
               <span className="ant-pro-menu-item-title">
-                {t("components.phylogram-panel.header")}
+                {t("components.geography-panel.header")}
               </span>
             </Space>
           }
@@ -29,6 +29,6 @@ class PhylogramPanel extends Component {
     );
   }
 }
-PhylogramPanel.propTypes = {};
-PhylogramPanel.defaultProps = {};
-export default withTranslation("common")(PhylogramPanel);
+GeographyPanel.propTypes = {};
+GeographyPanel.defaultProps = {};
+export default withTranslation("common")(GeographyPanel);

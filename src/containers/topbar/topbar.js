@@ -36,8 +36,8 @@ class Topbar extends Component {
   };
 
   render() {
-    const { current, visible, loading } = this.state;
-    const { t, file } = this.props;
+    const { current, visible } = this.state;
+    const { t, file, loading } = this.props;
     let params = file && `?file=${file}`;
 
     return (
