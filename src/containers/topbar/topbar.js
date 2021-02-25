@@ -14,18 +14,22 @@ import TopbarWrapper from "./topbar.style";
 import { siteConfig } from "../../settings";
 import SettingsPanel from "../../components/settingsPanel";
 import logo from "../../assets/images/logo.png";
-import appActions from "../../redux/app/actions";
 
-const { updateNavigation } = appActions;
 const { Header } = Layout;
+
+const navigationMap = { 
+  "/": "dashboard",
+  "/data-selection/": "data-selection"
+}
 
 class Topbar extends Component {
   state = {
+    currentPage: "",
     visible: false
   };
 
   handleClick = (e) => {
-    this.props.updateNavigation(e.key);
+    this.setState({ currentPage: e.key });
   };
 
   handleSettingsClick = () => {
@@ -36,9 +40,15 @@ class Topbar extends Component {
     this.setState({ visible: false });
   };
 
+  componentWillReceiveProps(nextProps) {
+    // to update the navigation when page refresh
+    let pathname = new URL(decodeURI(document.location)).pathname;
+    this.setState({ currentPage: navigationMap[pathname] });
+  }
+
   render() {
-    const { visible } = this.state;
-    const { t, file, loading, currentPage } = this.props;
+    const { visible, currentPage } = this.state;
+    const { t, file, loading } = this.props;
     let params = file && `?file=${file}`;
 
     return (
@@ -128,12 +138,10 @@ Topbar.defaultProps = {
   currentPage: ""
 };
 const mapDispatchToProps = (dispatch) => ({
-  updateNavigation: (currentPage) => dispatch(updateNavigation(currentPage))
 });
 const mapStateToProps = (state) => ({
   file: state.App.file,
-  loading: state.App.loading,
-  currentPage: state.App.currentPage
+  loading: state.App.loading
 });
 export default connect(
   mapStateToProps,

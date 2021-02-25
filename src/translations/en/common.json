@@ -44,7 +44,7 @@
       "header": "Geography"
     },
     "legend-panel": {
-      "header": "Coordinates"
+      "header": "Reference"
     },
     "phylogeny-panel": {
       "header": "Phylogeny"
@@ -59,7 +59,7 @@
       "header": "Genome Graph"
     },
     "settings-panel": {
-      "coordinates": { "label": "Coordinates" },
+      "coordinates": { "label": "Reference" },
       "panels": {
         "label": "Visible Panels"
       }
