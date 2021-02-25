@@ -5,9 +5,9 @@ import { connect } from "react-redux";
 import { withRouter, Redirect } from "react-router-dom";
 import { PageHeader, Space, Tag } from "antd";
 import Wrapper from "./index.style";
-import appAction from "../../redux/app/actions";
+import genomeActions from "../../redux/genome/actions";
 
-const { getGenome } = appAction;
+const { getGenome } = genomeActions;
 
 class HeaderPanel extends Component {
   state = {
@@ -82,9 +82,9 @@ const mapDispatchToProps = (dispatch) => ({
   getGenome: (file) => dispatch(getGenome(file))
 });
 const mapStateToProps = (state) => ({
-  file: state.App.file,
-  datafile: state.App.datafile,
-  datafiles: state.App.datafiles,
+  file: state.Genome.file,
+  datafile: state.Genome.datafile,
+  datafiles: state.Genome.datafiles,
 });
 export default connect(
   mapStateToProps,

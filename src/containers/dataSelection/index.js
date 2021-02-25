@@ -9,18 +9,20 @@ import FiltersPanel from "../../components/filtersPanel";
 import HomeHeader from "../../components/headerPanel";
 import FiltersResults from "../../components/filtersResults";
 
-
 class DataSelection extends Component {
-
-  state = {dataRecords: []}
+  state = { dataRecords: [] };
 
   onSearch = (values) => {
     let filtered = this.props.datafiles;
     if (values && values.tags && values.tags.length > 0) {
-    filtered = this.props.datafiles.filter(d => d.tags.filter(e => values.tags.includes(e)).length === values.tags.length);
+      filtered = this.props.datafiles.filter(
+        (d) =>
+          d.tags.filter((e) => values.tags.includes(e)).length ===
+          values.tags.length
+      );
     }
-    filtered = filtered.sort((a,b) => d3.ascending(a.datafile, b.datafile));
-    this.setState({dataRecords: filtered});
+    filtered = filtered.sort((a, b) => d3.ascending(a.datafile, b.datafile));
+    this.setState({ dataRecords: filtered });
   };
 
   render() {
@@ -34,12 +36,15 @@ class DataSelection extends Component {
         <div className="ant-ds-content-container">
           <Row gutter={0} className="ant-ds-filter-container">
             <Col className="gutter-row" span={24}>
-              <FiltersPanel {...{tags, loading, onSearch: this.onSearch}}/>
+              <FiltersPanel {...{ tags, loading, onSearch: this.onSearch }} />
             </Col>
           </Row>
           <Row gutter={0} className="ant-ds-results-container">
             <Col className="gutter-row" span={24}>
-              <FiltersResults dataRecords={this.state.dataRecords} loading={loading}/>
+              <FiltersResults
+                dataRecords={this.state.dataRecords}
+                loading={loading}
+              />
             </Col>
           </Row>
         </div>
@@ -49,7 +54,7 @@ class DataSelection extends Component {
 }
 
 DataSelection.propTypes = {
-  tags: PropTypes.array
+  tags: PropTypes.array,
 };
 DataSelection.defaultProps = {
   tags: [],
@@ -57,9 +62,9 @@ DataSelection.defaultProps = {
 };
 const mapDispatchToProps = {};
 const mapStateToProps = (state) => ({
-  datafiles: state.App.datafiles,
-  tags: state.App.tags,
-  loading: state.App.loading
+  datafiles: state.Genome.datafiles,
+  tags: state.Genome.tags,
+  loading: state.Genome.loading,
 });
 export default connect(
   mapStateToProps,

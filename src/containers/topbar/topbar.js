@@ -140,7 +140,7 @@ Topbar.defaultProps = {
 const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
-  file: state.App.file,
+  file: state.Genome.file,
   loading: state.App.loading
 });
 export default connect(
