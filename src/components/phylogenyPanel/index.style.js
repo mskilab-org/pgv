@@ -4,7 +4,13 @@ const Wrapper = styled.div`
   .ant-wrapper {
     background: white;
     padding: 0px;
-    height: 500px;
+  }
+  .tooltip-box {
+    .header {
+      margin: 10px 0px;
+      font-size: 12px;
+      font-weight: 600;
+    }
   }
 `;
 
