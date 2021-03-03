@@ -5,6 +5,8 @@ const actions = {
   COORDINATES_UPDATED: "COORDINATES_UPDATED",
   UPDATE_VISIBILITY: "UPDATE_VISIBILITY",
   VISIBILITY_UPDATED: "VISIBILITY_UPDATED",
+  GET_DEPENDENCIES: "GET_DEPENDENCIES",
+  DEPENDENCIES_RECEIVED: "DEPENDENCIES_RECEIVED",
   getSettings: () => ({
     type: actions.GET_SETTINGS,
   }),
@@ -16,6 +18,10 @@ const actions = {
     type: actions.UPDATE_VISIBILITY,
     panel: panel,
     visible: visible
+  }),
+  getDependencies: (file) => ({
+    type: actions.GET_DEPENDENCIES,
+    file: file
   })
 };
 

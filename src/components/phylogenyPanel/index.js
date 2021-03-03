@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
+import { connect } from "react-redux";
 import { Card, Space } from "antd";
 import { withTranslation } from "react-i18next";
 import { GrTree } from "react-icons/gr";
@@ -13,7 +14,7 @@ const margins = {
 
 class PhylogenyPanel extends Component {
   render() {
-    const { t } = this.props;
+    const { t, phylogeny } = this.props;
 
     return (
       <Wrapper>
@@ -32,7 +33,7 @@ class PhylogenyPanel extends Component {
         >
           <ContainerDimensions>
             {({ width, height }) => {
-              return <PhyloTree {...{ width: width - 2 * margins.padding, height: 600 }} />;
+              return <PhyloTree {...{ width: width - 2 * margins.padding, height: 600, newickString: phylogeny }} />;
             }}
           </ContainerDimensions>
         </Card>
@@ -42,4 +43,13 @@ class PhylogenyPanel extends Component {
 }
 PhylogenyPanel.propTypes = {};
 PhylogenyPanel.defaultProps = {};
-export default withTranslation("common")(PhylogenyPanel);
+const mapDispatchToProps = (dispatch) => ({
+});
+const mapStateToProps = (state) => ({
+  phylogeny: state.Strains.phylogeny,
+});
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withTranslation("common")(PhylogenyPanel));
+

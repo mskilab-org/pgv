@@ -5,9 +5,9 @@ import { connect } from "react-redux";
 import { withRouter, Redirect } from "react-router-dom";
 import { PageHeader, Space, Tag } from "antd";
 import Wrapper from "./index.style";
-import genomeActions from "../../redux/genome/actions";
+import appActions from "../../redux/app/actions";
 
-const { getGenome } = genomeActions;
+const { getDependencies } = appActions;
 
 class HeaderPanel extends Component {
   state = {
@@ -29,17 +29,17 @@ class HeaderPanel extends Component {
     // When we enter through a full page refresh
     let params = new URL(decodeURI(document.location)).searchParams;
     let file = params.get("file");
-    console.log(new URL(decodeURI(document.location)))
-    file && this.props.getGenome(file);
+    console.log(new URL(decodeURI(document.location)));
+    file && this.props.getDependencies(file);
   }
   render() {
-    const { t, file, datafile, datafiles } = this.props;
+    const { t, file, datafile, datafiles, strainsList } = this.props;
 
     const { redirectToReferrer } = this.state;
     let params = new URL(decodeURI(document.location)).searchParams;
     if (!params.get("file") && redirectToReferrer) {
       let file = datafiles[0].file;
-      this.props.getGenome(file);
+      this.props.getDependencies(file);
       return <Redirect to={`?file=${file}`} />;
     }
 
@@ -48,6 +48,12 @@ class HeaderPanel extends Component {
       t("containers.home.category", {
         count: datafile && datafile.tags.length,
       });
+    let strainsText =
+      datafile &&
+      strainsList &&
+      t("containers.home.strain", {
+        count: datafile && strainsList && strainsList.length,
+      });
     let tags = (datafile && datafile.tags) || [];
     return (
       <Wrapper>
@@ -55,6 +61,11 @@ class HeaderPanel extends Component {
           className="site-page-header"
           title={file}
           subTitle={description}
+          footer={
+            <p>
+              <b>{strainsList && strainsList.length}</b> {strainsText}
+            </p>
+          }
         >
           <div className="site-page-content">
             <Space wrap={true}>
@@ -79,12 +90,13 @@ HeaderPanel.defaultProps = {
   file: "",
 };
 const mapDispatchToProps = (dispatch) => ({
-  getGenome: (file) => dispatch(getGenome(file))
+  getDependencies: (file) => dispatch(getDependencies(file)),
 });
 const mapStateToProps = (state) => ({
   file: state.Genome.file,
   datafile: state.Genome.datafile,
   datafiles: state.Genome.datafiles,
+  strainsList: state.Strains.strainsList,
 });
 export default connect(
   mapStateToProps,

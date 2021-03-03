@@ -1,0 +1,602 @@
+[
+  {
+    "sid": 2082,
+    "strain": "HG03765",
+    "clade": "SAS",
+    "gid": 175
+  },
+  {
+    "sid": 809,
+    "strain": "HG03295",
+    "clade": "AFR",
+    "gid": 161
+  },
+  {
+    "sid": 16,
+    "strain": "HG01985",
+    "clade": "AFR",
+    "gid": 18
+  },
+  {
+    "sid": 258,
+    "strain": "HG01046",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 619,
+    "strain": "HG00654",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 1777,
+    "strain": "HG03091",
+    "clade": "AFR",
+    "gid": 200
+  },
+  {
+    "sid": 920,
+    "strain": "HG00366",
+    "clade": "EUR",
+    "gid": 67
+  },
+  {
+    "sid": 68,
+    "strain": "HG02455",
+    "clade": "AFR",
+    "gid": 18
+  },
+  {
+    "sid": 57,
+    "strain": "HG02343",
+    "clade": "AFR",
+    "gid": 18
+  },
+  {
+    "sid": 111,
+    "strain": "NA19901",
+    "clade": "AFR",
+    "gid": 228
+  },
+  {
+    "sid": 198,
+    "strain": "HG03908",
+    "clade": "SAS",
+    "gid": 19
+  },
+  {
+    "sid": 533,
+    "strain": "NA18740",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 1173,
+    "strain": "HG02715",
+    "clade": "AFR",
+    "gid": 82
+  },
+  {
+    "sid": 1332,
+    "strain": "HG01781",
+    "clade": "EUR",
+    "gid": 65
+  },
+  {
+    "sid": 1151,
+    "strain": "HG02613",
+    "clade": "AFR",
+    "gid": 82
+  },
+  {
+    "sid": 2147,
+    "strain": "HG01171",
+    "clade": "AMR",
+    "gid": 179
+  },
+  {
+    "sid": 2100,
+    "strain": "HG01047",
+    "clade": "AMR",
+    "gid": 179
+  },
+  {
+    "sid": 1327,
+    "strain": "HG01773",
+    "clade": "EUR",
+    "gid": 65
+  },
+  {
+    "sid": 44,
+    "strain": "HG02309",
+    "clade": "AFR",
+    "gid": 18
+  },
+  {
+    "sid": 422,
+    "strain": "NA12814",
+    "clade": "EUR",
+    "gid": 228
+  },
+  {
+    "sid": 1310,
+    "strain": "HG01705",
+    "clade": "EUR",
+    "gid": 65
+  },
+  {
+    "sid": 765,
+    "strain": "HG03114",
+    "clade": "AFR",
+    "gid": 161
+  },
+  {
+    "sid": 12,
+    "strain": "HG01914",
+    "clade": "AFR",
+    "gid": 18
+  },
+  {
+    "sid": 996,
+    "strain": "HG00236",
+    "clade": "EUR",
+    "gid": 74
+  },
+  {
+    "sid": 1944,
+    "strain": "HG01977",
+    "clade": "AMR",
+    "gid": 171
+  },
+  {
+    "sid": 200,
+    "strain": "HG03911",
+    "clade": "SAS",
+    "gid": 19
+  },
+  {
+    "sid": 124,
+    "strain": "NA19984",
+    "clade": "AFR",
+    "gid": 228
+  },
+  {
+    "sid": 276,
+    "strain": "HG01812",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 1316,
+    "strain": "HG01747",
+    "clade": "EUR",
+    "gid": 65
+  },
+  {
+    "sid": 1854,
+    "strain": "NA19679",
+    "clade": "AMR",
+    "gid": 228
+  },
+  {
+    "sid": 1971,
+    "strain": "HG02272",
+    "clade": "AMR",
+    "gid": 171
+  },
+  {
+    "sid": 1178,
+    "strain": "HG02757",
+    "clade": "AFR",
+    "gid": 82
+  },
+  {
+    "sid": 485,
+    "strain": "NA18596",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 2080,
+    "strain": "HG03709",
+    "clade": "SAS",
+    "gid": 175
+  },
+  {
+    "sid": 37,
+    "strain": "HG02256",
+    "clade": "AFR",
+    "gid": 18
+  },
+  {
+    "sid": 891,
+    "strain": "HG00329",
+    "clade": "EUR",
+    "gid": 67
+  },
+  {
+    "sid": 606,
+    "strain": "HG00620",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 1038,
+    "strain": "NA20859",
+    "clade": "SAS",
+    "gid": 228
+  },
+  {
+    "sid": 2060,
+    "strain": "HG03619",
+    "clade": "SAS",
+    "gid": 175
+  },
+  {
+    "sid": 64,
+    "strain": "HG02442",
+    "clade": "AFR",
+    "gid": 18
+  },
+  {
+    "sid": 387,
+    "strain": "NA12273",
+    "clade": "EUR",
+    "gid": 228
+  },
+  {
+    "sid": 260,
+    "strain": "HG01795",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 289,
+    "strain": "HG02166",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 1734,
+    "strain": "NA19446",
+    "clade": "AFR",
+    "gid": 113
+  },
+  {
+    "sid": 1664,
+    "strain": "NA19030",
+    "clade": "AFR",
+    "gid": 113
+  },
+  {
+    "sid": 1498,
+    "strain": "NA18987",
+    "clade": "EAS",
+    "gid": 112
+  },
+  {
+    "sid": 655,
+    "strain": "HG01136",
+    "clade": "AMR",
+    "gid": 47
+  },
+  {
+    "sid": 2306,
+    "strain": "NA20518",
+    "clade": "EUR",
+    "gid": 108
+  },
+  {
+    "sid": 1783,
+    "strain": "HG03224",
+    "clade": "AFR",
+    "gid": 200
+  },
+  {
+    "sid": 684,
+    "strain": "HG01351",
+    "clade": "AMR",
+    "gid": 47
+  },
+  {
+    "sid": 2367,
+    "strain": "NA20792",
+    "clade": "EUR",
+    "gid": 108
+  },
+  {
+    "sid": 1076,
+    "strain": "NA20906",
+    "clade": "SAS",
+    "gid": 228
+  },
+  {
+    "sid": 2205,
+    "strain": "HG03692",
+    "clade": "SAS",
+    "gid": 74
+  },
+  {
+    "sid": 1302,
+    "strain": "HG01686",
+    "clade": "EUR",
+    "gid": 65
+  },
+  {
+    "sid": 1674,
+    "strain": "NA19308",
+    "clade": "AFR",
+    "gid": 113
+  },
+  {
+    "sid": 936,
+    "strain": "HG00096",
+    "clade": "EUR",
+    "gid": 74
+  },
+  {
+    "sid": 1175,
+    "strain": "HG02721",
+    "clade": "AFR",
+    "gid": 82
+  },
+  {
+    "sid": 951,
+    "strain": "HG00113",
+    "clade": "EUR",
+    "gid": 74
+  },
+  {
+    "sid": 2354,
+    "strain": "NA20769",
+    "clade": "EUR",
+    "gid": 108
+  },
+  {
+    "sid": 1475,
+    "strain": "NA18964",
+    "clade": "EAS",
+    "gid": 112
+  },
+  {
+    "sid": 2427,
+    "strain": "NA18874",
+    "clade": "AFR",
+    "gid": 161
+  },
+  {
+    "sid": 1482,
+    "strain": "NA18971",
+    "clade": "EAS",
+    "gid": 112
+  },
+  {
+    "sid": 493,
+    "strain": "NA18609",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 2314,
+    "strain": "NA20528",
+    "clade": "EUR",
+    "gid": 108
+  },
+  {
+    "sid": 497,
+    "strain": "NA18613",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 2458,
+    "strain": "NA19118",
+    "clade": "AFR",
+    "gid": 161
+  },
+  {
+    "sid": 767,
+    "strain": "HG03117",
+    "clade": "AFR",
+    "gid": 161
+  },
+  {
+    "sid": 116,
+    "strain": "NA19914",
+    "clade": "AFR",
+    "gid": 228
+  },
+  {
+    "sid": 2387,
+    "strain": "NA20814",
+    "clade": "EUR",
+    "gid": 108
+  },
+  {
+    "sid": 2276,
+    "strain": "HG04033",
+    "clade": "SAS",
+    "gid": 74
+  },
+  {
+    "sid": 177,
+    "strain": "HG03800",
+    "clade": "SAS",
+    "gid": 19
+  },
+  {
+    "sid": 1754,
+    "strain": "HG03052",
+    "clade": "AFR",
+    "gid": 200
+  },
+  {
+    "sid": 798,
+    "strain": "HG03199",
+    "clade": "AFR",
+    "gid": 161
+  },
+  {
+    "sid": 1217,
+    "strain": "HG02887",
+    "clade": "AFR",
+    "gid": 82
+  },
+  {
+    "sid": 262,
+    "strain": "HG01797",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 2359,
+    "strain": "NA20774",
+    "clade": "EUR",
+    "gid": 108
+  },
+  {
+    "sid": 1053,
+    "strain": "NA20878",
+    "clade": "SAS",
+    "gid": 228
+  },
+  {
+    "sid": 975,
+    "strain": "HG00140",
+    "clade": "EUR",
+    "gid": 74
+  },
+  {
+    "sid": 629,
+    "strain": "HG00684",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 2423,
+    "strain": "NA18868",
+    "clade": "AFR",
+    "gid": 161
+  },
+  {
+    "sid": 1046,
+    "strain": "NA20869",
+    "clade": "SAS",
+    "gid": 228
+  },
+  {
+    "sid": 240,
+    "strain": "HG04188",
+    "clade": "SAS",
+    "gid": 19
+  },
+  {
+    "sid": 290,
+    "strain": "HG02178",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 2111,
+    "strain": "HG01064",
+    "clade": "AMR",
+    "gid": 179
+  },
+  {
+    "sid": 943,
+    "strain": "HG00105",
+    "clade": "EUR",
+    "gid": 74
+  },
+  {
+    "sid": 542,
+    "strain": "HG00407",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 299,
+    "strain": "HG02188",
+    "clade": "EAS",
+    "gid": 46
+  },
+  {
+    "sid": 1252,
+    "strain": "HG01513",
+    "clade": "EUR",
+    "gid": 65
+  },
+  {
+    "sid": 751,
+    "strain": "HG02973",
+    "clade": "AFR",
+    "gid": 161
+  },
+  {
+    "sid": 772,
+    "strain": "HG03124",
+    "clade": "AFR",
+    "gid": 161
+  },
+  {
+    "sid": 1872,
+    "strain": "NA19740",
+    "clade": "AMR",
+    "gid": 228
+  },
+  {
+    "sid": 976,
+    "strain": "HG00141",
+    "clade": "EUR",
+    "gid": 74
+  },
+  {
+    "sid": 373,
+    "strain": "NA12005",
+    "clade": "EUR",
+    "gid": 228
+  },
+  {
+    "sid": 1449,
+    "strain": "HG04235",
+    "clade": "SAS",
+    "gid": 74
+  },
+  {
+    "sid": 1255,
+    "strain": "HG01518",
+    "clade": "EUR",
+    "gid": 65
+  },
+  {
+    "sid": 1093,
+    "strain": "NA21100",
+    "clade": "SAS",
+    "gid": 228
+  },
+  {
+    "sid": 1097,
+    "strain": "NA21104",
+    "clade": "SAS",
+    "gid": 228
+  },
+  {
+    "sid": 1070,
+    "strain": "NA20900",
+    "clade": "SAS",
+    "gid": 228
+  },
+  {
+    "sid": 753,
+    "strain": "HG02976",
+    "clade": "AFR",
+    "gid": 161
+  },
+  {
+    "sid": 1626,
+    "strain": "HG02079",
+    "clade": "EAS",
+    "gid": 236
+  }
+]

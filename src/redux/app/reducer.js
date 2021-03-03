@@ -14,7 +14,7 @@ function updateChromoBins(coordinateSet) {
     boundary += chromo.length;
     return hash;
   }, {});
-  return {genomeLength, chromoBins}
+  return { genomeLength, chromoBins };
 }
 
 export default function appReducer(state = {}, action) {
@@ -23,19 +23,41 @@ export default function appReducer(state = {}, action) {
       return { ...state, loading: true };
     case actions.SETTINGS_RECEIVED:
       let selectedCoordinate = action.settings.coordinates.default;
-      let {genomeLength, chromoBins} = updateChromoBins(action.settings.coordinates.sets[selectedCoordinate]);
-      return { ...state, genomeLength, chromoBins, selectedCoordinate, coordinates: action.settings.coordinates, panels: action.settings.panels, loading: false };
+      let { genomeLength, chromoBins } = updateChromoBins(
+        action.settings.coordinates.sets[selectedCoordinate]
+      );
+      return {
+        ...state,
+        genomeLength,
+        chromoBins,
+        selectedCoordinate,
+        coordinates: action.settings.coordinates,
+        panels: action.settings.panels,
+        loading: false,
+      };
     case actions.UPDATE_COORDINATES:
       return { ...state, loading: true };
     case actions.COORDINATES_UPDATED:
-      let updatedBins = updateChromoBins(state.coordinates.sets[action.coordinate]);
-      return { ...state, genomeLength: updatedBins.genomeLength, chromoBins: updatedBins.chromoBins, selectedCoordinate: action.coordinate, loading: false };
+      let updatedBins = updateChromoBins(
+        state.coordinates.sets[action.coordinate]
+      );
+      return {
+        ...state,
+        genomeLength: updatedBins.genomeLength,
+        chromoBins: updatedBins.chromoBins,
+        selectedCoordinate: action.coordinate,
+        loading: false,
+      };
     case actions.UPDATE_VISIBILITY:
       return { ...state, loading: true };
     case actions.VISIBILITY_UPDATED:
-      let panels = {...state.panels};
+      let panels = { ...state.panels };
       panels[action.panel].visible = action.visible;
-      return { ...state, panels: panels, loading: false}
+      return { ...state, panels: panels, loading: false };
+    case actions.GET_DEPENDENCIES:
+      return { ...state, loading: true };
+    case actions.DEPENDENCIES_RECEIVED:
+      return { ...state, loading: false };
     default:
       return state;
   }
