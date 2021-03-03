@@ -14,7 +14,7 @@ const margins = {
 
 class PhylogenyPanel extends Component {
   render() {
-    const { t, phylogeny } = this.props;
+    const { t, phylogeny, strainsList } = this.props;
 
     return (
       <Wrapper>
@@ -33,7 +33,7 @@ class PhylogenyPanel extends Component {
         >
           <ContainerDimensions>
             {({ width, height }) => {
-              return <PhyloTree {...{ width: width - 2 * margins.padding, height: 600, newickString: phylogeny }} />;
+              return <PhyloTree {...{ width: width - 2 * margins.padding, height: 600, newickString: phylogeny, strainsList: strainsList }} />;
             }}
           </ContainerDimensions>
         </Card>
@@ -47,6 +47,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
   phylogeny: state.Strains.phylogeny,
+  strainsList: state.Strains.strainsList
 });
 export default connect(
   mapStateToProps,

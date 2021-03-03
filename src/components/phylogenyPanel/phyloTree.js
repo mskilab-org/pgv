@@ -55,7 +55,12 @@ class PhyloTree extends Component {
 
     //this.tree.setSize(this.props.width, this.props.height);
     this.tree.load(this.props.newickString, () => console.log("tree loaded"));
-
+    this.tree.on("beforeFirstDraw", () => {
+      for (var i = 0; i < this.tree.leaves.length; i++) {
+        console.log(this.tree.leaves[i]);
+        this.tree.leaves[i].data = this.props.strainsList.find((d,i) => +d.sid === +this.tree.leaves[i].id);
+      }
+    });
     this.tree.lineWidth = 1.2;
     this.tree.fillCanvas = true;
     this.tree.showInternalNodeLabels = true;

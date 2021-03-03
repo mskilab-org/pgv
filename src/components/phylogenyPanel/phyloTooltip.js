@@ -19,7 +19,7 @@ class PhyloTooltip extends Tooltip {
 
     createContent(node) {
       let box = d3.select(this.element).append('div').attr("class", "tooltip-box");
-      box.append("p").attr("class", "header").html(node.id);
+      box.append("p").attr("class", "header").html(`${node.id} - ${node.data.strain} - ${node.data.clade}`);
       let tbody = box.append("table").append("tbody");
       let tr = tbody.append("tr");
       tr.append("th").text("Total Branch Length");

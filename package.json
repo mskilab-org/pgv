@@ -10,6 +10,7 @@
     "antd": "^4.12.3",
     "axios": "^0.21.1",
     "d3": "^6.5.0",
+    "d3-collection": "^1.0.7",
     "google-map-react": "^2.1.9",
     "history": "^5.0.0",
     "http-proxy-middleware": "^1.0.6",
