@@ -14,6 +14,10 @@ import contextMenuPlugin, {
 Phylocanvas.plugin(scalebarPlugin);
 Phylocanvas.plugin(contextMenuPlugin);
 
+const margins = {
+  padding: 10
+};
+
 class PhyloTree extends Component {
   container = null;
   tree = null;
@@ -49,40 +53,42 @@ class PhyloTree extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (!this.props.newickString) {
+    const {newickString, strainsList, geography} = this.props;
+    if (!newickString) {
       return;
     }
+    const pixelRatio = window.devicePixelRatio || 1.0;
+    const geographyHash = {};
+    geography.forEach((d, i) => (geographyHash[d.id] = d));
 
     //this.tree.setSize(this.props.width, this.props.height);
-    this.tree.load(this.props.newickString, () => console.log("tree loaded"));
+    this.tree.load(newickString, () => console.log("tree loaded"));
     this.tree.on("beforeFirstDraw", () => {
-      for (var i = 0; i < this.tree.leaves.length; i++) {
-        console.log(this.tree.leaves[i]);
-        this.tree.leaves[i].data = this.props.strainsList.find((d,i) => +d.sid === +this.tree.leaves[i].id);
-      }
+      this.tree.leaves.forEach((leaf, i) => {
+        leaf.data = strainsList.find((d,i) => +d.sid === +leaf.id);
+        if (leaf.data && leaf.data.strain) {
+          leaf.label = leaf.data.strain;
+        }
+        leaf.data = leaf.data || {};
+        leaf.data.geography = geographyHash[leaf.data && leaf.data.gid] || {};
+        leaf.setDisplay({colour: geographyHash[leaf.data.gid] ? geographyHash[leaf.data && leaf.data.gid].fill : "#333"});
+      });
     });
     this.tree.lineWidth = 1.2;
     this.tree.fillCanvas = true;
     this.tree.showInternalNodeLabels = true;
-    //this.tree.adjustForPixelRatio();
     this.tree.branchColour = "#3C7483";
     this.tree.selectedColour = "#FF7F0E";
     this.tree.setTreeType("rectangular");
     this.tree.highlightColour = "#FF7F0E";
     this.tree.highlightWidth = 2;
-    this.tree.padding = 10;
+    this.tree.padding = margins.padding;
     this.tree.zoomFactor = 2;
     this.tree.setNodeSize(5);
     this.tree.setTextSize(11);
-    this.tree.setSize(this.props.width - 20, this.tree.leaves.length * 6);
+    this.tree.setSize((this.props.width - 2 * margins.padding) / pixelRatio, (this.tree.leaves.length * 10) / pixelRatio);
     this.tree.draw();
-
-    this.tree.on("mousewheel", (e) => {
-      //console.log(this.tree.zoom);
-      if (this.tree.zoom < 1) {
-        this.tree.fitInPanel();
-      }
-    });
+    this.tree.adjustForPixelRatio();
     this.tree.disableZoom = true;
     this.tree.tooltip = new PhyloTooltip(this.tree);
     this.tree.on("mousemove", (e) => {
@@ -109,6 +115,11 @@ class PhyloTree extends Component {
 PhyloTree.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
+  strainsList: PropTypes.array,
+  geography: PropTypes.array
 };
-PhyloTree.defaultProps = {};
+PhyloTree.defaultProps = {
+  strainsList: [],
+  geography: []
+};
 export default withTranslation("common")(PhyloTree);

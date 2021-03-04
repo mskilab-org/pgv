@@ -18,10 +18,12 @@ function* updateVisibility({panel, visible}) {
 }
 
 function* fetchDependencies({file}) {
-  yield put(genomeActions.getGenome(file));
-  yield put(strainsActions.getStrainsList(file));
-  yield put(strainsActions.getPhylogeny(file));
-  yield put(strainsActions.getGeography(file));
+  yield all([
+    put(genomeActions.getGenome(file)),
+    put(strainsActions.getStrainsList(file)),
+    put(strainsActions.getPhylogeny(file)),
+    put(strainsActions.getGeography(file))
+  ])
   yield put({ type: actions.DEPENDENCIES_RECEIVED, file: file });
 }
 

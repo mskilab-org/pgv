@@ -10,15 +10,17 @@ import Wrapper from "./index.style";
 
 const margins = {
   padding: 0,
+  minHeight: 600
 };
 
 class PhylogenyPanel extends Component {
   render() {
-    const { t, phylogeny, strainsList } = this.props;
+    const { t, phylogeny, strainsList, geography, loading } = this.props;
 
     return (
       <Wrapper>
         <Card
+          loading={loading}
           size="small"
           title={
             <Space>
@@ -33,7 +35,7 @@ class PhylogenyPanel extends Component {
         >
           <ContainerDimensions>
             {({ width, height }) => {
-              return <PhyloTree {...{ width: width - 2 * margins.padding, height: 600, newickString: phylogeny, strainsList: strainsList }} />;
+              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography }} />;
             }}
           </ContainerDimensions>
         </Card>
@@ -47,7 +49,9 @@ const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
   phylogeny: state.Strains.phylogeny,
-  strainsList: state.Strains.strainsList
+  strainsList: state.Strains.strainsList,
+  geography: state.Strains.geography,
+  loading: state.Strains.loading
 });
 export default connect(
   mapStateToProps,

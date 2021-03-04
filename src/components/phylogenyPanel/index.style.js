@@ -7,9 +7,18 @@ const Wrapper = styled.div`
   }
   .tooltip-box {
     .header {
-      margin: 10px 0px;
-      font-size: 12px;
+      font-size: 16px;
       font-weight: 600;
+      text-align: left;
+    }
+    table.content {
+      td {
+        text-align: left;
+        padding: 3px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        min-width: 120px;
+      }
     }
   }
 `;

@@ -49,7 +49,16 @@
       "header": "Reference"
     },
     "phylogeny-panel": {
-      "header": "Phylogeny"
+      "header": "Phylogeny",
+      "tooltip": {
+        "id": "id",
+        "strain": "Strain",
+        "clade": "Clade",
+        "location": "Location",
+        "country": "Country",
+        "branch-length": "Branch Length",
+        "total-branch-length": "Total Branch Length"
+      }
     },
     "pca-panel": {
       "header": "PCA Graph"
