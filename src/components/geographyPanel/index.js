@@ -4,43 +4,60 @@ import { connect } from "react-redux";
 import * as d3 from "d3";
 import { nest } from "d3-collection";
 import { Card, Space } from "antd";
-import GoogleMapReact from "google-map-react";
+import ReactMapboxGl, { Marker, Popup } from "react-mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { withTranslation } from "react-i18next";
 import { GoGlobe } from "react-icons/go";
 import { siteConfig } from "../../settings";
 import Wrapper from "./index.style";
-import Marker from "./marker";
+import MarkerCircle from "./marker-circle";
+import MarkerPopup from "./marker-popup";
+
+const Mapbox = ReactMapboxGl({
+  minZoom: 1,
+  maxZoom: 15,
+  accessToken: siteConfig.mapBoxToken,
+  antialias: true,
+});
 
 class GeographyPanel extends Component {
-  handleApiLoaded = (map, maps) => {
-    console.log(map, maps, maps.LatLng(22.355803, 91.767919));
-    // var LatLngList = [
-    //   maps.LatLng(22.355803, 91.767919),
-    //   maps.LatLng(52.564, -2.017),
-    // ];
-    // //  Create a new viewpoint bound
-    // var bounds = new maps.LatLngBounds();
-    // //  Go through each...
-    // for (var i = 0, LtLgLen = LatLngList.length; i < LtLgLen; i++) {
-    //   //  And increase the bounds to take this point
-    //   bounds.extend(LatLngList[i]);
-    // }
-    // //  Fit these bounds to the map
-    // map.fitBounds(bounds);
-  };
+  state = {};
 
+  onToggleHover(cursor, { map }) {
+    console.log(map);
+    //map.getCanvas().style.cursor = cursor;
+  }
+
+  handleMouseOver = (node, visible) => {
+    console.log(node);
+    this.setState({
+      node: visible ? node : null
+    });
+  };
   render() {
-    const { t, center, zoom, geography, strainsList } = this.props;
-    const geographyHash = {};
-    geography.forEach((d, i) => (geographyHash[d.id] = d));
+    let { t, geographyHash, geography, strainsList } = this.props;
+    const { node } = this.state;
     const nestedTotalStrains = nest()
       .key((d) => d.gid)
       .entries(strainsList);
-    const circleScale = d3.scaleLinear()
+    const circleScale = d3
+      .scaleLinear()
       .domain([1, d3.max(nestedTotalStrains, (d) => d.values.length)])
-      .range([1, 33])
+      .range([1, 13])
       .nice();
-    console.log(Math.ceil(Math.log2(window.innerWidth) - 8));
+    const bounds =
+      geography.length * strainsList.length > 0
+        ? [
+            [
+              d3.min(strainsList, (d) => geographyHash[d.gid].longitude),
+              d3.min(strainsList, (d) => geographyHash[d.gid].latitude),
+            ],
+            [
+              d3.max(strainsList, (d) => geographyHash[d.gid].longitude),
+              d3.max(strainsList, (d) => geographyHash[d.gid].latitude),
+            ],
+          ]
+        : undefined;
     return (
       <Wrapper>
         <Card
@@ -56,33 +73,55 @@ class GeographyPanel extends Component {
             </Space>
           }
         >
-          <div
-            className="ant-wrapper"
-            style={{ height: "400px", width: "100%" }}
-          >
-            <GoogleMapReact
-              bootstrapURLKeys={{
-                key: siteConfig.googleMapsAPI,
+          <div className="ant-wrapper">
+            <Mapbox
+              style={"mapbox://styles/mapbox/light-v10"}
+              fitBounds={bounds}
+              scrollZoom={true}
+              flyToOptions={{ speed: 0.8 }}
+              containerStyle={{
+                height: 400,
+                width: "100%",
               }}
-              defaultCenter={center}
-              defaultZoom={1}
-              yesIWantToUseGoogleMapApiInternals={true}
-              onGoogleApiLoaded={({ map, maps }) =>
-                this.handleApiLoaded(map, maps)
-              }
             >
               {geography.length > 0 &&
                 nestedTotalStrains.map((d, i) => (
                   <Marker
-                    key={i}
-                    lat={geographyHash[d.key].latitude}
-                    lng={geographyHash[d.key].longitude}
-                    text={geographyHash[d.key].code}
-                    radius={circleScale(d.values.length)}
-                    fill={geographyHash[d.key].fill}
-                  />
+                    key={d.key}
+                    coordinates={[
+                      geographyHash[d.key].longitude,
+                      geographyHash[d.key].latitude,
+                    ]}
+                    style={{ cursor: "pointer" }}
+                    onMouseEnter={() => this.handleMouseOver(d, true)}
+                    onMouseLeave={() => this.handleMouseOver(d, false)}
+                  >
+                    <MarkerCircle
+                      key={d.key}
+                      lat={geographyHash[d.key].latitude}
+                      lng={geographyHash[d.key].longitude}
+                      text={geographyHash[d.key].code}
+                      radius={circleScale(d.values.length)}
+                      fill={geographyHash[d.key].fill}
+                    />
+                  </Marker>
                 ))}
-            </GoogleMapReact>
+              {node && (
+                <Popup
+                  key={node.key}
+                  coordinates={[
+                    geographyHash[node.key].longitude,
+                    geographyHash[node.key].latitude,
+                  ]}
+                  offset={{ bottom: [0, -38] }}
+                >
+                  <MarkerPopup
+                    title={geographyHash[node.key].title}
+                    content={t("components.geography-panel.tooltip.content.strain", {count: node.values.length})}
+                  />
+                </Popup>
+              )}
+            </Mapbox>
           </div>
         </Card>
       </Wrapper>
@@ -91,17 +130,14 @@ class GeographyPanel extends Component {
 }
 GeographyPanel.propTypes = {};
 GeographyPanel.defaultProps = {
-  center: {
-    lat: 0,
-    lng: 0,
-  },
-  zoom: 1,
   strainsList: [],
+  geographyHash: {},
   geography: [],
 };
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   geography: state.Strains.geography,
+  geographyHash: state.Strains.geographyHash,
   strainsList: state.Strains.strainsList,
 });
 export default connect(

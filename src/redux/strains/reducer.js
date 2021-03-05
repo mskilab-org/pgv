@@ -13,7 +13,9 @@ export default function appReducer(state = {}, action) {
     case actions.GET_GEOGRAPHY:
       return { ...state, loading: true };
     case actions.GEOGRAPHY_RECEIVED:
-      return { ...state, geography: action.geography, file: action.file, loading: false };
+      const geographyHash = {};
+      action.geography.forEach((d, i) => (geographyHash[d.id] = d));
+      return { ...state, geography: action.geography, file: action.file, geographyHash: geographyHash, loading: false };
     default:
       return state;
   }

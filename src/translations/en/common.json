@@ -43,7 +43,15 @@
       "badge_plural": "{{count}} matched samples"
     },
     "geography-panel": {
-      "header": "Geography"
+      "header": "Geography",
+      "tooltip": {
+        "content": {
+          "clade": "{{count}} clade",
+          "clade_plural": "{{count}} clades",
+          "strain": "{{count}} strain",
+          "strain_plural": "{{count}} strains"
+        }
+      }
     },
     "legend-panel": {
       "header": "Reference"
