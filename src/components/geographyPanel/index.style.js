@@ -6,6 +6,9 @@ const Wrapper = styled.div`
     padding: 0px;
     width: 100%;
     ${props => !props.empty && "height: 400px"};
+    .ant-marker {
+      transform: translate(0%, 50%) !important;
+     }
     .mapboxgl-popup-content {
       padding: inherit;
       .marker-popup {

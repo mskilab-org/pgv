@@ -63,7 +63,7 @@ class HeaderPanel extends Component {
           subTitle={description}
           footer={
             <p>
-              <b>{strainsList && strainsList.length}</b> {strainsText}
+              <b>{strainsList.length}</b> {strainsText}
             </p>
           }
         >
@@ -87,6 +87,7 @@ HeaderPanel.propTypes = {
 HeaderPanel.defaultProps = {
   datafiles: [],
   datafile: { file: "", filename: "", tags: [] },
+  strainsList: [],
   file: "",
 };
 const mapDispatchToProps = (dispatch) => ({

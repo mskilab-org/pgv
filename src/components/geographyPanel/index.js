@@ -21,22 +21,26 @@ const Mapbox = ReactMapboxGl({
 });
 
 class GeographyPanel extends Component {
-  state = {};
+  state = {
+    node: null,
+    visible: false
+  };
 
-  onToggleHover(cursor, { map }) {
-    console.log(map);
-    //map.getCanvas().style.cursor = cursor;
-  }
-
-  handleMouseOver = (node, visible) => {
-    console.log(node);
+  handleClick = (node) => {
     this.setState({
-      node: visible ? node : null
+      node: node,
+      visible: true
     });
   };
+
+  handleMouseOver = (node, visible) => {
+    //this.setState({
+    //  node: visible ? node : null
+    //});
+  };
   render() {
-    let { t, geographyHash, geography, strainsList } = this.props;
-    const { node } = this.state;
+    let { t, geographyHash, strainsList } = this.props;
+    const { node, visible } = this.state;
     const nestedTotalStrains = nest()
       .key((d) => d.gid)
       .entries(strainsList);
@@ -45,19 +49,6 @@ class GeographyPanel extends Component {
       .domain([1, d3.max(nestedTotalStrains, (d) => d.values.length)])
       .range([1, 13])
       .nice();
-    const bounds =
-      geography.length * strainsList.length > 0
-        ? [
-            [
-              0.95*d3.min(strainsList, (d) => geographyHash[d.gid].longitude),
-              0.95*d3.min(strainsList, (d) => geographyHash[d.gid].latitude),
-            ],
-            [
-              1.05*d3.max(strainsList, (d) => geographyHash[d.gid].longitude),
-              1.05*d3.max(strainsList, (d) => geographyHash[d.gid].latitude),
-            ],
-          ]
-        : siteConfig.defaultLocationBounds;
     return (
       <Wrapper empty={strainsList.length < 1}>
         <Card
@@ -78,16 +69,15 @@ class GeographyPanel extends Component {
             {strainsList.length > 0 && 
             <Mapbox
               style={"mapbox://styles/mapbox/light-v10"}
-              fitBounds={bounds}
-              scrollZoom={true}
+              scrollZoom={false}
+              fitBounds={[[-180, -70], [180, 90]]}
               flyToOptions={{ speed: 0.8 }}
               containerStyle={{
                 height: 400,
                 width: "100%",
               }}
             >
-              {geography.length > 0 &&
-                nestedTotalStrains.map((d, i) => (
+              {nestedTotalStrains.map((d, i) => (
                   <Marker
                     key={d.key}
                     coordinates={[
@@ -95,8 +85,7 @@ class GeographyPanel extends Component {
                       geographyHash[d.key].latitude,
                     ]}
                     style={{ cursor: "pointer" }}
-                    onMouseEnter={() => this.handleMouseOver(d, true)}
-                    onMouseLeave={() => this.handleMouseOver(d, false)}
+                    onClick={() => this.handleClick(d)}
                   >
                     <MarkerCircle
                       key={d.key}
@@ -108,7 +97,7 @@ class GeographyPanel extends Component {
                     />
                   </Marker>
                 ))}
-              {node && (
+              {node && visible && (
                 <Popup
                   key={node.key}
                   coordinates={[
@@ -132,6 +121,7 @@ class GeographyPanel extends Component {
 }
 GeographyPanel.propTypes = {};
 GeographyPanel.defaultProps = {
+  strainsList: []
 };
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
