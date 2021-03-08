@@ -17,7 +17,20 @@ function updateChromoBins(coordinateSet) {
   return { genomeLength, chromoBins };
 }
 
-export default function appReducer(state = {}, action) {
+const initState = {
+  loading: false,
+  selectedCoordinate: null,
+  defaultGeography: [],
+  genomeLength: 0,
+  chromoBins: {},
+  coordinates: [],
+  geography: [],
+  geographyHash: {},
+  panels: {phylogeny: {}, pca: {}, genes: {}, geography: {}}
+};
+
+export default function appReducer(state = initState, action) {
+  let {geographyHash, geography} = state;
   switch (action.type) {
     case actions.GET_SETTINGS:
       return { ...state, loading: true };
@@ -26,12 +39,17 @@ export default function appReducer(state = {}, action) {
       let { genomeLength, chromoBins } = updateChromoBins(
         action.settings.coordinates.sets[selectedCoordinate]
       );
+      geographyHash = {};
+      action.settings.geography.forEach((d, i) => (geographyHash[d.id] = d));
       return {
         ...state,
         genomeLength,
         chromoBins,
         selectedCoordinate,
         coordinates: action.settings.coordinates,
+        defaultGeography: action.settings.geography,
+        geography: action.settings.geography,
+        geographyHash: geographyHash,
         panels: action.settings.panels,
         loading: false,
       };
@@ -54,6 +72,13 @@ export default function appReducer(state = {}, action) {
       let panels = { ...state.panels };
       panels[action.panel].visible = action.visible;
       return { ...state, panels: panels, loading: false };
+    case actions.GET_GEOGRAPHY:
+      return { ...state, loading: true };
+    case actions.GEOGRAPHY_RECEIVED:
+      geography = action.geography || state.defaultGeography;
+      geographyHash = {};
+      geography.forEach((d, i) => (geographyHash[d.id] = d));
+      return { ...state, geography, file: action.file, geographyHash, loading: false };
     case actions.GET_DEPENDENCIES:
       return { ...state, loading: true };
     case actions.DEPENDENCIES_RECEIVED:

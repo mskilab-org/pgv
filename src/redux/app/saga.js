@@ -17,20 +17,27 @@ function* updateVisibility({panel, visible}) {
   yield put({ type: actions.VISIBILITY_UPDATED, panel: panel, visible: visible });
 }
 
-function* fetchDependencies({file}) {
-  yield all([
-    put(genomeActions.getGenome(file)),
-    put(strainsActions.getStrainsList(file)),
-    put(strainsActions.getPhylogeny(file)),
-    put(strainsActions.getGeography(file))
-  ])
-  yield put({ type: actions.DEPENDENCIES_RECEIVED, file: file });
+function* fetchGeography({file}) {
+  const { response, error } = yield axios.get(`/data/${file}/geography.json`)
+    .then((response) => ({ response }))
+    .catch((error) => ({ error }));
+  yield put({ type: actions.GEOGRAPHY_RECEIVED, file: file, geography: (response && response.data) });
 }
 
+function* fetchDependencies({file}) {
+  yield all([
+    put({ type: genomeActions.GET_GENOME, file: file }),
+    put({ type: strainsActions.GET_STRAINSLIST, file: file }),
+    put({ type: strainsActions.GET_PHYLOGENY, file: file }),
+    put({ type: actions.GET_GEOGRAPHY, file: file }),
+    put({ type: actions.DEPENDENCIES_RECEIVED, file: file }),
+  ])
+}
 function* actionWatcher() {
   yield takeEvery(actions.GET_SETTINGS, fetchSettings);
   yield takeEvery(actions.UPDATE_COORDINATES, updateCoordinates);
   yield takeEvery(actions.UPDATE_VISIBILITY, updateVisibility);
+  yield takeEvery(actions.GET_GEOGRAPHY, fetchGeography);
   yield takeEvery(actions.GET_DEPENDENCIES, fetchDependencies);
 }
 export default function* rootSaga() {

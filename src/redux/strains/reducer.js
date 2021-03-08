@@ -3,9 +3,7 @@ import actions from "./actions";
 const initState = {
   loading: false,
   strainsList: [],
-  phylogeny: undefined,
-  geography: [],
-  geographyHash: {}
+  phylogeny: null
 };
 
 export default function appReducer(state = initState, action) {
@@ -18,12 +16,6 @@ export default function appReducer(state = initState, action) {
       return { ...state, loading: true };
     case actions.PHYLOGENY_RECEIVED:
       return { ...state, phylogeny: action.phylogeny, file: action.file, loading: false };
-    case actions.GET_GEOGRAPHY:
-      return { ...state, loading: true };
-    case actions.GEOGRAPHY_RECEIVED:
-      const geographyHash = {};
-      action.geography.forEach((d, i) => (geographyHash[d.id] = d));
-      return { ...state, geography: action.geography, file: action.file, geographyHash: geographyHash, loading: false };
     default:
       return state;
   }

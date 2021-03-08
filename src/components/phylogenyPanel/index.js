@@ -51,7 +51,7 @@ const mapDispatchToProps = (dispatch) => ({
 const mapStateToProps = (state) => ({
   phylogeny: state.Strains.phylogeny,
   strainsList: state.Strains.strainsList,
-  geography: state.Strains.geography,
+  geography: state.App.geography,
   loading: state.Strains.loading
 });
 export default connect(

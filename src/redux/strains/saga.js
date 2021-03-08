@@ -16,17 +16,9 @@ function* fetchPhylogeny({file}) {
   yield put({ type: actions.PHYLOGENY_RECEIVED, file: file, phylogeny: response && response.data });
 }
 
-function* fetchGeography({file}) {
-  const { response, error } = yield axios.get(`/data/${file}/geography.json`)
-    .then((response) => ({ response }))
-    .catch((error) => ({ error }));
-  yield put({ type: actions.GEOGRAPHY_RECEIVED, file: file, geography: (response && response.data) || [] });
-}
-
 function* actionWatcher() {
   yield takeEvery(actions.GET_STRAINSLIST, fetchStrainsList);
   yield takeEvery(actions.GET_PHYLOGENY, fetchPhylogeny);
-  yield takeEvery(actions.GET_GEOGRAPHY, fetchGeography);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

@@ -24,7 +24,7 @@ const Wrapper = styled.div`
           border-bottom: 1px solid #f0f0f0;
         }
         .ant-popover-inner-content {
-          padding: 12px 16px;
+          padding: 2px 16px;
           color: rgba(0,0,0,.85);
         }
       }

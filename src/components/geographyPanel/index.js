@@ -49,12 +49,12 @@ class GeographyPanel extends Component {
       geography.length * strainsList.length > 0
         ? [
             [
-              d3.min(strainsList, (d) => geographyHash[d.gid].longitude),
-              d3.min(strainsList, (d) => geographyHash[d.gid].latitude),
+              0.95*d3.min(strainsList, (d) => geographyHash[d.gid].longitude),
+              0.95*d3.min(strainsList, (d) => geographyHash[d.gid].latitude),
             ],
             [
-              d3.max(strainsList, (d) => geographyHash[d.gid].longitude),
-              d3.max(strainsList, (d) => geographyHash[d.gid].latitude),
+              1.05*d3.max(strainsList, (d) => geographyHash[d.gid].longitude),
+              1.05*d3.max(strainsList, (d) => geographyHash[d.gid].latitude),
             ],
           ]
         : siteConfig.defaultLocationBounds;
@@ -102,7 +102,7 @@ class GeographyPanel extends Component {
                       key={d.key}
                       lat={geographyHash[d.key].latitude}
                       lng={geographyHash[d.key].longitude}
-                      text={geographyHash[d.key].code}
+                      text={d.values.length}
                       radius={circleScale(d.values.length)}
                       fill={geographyHash[d.key].fill}
                     />
@@ -119,7 +119,7 @@ class GeographyPanel extends Component {
                 >
                   <MarkerPopup
                     title={geographyHash[node.key].title}
-                    content={t("components.geography-panel.tooltip.content.strain", {count: node.values.length})}
+                    node={node}
                   />
                 </Popup>
               )}
@@ -132,14 +132,11 @@ class GeographyPanel extends Component {
 }
 GeographyPanel.propTypes = {};
 GeographyPanel.defaultProps = {
-  strainsList: [],
-  geographyHash: {},
-  geography: [],
 };
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
-  geography: state.Strains.geography,
-  geographyHash: state.Strains.geographyHash,
+  geography: state.App.geography,
+  geographyHash: state.App.geographyHash,
   strainsList: state.Strains.strainsList,
 });
 export default connect(

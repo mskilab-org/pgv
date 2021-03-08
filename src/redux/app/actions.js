@@ -5,6 +5,8 @@ const actions = {
   COORDINATES_UPDATED: "COORDINATES_UPDATED",
   UPDATE_VISIBILITY: "UPDATE_VISIBILITY",
   VISIBILITY_UPDATED: "VISIBILITY_UPDATED",
+  GET_GEOGRAPHY: "GET_GEOGRAPHY",
+  GEOGRAPHY_RECEIVED: "GEOGRAPHY_RECEIVED",
   GET_DEPENDENCIES: "GET_DEPENDENCIES",
   DEPENDENCIES_RECEIVED: "DEPENDENCIES_RECEIVED",
   getSettings: () => ({
@@ -18,6 +20,10 @@ const actions = {
     type: actions.UPDATE_VISIBILITY,
     panel: panel,
     visible: visible
+  }),
+  getGeography: (file) => ({
+    type: actions.GET_GEOGRAPHY,
+    file: file
   }),
   getDependencies: (file) => ({
     type: actions.GET_DEPENDENCIES,
