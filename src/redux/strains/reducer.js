@@ -1,6 +1,14 @@
 import actions from "./actions";
 
-export default function appReducer(state = {}, action) {
+const initState = {
+  loading: false,
+  strainsList: [],
+  phylogeny: undefined,
+  geography: [],
+  geographyHash: {}
+};
+
+export default function appReducer(state = initState, action) {
   switch (action.type) {
     case actions.GET_STRAINSLIST:
       return { ...state, loading: true };

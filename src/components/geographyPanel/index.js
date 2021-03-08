@@ -3,7 +3,7 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import * as d3 from "d3";
 import { nest } from "d3-collection";
-import { Card, Space } from "antd";
+import { Card, Space, Empty } from "antd";
 import ReactMapboxGl, { Marker, Popup } from "react-mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { withTranslation } from "react-i18next";
@@ -57,9 +57,9 @@ class GeographyPanel extends Component {
               d3.max(strainsList, (d) => geographyHash[d.gid].latitude),
             ],
           ]
-        : undefined;
+        : siteConfig.defaultLocationBounds;
     return (
-      <Wrapper>
+      <Wrapper empty={strainsList.length < 1}>
         <Card
           size="small"
           title={
@@ -74,6 +74,8 @@ class GeographyPanel extends Component {
           }
         >
           <div className="ant-wrapper">
+            {strainsList.length < 1 && <Empty description={t("components.geography-panel.no-data-message")}/>}
+            {strainsList.length > 0 && 
             <Mapbox
               style={"mapbox://styles/mapbox/light-v10"}
               fitBounds={bounds}
@@ -121,7 +123,7 @@ class GeographyPanel extends Component {
                   />
                 </Popup>
               )}
-            </Mapbox>
+            </Mapbox>}
           </div>
         </Card>
       </Wrapper>

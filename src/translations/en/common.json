@@ -44,6 +44,7 @@
     },
     "geography-panel": {
       "header": "Geography",
+      "no-data-message": "No Geography data available",
       "tooltip": {
         "content": {
           "clade": "{{count}} clade",
@@ -58,6 +59,7 @@
     },
     "phylogeny-panel": {
       "header": "Phylogeny",
+      "no-data-message": "No Phylogeny data available",
       "tooltip": {
         "id": "id",
         "strain": "Strain",

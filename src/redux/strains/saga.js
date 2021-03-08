@@ -3,18 +3,24 @@ import axios from "axios";
 import actions from "./actions";
 
 function* fetchStrainsList({file}) {
-  const json = yield axios.get(`/data/${file}/strains.json`).then((response) => response);
-  yield put({ type: actions.STRAINSLIST_RECEIVED, file: file, strainsList: json.data });
+  const { response, error } = yield axios.get(`/data/${file}/strains.json`)
+    .then((response) => ({ response }))
+    .catch((error) => ({ error }));
+  yield put({ type: actions.STRAINSLIST_RECEIVED, file: file, strainsList: response && response.data });
 }
 
 function* fetchPhylogeny({file}) {
-  const json = yield axios.get(`/data/${file}/phylogeny.newick`).then((response) => response);
-  yield put({ type: actions.PHYLOGENY_RECEIVED, file: file, phylogeny: json.data });
+  const { response, error } = yield axios.get(`/data/${file}/phylogeny.newick`)
+    .then((response) => ({ response }))
+    .catch((error) => ({ error }));
+  yield put({ type: actions.PHYLOGENY_RECEIVED, file: file, phylogeny: response && response.data });
 }
 
 function* fetchGeography({file}) {
-  const json = yield axios.get(`/data/${file}/geography.json`).then((response) => response);
-  yield put({ type: actions.GEOGRAPHY_RECEIVED, file: file, geography: json.data });
+  const { response, error } = yield axios.get(`/data/${file}/geography.json`)
+    .then((response) => ({ response }))
+    .catch((error) => ({ error }));
+  yield put({ type: actions.GEOGRAPHY_RECEIVED, file: file, geography: (response && response.data) || [] });
 }
 
 function* actionWatcher() {

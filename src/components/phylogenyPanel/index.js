@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
-import { Card, Space } from "antd";
+import { Card, Space, Empty } from "antd";
 import { withTranslation } from "react-i18next";
 import { GrTree } from "react-icons/gr";
 import ContainerDimensions from "react-container-dimensions";
@@ -33,11 +33,12 @@ class PhylogenyPanel extends Component {
             </Space>
           }
         >
-          <ContainerDimensions>
+          {!phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
+          {phylogeny && <ContainerDimensions>
             {({ width, height }) => {
               return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography }} />;
             }}
-          </ContainerDimensions>
+          </ContainerDimensions>}
         </Card>
       </Wrapper>
     );

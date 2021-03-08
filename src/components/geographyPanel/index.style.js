@@ -5,7 +5,7 @@ const Wrapper = styled.div`
     background: white;
     padding: 0px;
     width: 100%;
-    height: 400px;
+    ${props => !props.empty && "height: 400px"};
     .mapboxgl-popup-content {
       padding: inherit;
       .marker-popup {

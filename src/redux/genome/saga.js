@@ -4,8 +4,8 @@ import * as d3 from "d3";
 import actions from "./actions";
 
 function* fetchDatafiles() {
-  const res = yield d3.csv("/datafiles.csv").then((response) => response);
-  yield put({ type: actions.DATAFILES_RECEIVED, datafiles: res });
+  const json = yield axios.get("/datafiles.json").then((response) => response);
+  yield put({ type: actions.DATAFILES_RECEIVED, datafiles: json.data });
 }
 
 function* fetchGenome({file}) {

@@ -1,13 +1,21 @@
 import actions from "./actions";
 import * as d3 from "d3";
 
-export default function appReducer(state = {}, action) {
+const initState = {
+  loading: false,
+  datafiles: [],
+  tags: [],
+  genome: {},
+  file: undefined
+};
+
+export default function appReducer(state = initState, action) {
   switch (action.type) {
     case actions.GET_DATAFILES:
       return { ...state, loading: true };
     case actions.DATAFILES_RECEIVED:
       let files = action.datafiles.map((d, i) => {
-        return { filename: d.filename, file: d.filename.replace(".json", ""), tags: d.description.split(";") };
+        return { filename: d.filename, file: d.filename.replace(".json", ""), tags: d.description };
       });
       let tagsAll = files.map((d) => d.tags).flat();
       let tags = [

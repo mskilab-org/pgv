@@ -57,8 +57,6 @@ export default function appReducer(state = {}, action) {
     case actions.GET_DEPENDENCIES:
       return { ...state, loading: true };
     case actions.DEPENDENCIES_RECEIVED:
-      let newState = {...state};
-      //newState.Strains.
       return { ...state, loading: false };
     default:
       return state;
