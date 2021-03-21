@@ -70,6 +70,9 @@
         "total-branch-length": "Total Branch Length"
       }
     },
+    "anatomy-panel": {
+      "header": "Anatomy Graph"
+    },
     "pca-panel": {
       "header": "PCA Graph"
     },

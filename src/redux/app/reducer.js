@@ -26,7 +26,7 @@ const initState = {
   coordinates: [],
   geography: [],
   geographyHash: {},
-  panels: {phylogeny: {}, pca: {}, genes: {}, geography: {}}
+  panels: {phylogeny: {}, pca: {}, genes: {}, geography: {}, anatomy: {}}
 };
 
 export default function appReducer(state = initState, action) {

@@ -12,6 +12,7 @@ import PhylogenyPanel from "../../components/phylogenyPanel";
 import PcaPanel from "../../components/pcaPanel";
 import GenesPanel from "../../components/genesPanel";
 import GenomePanel from "../../components/genomePanel";
+import AnatomyPanel from "../../components/anatomyPanel";
 
 class Home extends Component {
 
@@ -31,6 +32,11 @@ class Home extends Component {
           {panels.geography.visible && <Row gutter={24} className="ant-panel-container ant-home-map-panel-container">
             <Col className="gutter-row" span={24}>
               <GeographyPanel/>
+            </Col>
+          </Row>}
+          {panels.anatomy.visible && <Row gutter={24} className="ant-panel-container ant-home-anatomy-panel-container">
+            <Col className="gutter-row" span={24}>
+              <AnatomyPanel/>
             </Col>
           </Row>}
           {panels.pca.visible && <Row className="ant-panel-container ant-home-map-panel-container">
@@ -65,7 +71,8 @@ Home.defaultProps = {
     phylogeny: {visible: true},
     geography: {visible: true},
     pca: {visible: true},
-    genes: {visible: true}
+    genes: {visible: true},
+    anatomy: {visible: false}
   }
 };
 const mapDispatchToProps = (dispatch) => ({
