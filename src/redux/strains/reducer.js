@@ -1,9 +1,11 @@
 import actions from "./actions";
 
+
 const initState = {
   loading: false,
   strainsList: [],
-  phylogeny: null
+  phylogeny: null,
+  pcaData: null
 };
 
 export default function appReducer(state = initState, action) {
@@ -16,6 +18,11 @@ export default function appReducer(state = initState, action) {
       return { ...state, loading: true };
     case actions.PHYLOGENY_RECEIVED:
       return { ...state, phylogeny: action.phylogeny, file: action.file, loading: false };
+    case actions.GET_PCADATA:
+      return { ...state, loading: true };
+    case actions.PCADATA_RECEIVED:
+      const table = action.pcaData
+      return { ...state, pcaData: table, file: action.file, loading: false };
     default:
       return state;
   }

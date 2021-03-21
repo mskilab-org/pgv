@@ -107,6 +107,7 @@ class GeographyPanel extends Component {
                   offset={{ bottom: [0, -38] }}
                 >
                   <MarkerPopup
+                    key={node.key}
                     title={geographyHash[node.key].title}
                     node={node}
                   />

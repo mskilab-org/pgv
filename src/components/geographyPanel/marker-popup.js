@@ -15,7 +15,7 @@ class MarkerPopup extends Component {
         <div className="ant-popover-title">{title}</div>
         <div className="ant-popover-inner-content">
           <h4>{t("components.geography-panel.tooltip.content.strain", {count: node.values.length})}, {t("components.geography-panel.tooltip.content.clade", {count: cladeStrains.length})}</h4>
-          {cladeStrains.map((d,i) => <p><strong>{d.key}</strong>: {t("components.geography-panel.tooltip.content.strain", {count: d.values.length})}</p>)}
+          {cladeStrains.map((d,i) => <p key={i}><strong>{d.key}</strong>: {t("components.geography-panel.tooltip.content.strain", {count: d.values.length})}</p>)}
         </div>
       </div>
     );
