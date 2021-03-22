@@ -30,6 +30,7 @@ function* fetchDependencies({file}) {
     put({ type: strainsActions.GET_STRAINSLIST, file: file }),
     put({ type: strainsActions.GET_PHYLOGENY, file: file }),
     put({ type: actions.GET_GEOGRAPHY, file: file }),
+    put({ type: strainsActions.GET_ANATOMY, file: file }),
     put({ type: actions.DEPENDENCIES_RECEIVED, file: file }),
   ])
 }

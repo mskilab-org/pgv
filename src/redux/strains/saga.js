@@ -24,10 +24,18 @@ function* fetchPcaData({file}) {
   yield put({ type: actions.PCADATA_RECEIVED, file: file, pcaData: results });
 }
 
+function* fetchAnatomy({file}) {
+  const { response, error } = yield axios.get(`/data/${file}/anatomy.json`)
+    .then((response) => ({ response }))
+    .catch((error) => ({ error }));
+  yield put({ type: actions.ANATOMY_RECEIVED, file: file, anatomy: ((response && response.data) || [])});
+}
+
 function* actionWatcher() {
   yield takeEvery(actions.GET_STRAINSLIST, fetchStrainsList);
   yield takeEvery(actions.GET_PHYLOGENY, fetchPhylogeny);
   yield takeEvery(actions.GET_PCADATA, fetchPcaData);
+  yield takeEvery(actions.GET_ANATOMY, fetchAnatomy);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

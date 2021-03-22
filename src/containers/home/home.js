@@ -29,15 +29,13 @@ class Home extends Component {
               <PhylogenyPanel/>
             </Col>
           </Row>}
-          {panels.geography.visible && <Row gutter={24} className="ant-panel-container ant-home-map-panel-container">
-            <Col className="gutter-row" span={24}>
+          {(panels.geography.visible || panels.anatomy.visible) && <Row gutter={24} className="ant-panel-container ant-home-map-panel-container">
+            {panels.geography.visible && <Col className="gutter-row" span={panels.anatomy.visible ? 18 : 24}>
               <GeographyPanel/>
-            </Col>
-          </Row>}
-          {panels.anatomy.visible && <Row gutter={24} className="ant-panel-container ant-home-anatomy-panel-container">
-            <Col className="gutter-row" span={24}>
+            </Col>}
+            {panels.anatomy.visible && <Col className="gutter-row" span={panels.geography.visible ? 6 : 24}>
               <AnatomyPanel/>
-            </Col>
+            </Col>}
           </Row>}
           {panels.pca.visible && <Row className="ant-panel-container ant-home-map-panel-container">
             <Col className="gutter-row" span={24}>

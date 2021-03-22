@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { withTranslation } from "react-i18next";
-///import * as d3 from "d3";
+import * as d3 from "d3";
 import Phylocanvas, { Tooltip } from "phylocanvas";
 import PhyloTooltip from "./phyloTooltip";
 import scalebarPlugin from "phylocanvas-plugin-scalebar";
@@ -36,8 +36,8 @@ class PhyloTree extends Component {
         active: true,
         width: 100,
         height: 20,
-        fillStyle: "#3C7483",
-        strokeStyle: "#3C7483",
+        fillStyle: "#808080",
+        strokeStyle: "#808080",
         lineWidth: 1,
         fontFamily: "Sans-serif",
         fontSize: 16,
@@ -61,7 +61,6 @@ class PhyloTree extends Component {
     const geographyHash = {};
     geography.forEach((d, i) => (geographyHash[d.id] = d));
 
-    //this.tree.setSize(this.props.width, this.props.height);
     this.tree.load(newickString, () => console.log("tree loaded"));
     this.tree.on("beforeFirstDraw", () => {
       this.tree.leaves.forEach((leaf, i) => {
@@ -71,13 +70,19 @@ class PhyloTree extends Component {
         }
         leaf.data = leaf.data || {};
         leaf.data.geography = geographyHash[leaf.data && leaf.data.gid] || {};
-        leaf.setDisplay({colour: geographyHash[leaf.data.gid] ? geographyHash[leaf.data && leaf.data.gid].fill : "#333"});
+        leaf.setDisplay({
+          leafStyle: {
+            strokeStyle: geographyHash[leaf.data.gid] ? d3.rgb(geographyHash[leaf.data && leaf.data.gid].fill).darker() : "#808080",
+            fillStyle: geographyHash[leaf.data.gid] ? geographyHash[leaf.data && leaf.data.gid].fill : "#808080",
+            lineWidth: 2,
+          }
+        });
       });
     });
     this.tree.lineWidth = 1.2;
     this.tree.fillCanvas = true;
     this.tree.showInternalNodeLabels = true;
-    this.tree.branchColour = "#3C7483";
+    this.tree.branchColour = "#808080";
     this.tree.selectedColour = "#FF7F0E";
     this.tree.setTreeType("rectangular");
     this.tree.highlightColour = "#FF7F0E";
