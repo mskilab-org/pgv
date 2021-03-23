@@ -71,7 +71,8 @@
       }
     },
     "anatomy-panel": {
-      "header": "Anatomy Graph"
+      "header": "Anatomy Graph",
+      "no-data-message": "No Anatomy data available"
     },
     "pca-panel": {
       "header": "PCA Graph"

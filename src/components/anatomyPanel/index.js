@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
-import { Card, Space } from "antd";
+import { Card, Space, Empty } from "antd";
 import ContainerDimensions from "react-container-dimensions";
 import { withTranslation } from "react-i18next";
 import { GiAnatomy } from "react-icons/gi";
@@ -11,9 +11,9 @@ import Wrapper from "./index.style";
 class AnatomyPanel extends Component {
   render() {
     const { t, anatomy } = this.props;
-
+console.log('here', anatomy.length)
     return (
-      <Wrapper>
+      <Wrapper empty={anatomy.length < 1}>
         <Card
           size="small"
           title={
@@ -28,11 +28,22 @@ class AnatomyPanel extends Component {
           }
         >
           <div className="ant-wrapper">
-            <ContainerDimensions>
-              {({ width, height }) => {
-                return <Body {...{ width: width, height: height, locations: anatomy }} />;
-              }}
-            </ContainerDimensions>
+            {anatomy.length < 1 && (
+              <Empty
+                description={t("components.anatomy-panel.no-data-message")}
+              />
+            )}
+            {anatomy.length > 0 && (
+              <ContainerDimensions>
+                {({ width, height }) => {
+                  return (
+                    <Body
+                      {...{ width: width, height: height, locations: anatomy }}
+                    />
+                  );
+                }}
+              </ContainerDimensions>
+            )}
           </div>
         </Card>
       </Wrapper>
