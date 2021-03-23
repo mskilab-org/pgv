@@ -75,7 +75,10 @@
       "no-data-message": "No Anatomy data available"
     },
     "pca-panel": {
-      "header": "PCA Graph"
+      "header": "PCA Graph",
+      "datapoint": "datapoint",
+      "datapoint_plural": "datapoints",
+      "title": "PCA Distribution Probability"
     },
     "genes-panel": {
       "header": "Genes"

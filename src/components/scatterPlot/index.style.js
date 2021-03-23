@@ -6,6 +6,14 @@ const Wrapper = styled.div`
     padding: 0px;
     min-height: 400px;
   }
+  div.scatterplot canvas {
+    margin: ${props => props.margins.gap}px !important;
+    padding: 0px !important;
+  }
+  svg.plot-container {
+    position: absolute;
+    top: 0px;
+  }
 `;
 
 export default Wrapper;

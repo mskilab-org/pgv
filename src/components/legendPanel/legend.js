@@ -5,7 +5,7 @@ import * as d3 from "d3";
 
 const margins = {
   legend: {
-    padding: 0,
+    padding: 24,
     height: 60,
     bar: 30,
     style: { fill: "steelblue", stroke: "black", fillOpacity: 0.8 },

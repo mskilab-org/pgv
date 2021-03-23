@@ -3,6 +3,7 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import ContainerDimensions from "react-container-dimensions";
 import { Card, Space } from "antd";
+import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import { AiOutlineDotChart } from "react-icons/ai";
 import Wrapper from "./index.style";
@@ -22,7 +23,7 @@ class PcaPanel extends Component {
   }
 
   render() {
-    const { t, loading, pcaData } = this.props;
+    const { t, loading, pcaData, domain } = this.props;
     if (!pcaData) {
       return null;
     }
@@ -41,13 +42,14 @@ class PcaPanel extends Component {
               </span>
             </Space>
           }
+          extra={<p><b>{d3.format(",.2r")(pcaData.length)}</b> {t("components.pca-panel.datapoint", {count: pcaData.length})}</p>}
         >
           <div className="ant-wrapper">
             <ContainerDimensions>
               {({ width, height }) => {
                 return (
                   <ScatterPlot
-                    {...{ width: width - 2 * margins.padding, height: height, results: pcaData }}
+                    {...{ width: width - 2 * margins.padding, height: height, results: pcaData, xDomain: domain, title: t("components.pca-panel.title")}}
                   />
                 );
               }}
@@ -65,6 +67,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
   loading: state.Strains.loading,
+  domain: state.App.domain,
   pcaData: state.Strains.pcaData,
 });
 export default connect(

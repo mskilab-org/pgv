@@ -22,6 +22,7 @@ const initState = {
   selectedCoordinate: null,
   defaultGeography: [],
   genomeLength: 0,
+  domain: [],
   chromoBins: {},
   coordinates: [],
   geography: [],
@@ -44,6 +45,7 @@ export default function appReducer(state = initState, action) {
       return {
         ...state,
         genomeLength,
+        domain: [1, genomeLength],
         chromoBins,
         selectedCoordinate,
         coordinates: action.settings.coordinates,
@@ -61,6 +63,7 @@ export default function appReducer(state = initState, action) {
       );
       return {
         ...state,
+        domain: [1, updatedBins.genomeLength],
         genomeLength: updatedBins.genomeLength,
         chromoBins: updatedBins.chromoBins,
         selectedCoordinate: action.coordinate,
