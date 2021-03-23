@@ -84,7 +84,9 @@
       "header": "Genes"
     },
     "genome-panel": {
-      "header": "Genome Graph"
+      "header": "Genome Graph",
+      "interval": "datapoint",
+      "interval_plural": "intervals"
     },
     "settings-panel": {
       "coordinates": { "label": "Reference" },
