@@ -9,7 +9,8 @@ function updateChromoBins(coordinateSet) {
   let chromoBins = coordinateSet.reduce((hash, element) => {
     let chromo = element;
     chromo.length = chromo.endPoint;
-    chromo.startPlace = boundary;
+    chromo.startPlace = boundary + chromo.startPoint;
+    chromo.endPlace = boundary + chromo.endPoint;
     hash[element.chromosome] = chromo;
     boundary += chromo.length;
     return hash;

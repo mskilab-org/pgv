@@ -82,7 +82,7 @@ class GenomePlot extends Component {
   }
 
   render() {
-    const { width, height, genome, xDomain, title } = this.props;
+    const { width, height, genome, xDomain, title, chromoBins } = this.props;
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 2 * margins.gap;
     const yScale = d3
@@ -132,7 +132,8 @@ GenomePlot.propTypes = {
   height: PropTypes.number.isRequired,
   xDomain: PropTypes.array,
   genome: PropTypes.object,
-  title: PropTypes.string
+  title: PropTypes.string,
+  chromoBins: PropTypes.object
 };
 GenomePlot.defaultProps = {
   xDomain: [],

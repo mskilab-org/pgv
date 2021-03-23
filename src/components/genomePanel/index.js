@@ -31,7 +31,7 @@ class GenomePanel extends Component {
               </span>
             </Space>
           }
-          extra={<p><b>{d3.format(".2")(genome.intervals.length)}</b> {t("components.genome-panel.interval", {count: genome.intervals.length})}</p>}
+          extra={<p><b>{(genome.intervals.length)}</b> {t("components.genome-panel.interval", {count: genome.intervals.length})}</p>}
         >
           <div className="ant-wrapper">
             <ContainerDimensions>
