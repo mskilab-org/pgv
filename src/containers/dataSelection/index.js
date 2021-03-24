@@ -39,7 +39,17 @@ class DataSelection extends Component {
               status="404"
               title={t("containers.data-selection.missing.title")}
               subTitle={t("containers.data-selection.missing.subtitle")}
-              extra={<p ><Alert message={t("containers.data-selection.missing.extra")} type="info" showIcon /></p>}
+              extra={
+                <Row>
+                  <Col span={12} offset={6}>
+                    <Alert
+                      message={t("containers.data-selection.missing.extra")}
+                      type="info"
+                      showIcon
+                    />
+                  </Col>
+                </Row>
+              }
             />
           )}
           {!missingDataFiles && (
