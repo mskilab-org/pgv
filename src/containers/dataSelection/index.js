@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
-import { Row, Col } from "antd";
+import { Row, Col, Result, Alert } from "antd";
 import * as d3 from "d3";
 import DataSelectionWrapper from "./index.style";
 import { withTranslation } from "react-i18next";
@@ -26,7 +26,7 @@ class DataSelection extends Component {
   };
 
   render() {
-    const { tags, loading } = this.props;
+    const { t, tags, loading, missingDataFiles } = this.props;
 
     return (
       <DataSelectionWrapper>
@@ -34,19 +34,31 @@ class DataSelection extends Component {
           <HomeHeader />
         </div>
         <div className="ant-ds-content-container">
-          <Row gutter={0} className="ant-ds-filter-container">
-            <Col className="gutter-row" span={24}>
-              <FiltersPanel {...{ tags, loading, onSearch: this.onSearch }} />
-            </Col>
-          </Row>
-          <Row gutter={0} className="ant-ds-results-container">
-            <Col className="gutter-row" span={24}>
-              <FiltersResults
-                dataRecords={this.state.dataRecords}
-                loading={loading}
-              />
-            </Col>
-          </Row>
+          {missingDataFiles && (
+            <Result
+              status="404"
+              title={t("containers.data-selection.missing.title")}
+              subTitle={t("containers.data-selection.missing.subtitle")}
+              extra={<p ><Alert message={t("containers.data-selection.missing.extra")} type="info" showIcon /></p>}
+            />
+          )}
+          {!missingDataFiles && (
+            <Row gutter={0} className="ant-ds-filter-container">
+              <Col className="gutter-row" span={24}>
+                <FiltersPanel {...{ tags, loading, onSearch: this.onSearch }} />
+              </Col>
+            </Row>
+          )}
+          {!missingDataFiles && (
+            <Row gutter={0} className="ant-ds-results-container">
+              <Col className="gutter-row" span={24}>
+                <FiltersResults
+                  dataRecords={this.state.dataRecords}
+                  loading={loading}
+                />
+              </Col>
+            </Row>
+          )}
         </div>
       </DataSelectionWrapper>
     );
@@ -63,6 +75,7 @@ DataSelection.defaultProps = {
 const mapDispatchToProps = {};
 const mapStateToProps = (state) => ({
   datafiles: state.Genome.datafiles,
+  missingDataFiles: state.Genome.missingDataFiles,
   tags: state.Genome.tags,
   loading: state.Genome.loading,
 });

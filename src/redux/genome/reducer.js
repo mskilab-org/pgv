@@ -26,6 +26,8 @@ export default function appReducer(state = initState, action) {
         ),
       ].sort((a, b) => d3.descending(a[1], b[1]));
       return { ...state, datafiles: files, tags: tags, loading: false };
+    case actions.DATAFILES_FAILED:
+        return { ...state, datafiles: [], tags: [], missingDataFiles: true, loading: false };
     case actions.GET_GENOME:
       return { ...state, loading: true };
     case actions.GENOME_RECEIVED:

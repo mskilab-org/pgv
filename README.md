@@ -7,6 +7,10 @@ Before you get started, in the project directory, you need to run:
 
 ### `yarn install`
 
+Make sure you add your own list of sample files at the location /public/datafiles.json
+
+You may find an example datafiles.json file at /public/datafiles0.json
+
 As soon as this is completed, you can run:
 
 ### `yarn start`

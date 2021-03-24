@@ -17,7 +17,13 @@
       "strain": "strain",
       "strain_plural": "strains"
     },
-    "data-selection": {}
+    "data-selection": {
+      "missing": {
+        "title": "Your datafiles definition is missing",
+        "subtitle": "Please add this at /public/datafiles.json",
+        "extra": "You may use the example file at /public/datafiles0.json"
+      }
+    }
   },
   "components": {
     "filters-panel": {

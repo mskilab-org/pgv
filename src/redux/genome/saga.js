@@ -4,8 +4,14 @@ import * as d3 from "d3";
 import actions from "./actions";
 
 function* fetchDatafiles() {
-  const json = yield axios.get("/datafiles.json").then((response) => response);
-  yield put({ type: actions.DATAFILES_RECEIVED, datafiles: json.data });
+  const { response, error } = yield axios.get("/datafiles.json")
+  .then((response) => ({ response }))
+  .catch((error) => ({ error }));
+  if (response) {
+    yield put({ type: actions.DATAFILES_RECEIVED, datafiles: response && response.data });
+  } else {
+    yield put({ type: actions.DATAFILES_FAILED, datafiles: []});
+  }
 }
 
 function* fetchGenome({file}) {
