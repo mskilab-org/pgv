@@ -34,7 +34,7 @@ class ScatterPlot extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     this.regl.clear({
-      color: [0, 0, 0, 0],
+      color: [0, 0, 0, 0.05],
       depth: false,
     });
 
@@ -123,7 +123,7 @@ ScatterPlot.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   xDomain: PropTypes.array,
-  results: PropTypes.array,
+  results: PropTypes.object,
   title: PropTypes.string
 };
 ScatterPlot.defaultProps = {

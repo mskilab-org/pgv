@@ -43,6 +43,7 @@ class Body extends Component {
           {locations.map((d, i) => (
             <g>
               <circle
+                key={i}
                 ref={circleRefArray[i]}
                 cx={d.x}
                 cy={d.y}

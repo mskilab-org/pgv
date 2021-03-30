@@ -42,7 +42,7 @@ class PcaPanel extends Component {
               </span>
             </Space>
           }
-          extra={<p><b>{d3.format(",.2r")(pcaData.length)}</b> {t("components.pca-panel.datapoint", {count: pcaData.length})}</p>}
+          extra={<p><b>{d3.format(",")(pcaData.length)}</b> {t("components.pca-panel.datapoint", {count: pcaData.length})}</p>}
         >
           <div className="ant-wrapper">
             <ContainerDimensions>

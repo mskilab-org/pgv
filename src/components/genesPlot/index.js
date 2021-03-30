@@ -3,14 +3,14 @@ import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { Axis, axisPropsFromTickScale, LEFT, BOTTOM } from "react-d3-axis";
 import Wrapper from "./index.style";
-import { rgbtoInteger } from "../../helpers/utility";
+import { rgbtoInteger, measureText } from "../../helpers/utility";
 import Plot from "./plot";
 
 const margins = {
   gap: 24,
 };
 
-class GenomePlot extends Component {
+class GenesPlot extends Component {
   regl = null;
   container = null;
 
@@ -51,46 +51,63 @@ class GenomePlot extends Component {
   }
 
   updateStage() {
-    let { width, height, genome, xDomain, chromoBins } = this.props;
+    let { width, height, genes, xDomain, chromoBins } = this.props;
 
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 2 * margins.gap;
     this.regl.poll();
     
-    let intervals = genome.intervals;
-    let intervalBins = {}, intervalsStartPoint = [], intervalsEndPoint = [], domainY = [0,0], intervalsY = [], domainX = xDomain,intervalsFill = [], intervalsStroke = [];
-    intervals.forEach((d,i) => {
+    let geneBins = {}, genesStartPoint = [], genesEndPoint = [], domainY = [0,0], genesY = [], domainX = xDomain, genesFill = [], genesStroke = [];
+    genes.forEach((d,i) => {
+      d.y = d.strand === "+" ? 1 : 3;
       d.startPlace = chromoBins[`${d.chromosome}`].startPlace + d.startPoint;
-      intervalsStartPoint.push(d.startPlace);
+      genesStartPoint.push(d.startPlace);
       d.endPlace = chromoBins[`${d.chromosome}`].startPlace + d.endPoint;
-      intervalsEndPoint.push(d.endPlace);
-      intervalsY.push(+d.y);
-      intervalsFill.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color)));
-      intervalsStroke.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color).darker()));
+      genesEndPoint.push(d.endPlace);
+      genesY.push(+d.y);
+      genesFill.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color)));
+      genesStroke.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color).darker()));
       domainY = [d3.min([domainY[0], +d.y]), d3.max([domainY[1], +d.y])];
-      intervalBins[d.iid] = d;
+      geneBins[d.iid] = d;
     });
     
-    let intervalStruct = {intervalsStartPoint, intervalsEndPoint, intervalsY, intervalsFill, intervalsStroke, domainX , domainY};
-    console.log(intervalStruct)
+    domainY = [0,4];
+    let geneStruct = {genesStartPoint, genesEndPoint, genesY, genesFill, genesStroke, domainX , domainY};
+    console.log(geneStruct)
     this.plot.load(
       stageWidth,
       stageHeight,
-      intervalStruct
+      geneStruct
     );
     this.plot.render();
   }
 
+  handleGeneLabelClick = (gene) => {
+    window.open(`https://www.genecards.org/cgi-bin/carddisp.pl?gene=${gene.title}`, '_blank').focus();
+  }
+
   render() {
-    const { width, height, genome, xDomain, title } = this.props;
+    const { width, height, xDomain, genes, title, chromoBins } = this.props;
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 2 * margins.gap;
+    const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     const yScale = d3
       .scaleLinear()
-      .domain([0, d3.max(genome.intervals, d => d.y)])
-      .range([stageHeight, 0])
-      .nice();
-    const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
+      .domain([0, 4])
+      .range([stageHeight, 0]);
+    let texts = [];
+    let startPosNext = {"+": -1, "-": -1};
+    genes.forEach((d,i) => {
+      let isGene = (d.type === "gene")
+      let startPos = chromoBins[`${d.chromosome}`].startPlace + d.startPoint;
+      let xPos = xScale(startPos);
+      let textLength = measureText(d.title, 10);
+      let yPos = yScale(d.strand === "+" ? 1 : 3);
+      if (isGene && (xPos > 0) && (xPos < stageWidth) && (xPos > startPosNext[d.strand])) {
+        texts.push(<text key={d.iid} x={xPos} y={yPos} dy={-10} onClick={() => this.handleGeneLabelClick(d)} fontFamily="Arial" fontSize={10} textAnchor="start">{d.title}</text>);
+        startPosNext[d.strand] = xPos + textLength;
+      }
+    });
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div
@@ -107,11 +124,8 @@ class GenomePlot extends Component {
           >
             {title}
           </text>
-          <g transform={`translate(${[margins.gap, margins.gap]})`}>
-            <Axis
-              {...axisPropsFromTickScale(yScale)}
-              style={{ orient: LEFT }}
-            />
+          <g className="labels-container" transform={`translate(${[margins.gap, margins.gap]})`}>
+            {texts}
           </g>
           <g
             transform={`translate(${[margins.gap, stageHeight + margins.gap]})`}
@@ -127,15 +141,15 @@ class GenomePlot extends Component {
     );
   }
 }
-GenomePlot.propTypes = {
+GenesPlot.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   xDomain: PropTypes.array,
-  genome: PropTypes.object,
+  genes: PropTypes.array,
   title: PropTypes.string,
   chromoBins: PropTypes.object
 };
-GenomePlot.defaultProps = {
+GenesPlot.defaultProps = {
   xDomain: [],
 };
-export default GenomePlot;
+export default GenesPlot;

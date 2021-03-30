@@ -87,11 +87,13 @@
       "title": "PCA Distribution Probability"
     },
     "genes-panel": {
-      "header": "Genes"
+      "header": "Genes",
+      "gene": "gene",
+      "gene_plural": "genes"
     },
     "genome-panel": {
       "header": "Genome Graph",
-      "interval": "datapoint",
+      "interval": "interval",
       "interval_plural": "intervals"
     },
     "settings-panel": {
