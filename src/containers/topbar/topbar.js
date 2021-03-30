@@ -48,8 +48,8 @@ class Topbar extends Component {
 
   render() {
     const { visible, currentPage } = this.state;
-    const { t, file, loading } = this.props;
-    let params = file && `?file=${file}`;
+    const { t, file, domain, loading } = this.props;
+    let params = file && `?file=${file}&from=${domain[0]}&to=${domain[1]}`;
 
     return (
       <TopbarWrapper>
@@ -141,6 +141,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
   file: state.Genome.file,
+  domain: state.App.domain,
   loading: state.App.loading
 });
 export default connect(

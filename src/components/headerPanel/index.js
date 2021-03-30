@@ -7,7 +7,7 @@ import { PageHeader, Space, Tag } from "antd";
 import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 
-const { getDependencies } = appActions;
+const { getDependencies, updateDomain } = appActions;
 
 class HeaderPanel extends Component {
   state = {
@@ -29,18 +29,22 @@ class HeaderPanel extends Component {
     // When we enter through a full page refresh
     let params = new URL(decodeURI(document.location)).searchParams;
     let file = params.get("file");
-    console.log(new URL(decodeURI(document.location)));
-    file && this.props.getDependencies(file);
+    let from = params.get("from");
+    let to = params.get("to");
+    from && to && this.props.updateDomain(from, to);
+    file && this.props.getDependencies(file, from, to);
   }
   render() {
     const { t, file, datafile, datafiles, strainsList } = this.props;
 
     const { redirectToReferrer } = this.state;
     let params = new URL(decodeURI(document.location)).searchParams;
-    if (!params.get("file") && redirectToReferrer) {
-      let file = datafiles[0].file;
-      this.props.getDependencies(file);
-      return <Redirect to={`?file=${file}`} />;
+    if ((!params.get("file") || !params.get("from") || !params.get("to")) && redirectToReferrer) {
+      const { defaultDomain } = this.props;
+      let from = params.get("from") || defaultDomain[0];
+      let to = params.get("to") || defaultDomain[1];
+      let file = params.get("file") || datafiles[0].file;
+      return <Redirect to={`?file=${file}&from=${from}&to=${to}`} />;
     }
 
     let description =
@@ -92,9 +96,11 @@ HeaderPanel.defaultProps = {
 };
 const mapDispatchToProps = (dispatch) => ({
   getDependencies: (file) => dispatch(getDependencies(file)),
+  updateDomain: (from, to) => dispatch(updateDomain(from,to)),
 });
 const mapStateToProps = (state) => ({
   file: state.Genome.file,
+  defaultDomain: state.App.defaultDomain,
   datafile: state.Genome.datafile,
   datafiles: state.Genome.datafiles,
   strainsList: state.Strains.strainsList,

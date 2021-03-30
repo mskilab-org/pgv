@@ -7,10 +7,12 @@ import strainsActions from "./../strains/actions";
 function* fetchSettings() {
   const json = yield axios.get(`/settings.json`).then((response) => response);
   yield put({ type: actions.SETTINGS_RECEIVED, settings: json.data });
+  yield put({ type: actions.GET_GENES, coordinate: json.data.coordinates.default });
 }
 
 function* updateCoordinates({coordinate}) {
   yield put({ type: actions.COORDINATES_UPDATED, coordinate: coordinate });
+  yield put({ type: actions.GET_GENES, coordinate: coordinate });
 }
 
 function* updateVisibility({panel, visible}) {
@@ -22,6 +24,13 @@ function* fetchGeography({file}) {
     .then((response) => ({ response }))
     .catch((error) => ({ error }));
   yield put({ type: actions.GEOGRAPHY_RECEIVED, file: file, geography: (response && response.data) });
+}
+
+function* fetchGenes({coordinate}) {
+  const { response, error } = yield axios.get(`/genes/${coordinate}.json`)
+    .then((response) => ({ response }))
+    .catch((error) => ({ error }));
+  yield put({ type: actions.GENES_RECEIVED, genes: (response && response.data) });
 }
 
 function* fetchDependencies({file}) {
@@ -40,6 +49,7 @@ function* actionWatcher() {
   yield takeEvery(actions.UPDATE_VISIBILITY, updateVisibility);
   yield takeEvery(actions.GET_GEOGRAPHY, fetchGeography);
   yield takeEvery(actions.GET_DEPENDENCIES, fetchDependencies);
+  yield takeEvery(actions.GET_GENES, fetchGenes);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

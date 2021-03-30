@@ -38,6 +38,9 @@ packages/react-devtools-inline/dist
 packages/react-devtools-shell/dist
 packages/react-devtools-scheduling-profiler/dist# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# public datafiles
+/public/datafiles.json
+
 # dependencies
 /node_modules
 /.pnp

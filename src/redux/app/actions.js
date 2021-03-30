@@ -9,6 +9,9 @@ const actions = {
   GEOGRAPHY_RECEIVED: "GEOGRAPHY_RECEIVED",
   GET_DEPENDENCIES: "GET_DEPENDENCIES",
   DEPENDENCIES_RECEIVED: "DEPENDENCIES_RECEIVED",
+  GET_GENES: "GET_GENES",
+  GENES_RECEIVED: "GENES_RECEIVED",
+  DOMAIN_UPDATED: "DOMAIN_UPDATED",
   getSettings: () => ({
     type: actions.GET_SETTINGS,
   }),
@@ -28,6 +31,15 @@ const actions = {
   getDependencies: (file) => ({
     type: actions.GET_DEPENDENCIES,
     file: file
+  }),
+  getGenes: (coordinate) => ({
+    type: actions.GET_GENES,
+    coordinate: coordinate
+  }),
+  updateDomain: (from, to) => ({
+    type: actions.DOMAIN_UPDATED,
+    from: from,
+    to: to
   })
 };
 

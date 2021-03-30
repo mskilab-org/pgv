@@ -23,10 +23,12 @@ const initState = {
   selectedCoordinate: null,
   defaultGeography: [],
   genomeLength: 0,
-  domain: [],
+  defaultDomain: [],
+  domain: null,
   chromoBins: {},
   coordinates: [],
   geography: [],
+  genes: [],
   geographyHash: {},
   panels: {phylogeny: {}, pca: {}, genes: {}, geography: {}, anatomy: {}}
 };
@@ -46,7 +48,8 @@ export default function appReducer(state = initState, action) {
       return {
         ...state,
         genomeLength,
-        domain: [1, genomeLength],
+        defaultDomain: [1, genomeLength],
+        domain: state.domain || [1, genomeLength],
         chromoBins,
         selectedCoordinate,
         coordinates: action.settings.coordinates,
@@ -64,6 +67,7 @@ export default function appReducer(state = initState, action) {
       );
       return {
         ...state,
+        defaultDomain: [1, updatedBins.genomeLength],
         domain: [1, updatedBins.genomeLength],
         genomeLength: updatedBins.genomeLength,
         chromoBins: updatedBins.chromoBins,
@@ -87,6 +91,18 @@ export default function appReducer(state = initState, action) {
       return { ...state, loading: true };
     case actions.DEPENDENCIES_RECEIVED:
       return { ...state, loading: false };
+    case actions.GET_GENES:
+      return { ...state, loading: true };
+    case actions.GENES_RECEIVED:
+      return { ...state, genes: action.genes, loading: false };
+    case actions.DOMAIN_UPDATED:
+      let url = new URL(decodeURI(document.location));
+      let params = new URLSearchParams(url.search);
+      params.set("from", +action.from);
+      params.set("to", +action.to);
+      let newURL = `${url.origin}/?${params.toString()}`; 
+      window.history.replaceState(newURL, 'Pan Genome Viewer', newURL);
+      return { ...state, domain: [+action.from, +action.to] };
     default:
       return state;
   }

@@ -94,7 +94,7 @@ class ScatterPlot extends Component {
           <text
             transform={`translate(${[width / 2, margins.gap]})`}
             textAnchor="middle"
-            fontSize={16}
+            fontSize={14}
             dy="-4"
           >
             {title}

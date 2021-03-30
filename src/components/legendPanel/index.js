@@ -33,7 +33,7 @@ class LegendPanel extends Component {
         >          
           <ContainerDimensions>
             {({ width }) => {
-              return <Legend {...{ width: (width - 2 * margins.padding) }} />;
+              return <Legend className="ant-wrapper" {...{ width: (width - 2 * margins.padding) }} />;
             }}
           </ContainerDimensions>
         </Card>

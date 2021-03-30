@@ -2,6 +2,9 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import * as d3 from "d3";
+import appActions from "../../redux/app/actions";
+
+const { updateDomain } = appActions;
 
 const margins = {
   legend: {
@@ -12,11 +15,66 @@ const margins = {
   },
   chromoBox: { fillOpacity: 0.66 },
   chromoText: { textAnchor: "middle", fill: "white" },
+  brush: {gap: 5, defaultLength: 100}
 };
 
 class Legend extends Component {
+
+  componentDidMount() {
+    const { chromoBins } = this.props;
+
+    let stageWidth = this.props.width - 2 * margins.legend.padding;
+    let stageHeight = margins.legend.height;
+    
+    this.brush = d3.brushX()
+    .extent([[0,margins.brush.gap], [stageWidth, stageHeight - margins.brush.gap]])
+    
+    d3.select(this.container)
+    .append("g")
+    .attr("class", "brush-container")
+    .attr("transform", `translate(${[margins.legend.padding,0]})`)
+    .call(this.brush);
+    
+  }
+
+  componentDidUpdate() {
+    const { defaultDomain, domain, updateDomain } = this.props;
+    let stageWidth = this.props.width - 2 * margins.legend.padding;
+  console.log('legendDidUpdate', domain)
+    let genomeScale = d3
+      .scaleLinear()
+      .domain(defaultDomain)
+      .range([0, stageWidth]);
+
+    this.brush
+    .on("end", (event) => {
+      const selection = event.selection;
+      if (!event.sourceEvent || !selection) return;
+      const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
+      console.log('brushed', selection, [from, to])
+      updateDomain(from, to);
+    });
+
+    d3.select(this.container).select("g.brush-container")
+    .call(this.brush)
+    .call(this.brush.move, domain.map(genomeScale))
+    .call(g => g.select(".overlay")
+        .datum({type: "selection"})
+        .on("mousedown touchstart", (event) => {
+          const dx = margins.brush.defaultLength; // Use a fixed width when recentering.
+          const [[cx]] = d3.pointers(event);
+          const [x0, x1] = [cx - dx / 2, cx + dx / 2];
+          const [X0, X1] = [0, stageWidth];
+          d3.select(this.container).select("g.brush-container")
+              .call(this.brush.move, x1 > X1 ? [X1 - dx, X1] 
+                  : x0 < X0 ? [X0, X0 + dx] 
+                  : [x0, x1]);
+              }
+        ));
+  }
+
   render() {
-    const { width, genomeLength, chromoBins } = this.props;
+    const { width, defaultDomain, chromoBins } = this.props;
     if (!chromoBins) {
       return null;
     }
@@ -24,12 +82,12 @@ class Legend extends Component {
     let stageHeight = margins.legend.height;
     let genomeScale = d3
       .scaleLinear()
-      .domain([1, genomeLength])
+      .domain(defaultDomain)
       .range([0, stageWidth]);
 
     return (
         <div className="ant-wrapper">
-          <svg width={width} height={stageHeight} className="legend-container">
+          <svg ref={(elem) => (this.container = elem)} width={width} height={stageHeight} className="legend-container">
             <g
               className="chromo-legend"
               transform={`translate(${[
@@ -77,7 +135,8 @@ class Legend extends Component {
 }
 Legend.propTypes = {
   chromoBins: PropTypes.object,
-  genomeLength: PropTypes.number,
+  domain: PropTypes.array,
+  defaultDomain: PropTypes.array,
   width: PropTypes.number.isRequired,
 };
 Legend.defaultProps = {
@@ -85,9 +144,12 @@ Legend.defaultProps = {
   genomeLength: 0,
   width: 400,
 };
-const mapDispatchToProps = {};
+const mapDispatchToProps = (dispatch) => ({
+  updateDomain: (from, to) => dispatch(updateDomain(from,to))
+});
 const mapStateToProps = (state) => ({
-  genomeLength: state.App.genomeLength,
+  domain: state.App.domain,
+  defaultDomain: state.App.defaultDomain,
   chromoBins: state.App.chromoBins,
 });
 export default connect(mapStateToProps, mapDispatchToProps)(Legend);
