@@ -57,7 +57,7 @@ class PhyloTree extends Component {
     if (!newickString) {
       return;
     }
-    const pixelRatio = window.devicePixelRatio || 1.0;
+    const pixelRatio = window.devicePixelRatio || 2.0;
     const geographyHash = {};
     geography.forEach((d, i) => (geographyHash[d.id] = d));
 
@@ -88,9 +88,9 @@ class PhyloTree extends Component {
     this.tree.highlightColour = "#FF7F0E";
     this.tree.highlightWidth = 2;
     this.tree.padding = margins.padding;
-    this.tree.zoomFactor = 2;
-    this.tree.setNodeSize(5);
-    this.tree.setTextSize(11);
+    this.tree.zoomFactor = 1;
+    this.tree.setNodeSize(3);
+    this.tree.setTextSize(8);
     this.tree.setSize((this.props.width - 2 * margins.padding) / pixelRatio, (this.tree.leaves.length * 10) / pixelRatio);
     this.tree.draw();
     this.tree.adjustForPixelRatio();
