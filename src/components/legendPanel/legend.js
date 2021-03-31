@@ -40,7 +40,7 @@ class Legend extends Component {
   componentDidUpdate() {
     const { defaultDomain, domain, updateDomain } = this.props;
     let stageWidth = this.props.width - 2 * margins.legend.padding;
-  console.log('legendDidUpdate', domain)
+
     let genomeScale = d3
       .scaleLinear()
       .domain(defaultDomain)
@@ -51,7 +51,7 @@ class Legend extends Component {
       const selection = event.selection;
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
-      console.log('brushed', selection, [from, to])
+ 
       updateDomain(from, to);
     });
 

@@ -11,7 +11,7 @@ import Wrapper from "./index.style";
 class AnatomyPanel extends Component {
   render() {
     const { t, anatomy } = this.props;
-console.log('here', anatomy.length)
+
     return (
       <Wrapper empty={anatomy.length < 1}>
         <Card

@@ -61,7 +61,7 @@ class PhyloTree extends Component {
     const geographyHash = {};
     geography.forEach((d, i) => (geographyHash[d.id] = d));
 
-    this.tree.load(newickString, () => console.log("tree loaded"));
+    this.tree.load(newickString);
     this.tree.on("beforeFirstDraw", () => {
       this.tree.leaves.forEach((leaf, i) => {
         leaf.data = strainsList.find((d,i) => +d.sid === +leaf.id);
@@ -79,7 +79,7 @@ class PhyloTree extends Component {
         });
       });
     });
-    this.tree.lineWidth = 1.2;
+    this.tree.lineWidth = 1.2 * pixelRatio;
     this.tree.fillCanvas = true;
     this.tree.showInternalNodeLabels = true;
     this.tree.branchColour = "#808080";
@@ -89,8 +89,8 @@ class PhyloTree extends Component {
     this.tree.highlightWidth = 2;
     this.tree.padding = margins.padding;
     this.tree.zoomFactor = 1;
-    this.tree.setNodeSize(3);
-    this.tree.setTextSize(8);
+    this.tree.setNodeSize(3 * pixelRatio);
+    this.tree.setTextSize(8 * pixelRatio);
     this.tree.setSize((this.props.width - 2 * margins.padding) / pixelRatio, (this.tree.leaves.length * 10) / pixelRatio);
     this.tree.draw();
     this.tree.adjustForPixelRatio();
@@ -99,11 +99,9 @@ class PhyloTree extends Component {
     this.tree.on("mousemove", (e) => {
       var node = this.tree.getNodeAtMousePosition(e);
       if (node) {
-        //console.log(node);
         this.tree.tooltip.open(e.clientX, e.clientY, node);
       }
     });
-    window.pc = this.tree;
   }
 
   render() {

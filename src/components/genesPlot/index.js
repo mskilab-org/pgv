@@ -73,7 +73,7 @@ class GenesPlot extends Component {
     
     domainY = [0,4];
     let geneStruct = {genesStartPoint, genesEndPoint, genesY, genesFill, genesStroke, domainX , domainY};
-    console.log(geneStruct)
+
     this.plot.load(
       stageWidth,
       stageHeight,

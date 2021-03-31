@@ -13,6 +13,7 @@ const margins = {
 class GenomePlot extends Component {
   regl = null;
   container = null;
+  maxY = 10;
 
   componentDidMount() {
     const regl = require("regl")({
@@ -58,21 +59,24 @@ class GenomePlot extends Component {
     this.regl.poll();
     
     let intervals = genome.intervals;
-    let intervalBins = {}, intervalsStartPoint = [], intervalsEndPoint = [], domainY = [0,0], intervalsY = [], domainX = xDomain,intervalsFill = [], intervalsStroke = [];
+    let intervalBins = {}, intervalsStartPoint = [], intervalsEndPoint = [], maxY = 10, domainY = [0,0], intervalsY = [], domainX = xDomain,intervalsFill = [], intervalsStroke = [];
     intervals.forEach((d,i) => {
-      d.startPlace = chromoBins[`${d.chromosome}`].startPlace + d.startPoint;
-      intervalsStartPoint.push(d.startPlace);
-      d.endPlace = chromoBins[`${d.chromosome}`].startPlace + d.endPoint;
-      intervalsEndPoint.push(d.endPlace);
-      intervalsY.push(+d.y);
-      intervalsFill.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color)));
-      intervalsStroke.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color).darker()));
-      domainY = [d3.min([domainY[0], +d.y]), d3.max([domainY[1], +d.y])];
-      intervalBins[d.iid] = d;
-    });
-    
+      let startPlace = chromoBins[`${d.chromosome}`].startPlace + d.startPoint;
+      let endPlace = chromoBins[`${d.chromosome}`].startPlace + d.endPoint;
+      if (((startPlace <= xDomain[1]) && (startPlace >= xDomain[0])) || ((endPlace <= xDomain[1]) && (endPlace >= xDomain[0]))) {
+        intervalsStartPoint.push(startPlace);
+        intervalsEndPoint.push(endPlace);
+        intervalsY.push(+d.y);
+        intervalsFill.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color)));
+        intervalsStroke.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color).darker()));
+        maxY = d3.max([d.y, maxY]);
+        intervalBins[d.iid] = d;
+      }
+    }); 
+    domainY = [0, maxY + 1];
+
     let intervalStruct = {intervalsStartPoint, intervalsEndPoint, intervalsY, intervalsFill, intervalsStroke, domainX , domainY};
-    console.log(intervalStruct)
+
     this.plot.load(
       stageWidth,
       stageHeight,
@@ -82,12 +86,23 @@ class GenomePlot extends Component {
   }
 
   render() {
-    const { width, height, genome, xDomain, title } = this.props;
+    const { width, height, genome, chromoBins, xDomain, title } = this.props;
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 2 * margins.gap;
+
+    let maxY = 10;
+    genome.intervals.forEach((d,i) => {
+      let startPlace = chromoBins[`${d.chromosome}`].startPlace + d.startPoint;
+      let endPlace = chromoBins[`${d.chromosome}`].startPlace + d.endPoint;
+      if (((startPlace <= xDomain[1]) && (startPlace >= xDomain[0])) || ((endPlace <= xDomain[1]) && (endPlace >= xDomain[0]))) {
+        maxY = d3.max([d.y, maxY]);
+      }
+    });
+    let domainY = [0, maxY + 1];
+
     const yScale = d3
       .scaleLinear()
-      .domain([0, d3.max(genome.intervals, d => d.y)])
+      .domain(domainY)
       .range([stageHeight, 0])
       .nice();
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
