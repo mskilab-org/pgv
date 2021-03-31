@@ -59,21 +59,23 @@ class GenomePlot extends Component {
     this.regl.poll();
     
     let intervals = genome.intervals;
-    let intervalBins = {}, intervalsStartPoint = [], intervalsEndPoint = [], maxY = 10, domainY = [0,0], intervalsY = [], domainX = xDomain,intervalsFill = [], intervalsStroke = [];
+    let intervalBins = {}, intervalsStartPoint = [], intervalsEndPoint = [], counterFiltered = 0, globalMaxY = 10, maxY = 10, domainY = [0,0], intervalsY = [], domainX = xDomain,intervalsFill = [], intervalsStroke = [];
     intervals.forEach((d,i) => {
       let startPlace = chromoBins[`${d.chromosome}`].startPlace + d.startPoint;
       let endPlace = chromoBins[`${d.chromosome}`].startPlace + d.endPoint;
+      intervalsStartPoint.push(startPlace);
+      intervalsEndPoint.push(endPlace);
+      intervalsY.push(+d.y);
+      intervalsFill.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color)));
+      intervalsStroke.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color).darker()));
+      globalMaxY = d3.max([d.y, globalMaxY]);
+      intervalBins[d.iid] = d;
       if (((startPlace <= xDomain[1]) && (startPlace >= xDomain[0])) || ((endPlace <= xDomain[1]) && (endPlace >= xDomain[0]))) {
-        intervalsStartPoint.push(startPlace);
-        intervalsEndPoint.push(endPlace);
-        intervalsY.push(+d.y);
-        intervalsFill.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color)));
-        intervalsStroke.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color).darker()));
+        counterFiltered += 1;
         maxY = d3.max([d.y, maxY]);
-        intervalBins[d.iid] = d;
       }
     }); 
-    domainY = [0, maxY + 1];
+    domainY = [0, d3.min([10, counterFiltered > 0 ? maxY + 1 : globalMaxY])];
 
     let intervalStruct = {intervalsStartPoint, intervalsEndPoint, intervalsY, intervalsFill, intervalsStroke, domainX , domainY};
 
@@ -90,15 +92,17 @@ class GenomePlot extends Component {
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 2 * margins.gap;
 
-    let maxY = 10;
+    let maxY = 10, globalMaxY = 10, counterFiltered = 0;
     genome.intervals.forEach((d,i) => {
       let startPlace = chromoBins[`${d.chromosome}`].startPlace + d.startPoint;
       let endPlace = chromoBins[`${d.chromosome}`].startPlace + d.endPoint;
+      globalMaxY = d3.max([d.y, globalMaxY]);
       if (((startPlace <= xDomain[1]) && (startPlace >= xDomain[0])) || ((endPlace <= xDomain[1]) && (endPlace >= xDomain[0]))) {
+        counterFiltered += 1;
         maxY = d3.max([d.y, maxY]);
       }
     });
-    let domainY = [0, maxY + 1];
+    let domainY = [0, d3.min([10, counterFiltered > 0 ? maxY + 1 : globalMaxY])];
 
     const yScale = d3
       .scaleLinear()

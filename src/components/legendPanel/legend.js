@@ -47,7 +47,7 @@ class Legend extends Component {
       .range([0, stageWidth]);
 
     this.brush
-    .on("end", (event) => {
+    .on("brush", (event) => {
       const selection = event.selection;
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
