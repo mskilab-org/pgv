@@ -6,7 +6,8 @@ const initState = {
   datafiles: [],
   tags: [],
   genome: {},
-  file: undefined
+  file: undefined,
+  coverageData: null
 };
 
 export default function appReducer(state = initState, action) {
@@ -33,6 +34,11 @@ export default function appReducer(state = initState, action) {
     case actions.GENOME_RECEIVED:
       const datafile = state.datafiles.find(d => d.file === action.file);
       return { ...state, datafile, genome: action.genome, file: action.file, loading: false };
+    case actions.GET_COVERAGEDATA:
+      return { ...state, loading: true };
+    case actions.COVERAGEDATA_RECEIVED:
+      const table = action.coverageData
+      return { ...state, coverageData: table, file: action.file, loading: false };
     default:
       return state;
   }

@@ -116,6 +116,12 @@ class Points {
     };
   }
 
+  rescaleXY(domainX, domainY) {
+    this.dataBuffer.domainX = domainX;
+    this.dataBuffer.domainY = domainY;
+    this.render();
+  }
+
   render() {
     this.draw(this.dataBuffer);
   }

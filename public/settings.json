@@ -315,7 +315,8 @@
     "geography": {"visible": true},
     "pca": {"visible": true},
     "genes": {"visible": true},
-    "anatomy": {"visible": true}
+    "anatomy": {"visible": true},
+    "coverage": {"visible": true}
   },
   "geography": [
     {

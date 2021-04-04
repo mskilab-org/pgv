@@ -86,6 +86,12 @@
       "datapoint_plural": "datapoints",
       "title": "PCA Distribution Probability"
     },
+    "coverage-panel": {
+      "header": "Coverage Graph",
+      "datapoint": "datapoint",
+      "datapoint_plural": "datapoints",
+      "title": "Coverage Track"
+    },
     "genes-panel": {
       "header": "Genes",
       "gene": "gene",

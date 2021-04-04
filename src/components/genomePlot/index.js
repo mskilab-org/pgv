@@ -35,14 +35,30 @@ class GenomePlot extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    this.regl.clear({
-      color: [0, 0, 0, 0.05],
-      depth: false,
-    });
 
-    this.regl.poll();
+    if ((prevProps.genome.intervals.length !== this.props.genome.intervals.length) 
+      || (prevProps.chromoBins !== this.props.chromoBins)
+      || (prevProps.width !== this.props.width)
+      || (prevProps.height !== this.props.height)) {
+        this.regl.clear({
+          color: [0, 0, 0, 0.05],
+          depth: false,
+        });
+    
+        this.regl.poll();
+        this.updateStage();
+    }
+    if (prevProps.xDomain.toString() !== this.props.xDomain.toString()) {
+  
+      this.regl.clear({
+        color: [0, 0, 0, 0.05],
+        depth: false,
+      });
+  
+      this.regl.poll();
 
-    this.updateStage();
+      this.plot.rescaleX(this.props.xDomain);
+    }
   }
 
   componentWillUnmount() {
@@ -118,6 +134,9 @@ class GenomePlot extends Component {
           ref={(elem) => (this.container = elem)}
         />
         <svg width={width} height={height} className="plot-container">
+          <clipPath id="clipping">
+            <rect x={0} y={0} width={stageWidth} height={stageHeight} />
+          </clipPath>
           <text
             transform={`translate(${[width / 2, margins.gap]})`}
             textAnchor="middle"
@@ -129,17 +148,34 @@ class GenomePlot extends Component {
           <g transform={`translate(${[margins.gap, margins.gap]})`}>
             <Axis
               {...axisPropsFromTickScale(yScale)}
+              values={yScale.ticks(10).concat(yScale.domain()[1])}
               style={{ orient: LEFT }}
             />
+          </g>
+          <g clipPath="url(#clipping)"
+            transform={`translate(${[margins.gap, stageHeight + margins.gap]})`}
+          >
+            {Object.keys(chromoBins).map((d,i) => {
+            let xxScale = d3.scaleLinear().domain([chromoBins[d].startPoint, chromoBins[d].endPoint]).range([0, xScale(chromoBins[d].endPlace) - xScale(chromoBins[d].startPlace)]);
+            let tickCount = d3.max([Math.floor((xxScale.range()[1] - xxScale.range()[0]) / 40), 2]);
+            let ticks = xxScale.ticks(tickCount);
+            ticks[ticks.length - 1] = xxScale.domain()[1];
+            return (xScale(chromoBins[d].startPlace) <= stageWidth) && <g key={d} transform={`translate(${[xScale(chromoBins[d].startPlace), 0]})`}>
+              <Axis
+              {...axisPropsFromTickScale(xxScale, tickCount)}
+              values={ticks}
+              format={(e) => d3.format("~s")(e)}
+              style={{ orient: BOTTOM }}
+            />
+            </g>})}
           </g>
           <g
             transform={`translate(${[margins.gap, stageHeight + margins.gap]})`}
           >
-            <Axis
-              {...axisPropsFromTickScale(xScale, 10)}
-              format={(d) => d3.format("~s")(d)}
-              style={{ orient: BOTTOM }}
-            />
+            {Object.keys(chromoBins).map((d,i) => 
+            <g  key={d} transform={`translate(${[xScale(chromoBins[d].startPlace), 0]})`}>
+             <line x1="0" y1="0" x2="0" y2={-stageHeight} stroke="rgb(128, 128, 128)" strokeDasharray="4" />
+            </g>)}
           </g>
         </svg>
       </Wrapper>

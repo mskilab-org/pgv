@@ -9,7 +9,7 @@ import HeaderPanel from "../../components/headerPanel";
 import LegendPanel from "../../components/legendPanel";
 import GeographyPanel from "../../components/geographyPanel";
 import PhylogenyPanel from "../../components/phylogenyPanel";
-import PcaPanel from "../../components/pcaPanel";
+import CoveragePanel from "../../components/coveragePanel";
 import GenesPanel from "../../components/genesPanel";
 import GenomePanel from "../../components/genomePanel";
 import AnatomyPanel from "../../components/anatomyPanel";
@@ -37,11 +37,6 @@ class Home extends Component {
               <AnatomyPanel/>
             </Col>}
           </Row>}
-          {panels.pca.visible && <Row className="ant-panel-container ant-home-map-panel-container">
-            <Col className="gutter-row" span={24}>
-              <PcaPanel/>
-            </Col>
-          </Row>}
           <Row className="ant-panel-container ant-home-legend-container">
             <Col className="gutter-row" span={24}>
               <LegendPanel/>
@@ -50,6 +45,11 @@ class Home extends Component {
           {panels.genes.visible && <Row className="ant-panel-container ant-home-map-panel-container">
             <Col className="gutter-row" span={24}>
               <GenesPanel/>
+            </Col>
+          </Row>}
+          {panels.pca.visible && <Row className="ant-panel-container ant-home-map-panel-container">
+            <Col className="gutter-row" span={24}>
+              <CoveragePanel/>
             </Col>
           </Row>}
           <Row className="ant-panel-container ant-home-map-panel-container">

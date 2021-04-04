@@ -1,6 +1,7 @@
 import { all, takeEvery, put } from "redux-saga/effects";
 import axios from "axios";
 import * as d3 from "d3";
+import { loadArrowTable } from "../../helpers/utility";
 import actions from "./actions";
 
 function* fetchDatafiles() {
@@ -19,9 +20,17 @@ function* fetchGenome({file}) {
   yield put({ type: actions.GENOME_RECEIVED, file: file, genome: json.data });
 }
 
+function* fetchCoverageData({file}) {
+  const { results, error } = yield loadArrowTable(`data/${file}/coverage.arrow`)
+    .then((results) => ({ results }))
+    .catch((error) => ({ error }));
+  yield put({ type: actions.COVERAGEDATA_RECEIVED, file: file, coverageData: results });
+}
+
 function* actionWatcher() {
   yield takeEvery(actions.GET_DATAFILES, fetchDatafiles);
   yield takeEvery(actions.GET_GENOME, fetchGenome);
+  yield takeEvery(actions.GET_COVERAGEDATA, fetchCoverageData);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

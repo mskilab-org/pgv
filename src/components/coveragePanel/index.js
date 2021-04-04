@@ -7,24 +7,24 @@ import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import { AiOutlineDotChart } from "react-icons/ai";
 import Wrapper from "./index.style";
-import appActions from "../../redux/strains/actions";
+import appActions from "../../redux/genome/actions";
 import ScatterPlot from "../scatterPlot";
 
 const margins = {
   padding: 0,
 };
-const { getPcaData } = appActions;
+const { getCoverageData } = appActions;
 
-class PcaPanel extends Component {
+class CoveragePanel extends Component {
   componentDidMount() {
     let params = new URL(decodeURI(document.location)).searchParams;
     let file = params.get("file");
-    file && this.props.getPcaData(file);
+    file && this.props.getCoverageData(file);
   }
 
   render() {
-    const { t, loading, pcaData, domain } = this.props;
-    if (!pcaData) {
+    const { t, loading, coverageData, domain, chromoBins } = this.props;
+    if (!coverageData) {
       return null;
     }
     return (
@@ -38,18 +38,18 @@ class PcaPanel extends Component {
                 <AiOutlineDotChart />
               </span>
               <span className="ant-pro-menu-item-title">
-                {t("components.pca-panel.header")}
+                {t("components.coverage-panel.header")}
               </span>
             </Space>
           }
-          extra={<p><b>{d3.format(",")(pcaData.length)}</b> {t("components.pca-panel.datapoint", {count: pcaData.length})}</p>}
+          extra={<p><b>{d3.format(",")(coverageData.length)}</b> {t("components.coverage-panel.datapoint", {count: coverageData.length})}</p>}
         >
           <div className="ant-wrapper">
             <ContainerDimensions>
               {({ width, height }) => {
                 return (
                   <ScatterPlot
-                    {...{ width: width - 2 * margins.padding, height: height, results: pcaData, xDomain: domain, title: t("components.pca-panel.title")}}
+                    {...{ width: width - 2 * margins.padding, height: height, results: coverageData, xDomain: domain, chromoBins: chromoBins, title: t("components.coverage-panel.title")}}
                   />
                 );
               }}
@@ -60,17 +60,18 @@ class PcaPanel extends Component {
     );
   }
 }
-PcaPanel.propTypes = {};
-PcaPanel.defaultProps = {};
+CoveragePanel.propTypes = {};
+CoveragePanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
-  getPcaData: (file) => dispatch(getPcaData(file)),
+  getCoverageData: (file) => dispatch(getCoverageData(file)),
 });
 const mapStateToProps = (state) => ({
   loading: state.Strains.loading,
   domain: state.App.domain,
-  pcaData: state.Strains.pcaData,
+  coverageData: state.Genome.coverageData,
+  chromoBins: state.App.chromoBins
 });
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withTranslation("common")(PcaPanel));
+)(withTranslation("common")(CoveragePanel));

@@ -124,6 +124,13 @@ class Plot {
     this.dataBufferFill = {stageWidth, stageHeight, startPoint, endPoint, color, offset, valY, domainX, domainY, instances};
   }
 
+  rescaleX(domainX) {
+    this.dataBufferStroke.domainX = domainX;
+    this.dataBufferFill.domainX = domainX;
+    this.draw(this.dataBufferStroke);
+    this.draw(this.dataBufferFill);
+  }
+
   render() {
     this.draw(this.dataBufferStroke);
     this.draw(this.dataBufferFill);
