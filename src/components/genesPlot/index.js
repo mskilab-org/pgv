@@ -72,7 +72,7 @@ class GenesPlot extends Component {
     }
   }
 
-  updateStage() { console.log('called!', this.props)
+  updateStage() {
     let { width, height, genes, xDomain, chromoBins } = this.props;
 
     this.stageWidth = width - 2 * margins.gap;

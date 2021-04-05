@@ -9,6 +9,7 @@ import HeaderPanel from "../../components/headerPanel";
 import LegendPanel from "../../components/legendPanel";
 import GeographyPanel from "../../components/geographyPanel";
 import PhylogenyPanel from "../../components/phylogenyPanel";
+import PcaPanel from "../../components/pcaPanel";
 import CoveragePanel from "../../components/coveragePanel";
 import GenesPanel from "../../components/genesPanel";
 import GenomePanel from "../../components/genomePanel";
@@ -27,6 +28,11 @@ class Home extends Component {
           {panels.phylogeny.visible && <Row className="ant-panel-container ant-home-map-panel-container">
             <Col className="gutter-row" span={24}>
               <PhylogenyPanel/>
+            </Col>
+          </Row>}
+          {panels.pca.visible && <Row className="ant-panel-container ant-home-map-panel-container">
+            <Col className="gutter-row" span={24}>
+              <PcaPanel/>
             </Col>
           </Row>}
           {(panels.geography.visible || panels.anatomy.visible) && <Row gutter={24} className="ant-panel-container ant-home-map-panel-container">

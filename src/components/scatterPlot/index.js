@@ -105,7 +105,6 @@ class ScatterPlot extends Component {
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     let yTicks = yScale.ticks(margins.yTicksCount);
     yTicks[yTicks.length - 1] = yScale.domain()[1];
-    console.log(yTicks)
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div

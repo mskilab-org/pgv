@@ -6,7 +6,7 @@ const initState = {
   strainsList: [],
   phylogeny: null,
   anatomy: [],
-  pcaData: null
+  pcaData: []
 };
 
 export default function appReducer(state = initState, action) {
@@ -22,8 +22,7 @@ export default function appReducer(state = initState, action) {
     case actions.GET_PCADATA:
       return { ...state, loading: true };
     case actions.PCADATA_RECEIVED:
-      const table = action.pcaData
-      return { ...state, pcaData: table, file: action.file, loading: false };
+      return { ...state, pcaData: action.pcaData, file: action.file, loading: false };
     case actions.GET_ANATOMY:
       return { ...state, loading: true };
     case actions.ANATOMY_RECEIVED:

@@ -1,6 +1,5 @@
 import { all, takeEvery, put } from "redux-saga/effects";
 import axios from "axios";
-import { loadArrowTable } from "../../helpers/utility";
 import actions from "./actions";
 
 function* fetchStrainsList({file}) {
@@ -18,10 +17,10 @@ function* fetchPhylogeny({file}) {
 }
 
 function* fetchPcaData({file}) {
-  const { results, error } = yield loadArrowTable(`data/${file}/pca.arrow`)
-    .then((results) => ({ results }))
+  const { response, error } = yield axios.get(`/data/${file}/pca.json`)
+    .then((response) => ({ response }))
     .catch((error) => ({ error }));
-  yield put({ type: actions.PCADATA_RECEIVED, file: file, pcaData: results });
+  yield put({ type: actions.PCADATA_RECEIVED, file: file, pcaData: ((response && response.data) || [])});
 }
 
 function* fetchAnatomy({file}) {
