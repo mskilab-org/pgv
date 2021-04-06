@@ -30,7 +30,7 @@ const initState = {
   geography: [],
   genes: [],
   geographyHash: {},
-  panels: {phylogeny: {}, pca: {}, genes: {}, geography: {}, anatomy: {}, coverage: {}}
+  panels: {phylogeny: {}, pca: {}, genes: {}, geography: {}, anatomy: {}, coverage: {}, rpkm: {}}
 };
 
 export default function appReducer(state = initState, action) {

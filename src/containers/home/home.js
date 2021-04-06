@@ -11,6 +11,7 @@ import GeographyPanel from "../../components/geographyPanel";
 import PhylogenyPanel from "../../components/phylogenyPanel";
 import PcaPanel from "../../components/pcaPanel";
 import CoveragePanel from "../../components/coveragePanel";
+import RPKMPanel from "../../components/rpkmPanel";
 import GenesPanel from "../../components/genesPanel";
 import GenomePanel from "../../components/genomePanel";
 import AnatomyPanel from "../../components/anatomyPanel";
@@ -58,6 +59,11 @@ class Home extends Component {
               <CoveragePanel/>
             </Col>
           </Row>}
+          {panels.rpkm.visible && <Row className="ant-panel-container ant-home-map-panel-container">
+            <Col className="gutter-row" span={24}>
+              <RPKMPanel/>
+            </Col>
+          </Row>}
           <Row className="ant-panel-container ant-home-map-panel-container">
             <Col className="gutter-row" span={24}>
               <GenomePanel/>
@@ -76,7 +82,9 @@ Home.defaultProps = {
     geography: {visible: true},
     pca: {visible: true},
     genes: {visible: true},
-    anatomy: {visible: false}
+    anatomy: {visible: false},
+    coverage: {visible: false},
+    rpkm: {visible: false},
   }
 };
 const mapDispatchToProps = (dispatch) => ({

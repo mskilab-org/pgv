@@ -27,10 +27,18 @@ function* fetchCoverageData({file}) {
   yield put({ type: actions.COVERAGEDATA_RECEIVED, file: file, coverageData: results });
 }
 
+function* fetchRPKMData({file}) {
+  const { results, error } = yield loadArrowTable(`data/${file}/rpkm.arrow`)
+    .then((results) => ({ results }))
+    .catch((error) => ({ error }));
+  yield put({ type: actions.RPKMDATA_RECEIVED, file: file, rpkmData: results });
+}
+
 function* actionWatcher() {
   yield takeEvery(actions.GET_DATAFILES, fetchDatafiles);
   yield takeEvery(actions.GET_GENOME, fetchGenome);
   yield takeEvery(actions.GET_COVERAGEDATA, fetchCoverageData);
+  yield takeEvery(actions.GET_RPKMDATA, fetchRPKMData);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

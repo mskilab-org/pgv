@@ -6,6 +6,8 @@ const actions = {
   GENOME_RECEIVED: "GENOME_RECEIVED",
   GET_COVERAGEDATA: "GET_COVERAGEDATA",
   COVERAGEDATA_RECEIVED: "COVERAGEDATA_RECEIVED",
+  GET_RPKMDATA: "GET_RPKMDATA",
+  RPKMDATA_RECEIVED: "RPKMDATA_RECEIVED",
   getDatafiles: () => ({
     type: actions.GET_DATAFILES,
   }),
@@ -15,6 +17,10 @@ const actions = {
   }),
   getCoverageData: (file) => ({
     type: actions.GET_COVERAGEDATA,
+    file: file
+  }),
+  getRPKMData: (file) => ({
+    type: actions.GET_RPKMDATA,
     file: file
   }),
 };

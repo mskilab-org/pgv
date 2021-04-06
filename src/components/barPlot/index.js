@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { Axis, axisPropsFromTickScale, LEFT, BOTTOM } from "react-d3-axis";
-import Points from "./points";
+import Bars from "./bars";
 import Wrapper from "./index.style";
 
 const margins = {
@@ -10,7 +10,7 @@ const margins = {
   yTicksCount: 10
 };
 
-class ScatterPlot extends Component {
+class BarPlot extends Component {
   regl = null;
   container = null;
 
@@ -29,7 +29,7 @@ class ScatterPlot extends Component {
       color: [0, 0, 0, 0.05],
       stencil: true,
     });
-    this.points = new Points(this.regl);
+    this.bars = new Bars(this.regl);
     this.updateStage();
   }
 
@@ -54,9 +54,11 @@ class ScatterPlot extends Component {
       });
   
       this.regl.poll();
-  
-      let yExtent = d3.extent(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= this.props.xDomain[0]),this.dataPointsX.findIndex(d => d >= this.props.xDomain[1])));
-      this.points.rescaleXY(this.props.xDomain, yExtent);
+      let barsY = this.props.results.getColumn("y").toArray();
+      let barsStartPoint = this.props.results.getColumn("startPoint").toArray();
+      let limits = d3.extent(barsY.slice(barsStartPoint.findIndex(d => d >= this.props.xDomain[0]),barsStartPoint.findIndex(d => d >= this.props.xDomain[1])));
+      let yExtent = limits[0] !== undefined ? limits : d3.extent(barsY);
+      this.bars.rescaleXY(this.props.xDomain, yExtent);
     }
   }
 
@@ -72,23 +74,22 @@ class ScatterPlot extends Component {
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 2 * margins.gap;
     this.regl.poll();
-    let xExtent = xDomain;
-    this.dataPointsY = results.getColumn("y").toArray();
-    this.dataPointsX = results.getColumn("x").toArray();
-    let yExtent = d3.extent(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= xDomain[0]),this.dataPointsX.findIndex(d => d >= xDomain[1])));
-    let dataPointsColor = results.getColumn("color").toArray();
-    
-    this.points.load(
+    let domainX = xDomain;
+    let barsY = results.getColumn("y").toArray();
+    let barsStartPoint = results.getColumn("startPoint").toArray();
+    let barsEndPoint = results.getColumn("endPoint").toArray();
+    let limits = d3.extent(barsY.slice(barsStartPoint.findIndex(d => d >= xDomain[0]),barsStartPoint.findIndex(d => d >= xDomain[1])));
+    let domainY = limits[0] !== undefined ? limits : d3.extent(barsY);
+    console.log(limits, domainY)
+    let barsFill = results.getColumn("color").toArray();
+    let barsStruct = {barsStartPoint, barsEndPoint, barsY, barsFill, domainX, domainY};
+   
+    this.bars.load(
       stageWidth,
       stageHeight,
-      2,
-      this.dataPointsX,
-      this.dataPointsY,
-      dataPointsColor,
-      xExtent,
-      yExtent
+      barsStruct
     );
-    this.points.render();
+    this.bars.render();
   }
 
   render() {
@@ -96,8 +97,9 @@ class ScatterPlot extends Component {
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 2 * margins.gap;
     let dataPointsY = results.getColumn("y").toArray();
-    let dataPointsX = results.getColumn("x").toArray();
-    let yExtent = d3.extent(dataPointsY.slice(dataPointsX.findIndex(d => d >= xDomain[0]), dataPointsX.findIndex(d => d >= xDomain[1])));
+    let barsStartPoint = results.getColumn("startPoint").toArray();
+    let limits = d3.extent(dataPointsY.slice(barsStartPoint.findIndex(d => d >= xDomain[0]),barsStartPoint.findIndex(d => d >= xDomain[1])));
+    let yExtent = limits[0] !== undefined ? limits : d3.extent(dataPointsY);
     const yScale = d3
       .scaleLinear()
       .domain(yExtent)
@@ -128,6 +130,7 @@ class ScatterPlot extends Component {
             <Axis
               {...axisPropsFromTickScale(yScale, margins.yTicksCount)}
               values={yTicks}
+              format={(e) => d3.format("~s")(e)}
               style={{ orient: LEFT }}
             />
           </g>
@@ -161,7 +164,7 @@ class ScatterPlot extends Component {
     );
   }
 }
-ScatterPlot.propTypes = {
+BarPlot.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   xDomain: PropTypes.array,
@@ -169,7 +172,7 @@ ScatterPlot.propTypes = {
   title: PropTypes.string,
   chromoBins: PropTypes.object
 };
-ScatterPlot.defaultProps = {
+BarPlot.defaultProps = {
   xDomain: [],
 };
-export default ScatterPlot;
+export default BarPlot;

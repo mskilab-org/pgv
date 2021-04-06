@@ -7,7 +7,8 @@ const initState = {
   tags: [],
   genome: {},
   file: undefined,
-  coverageData: null
+  coverageData: null,
+  rpkmData: null
 };
 
 export default function appReducer(state = initState, action) {
@@ -37,8 +38,13 @@ export default function appReducer(state = initState, action) {
     case actions.GET_COVERAGEDATA:
       return { ...state, loading: true };
     case actions.COVERAGEDATA_RECEIVED:
-      const table = action.coverageData
-      return { ...state, coverageData: table, file: action.file, loading: false };
+      const coverageTable = action.coverageData
+      return { ...state, coverageData: coverageTable, file: action.file, loading: false };
+    case actions.GET_RPKMDATA:
+      return { ...state, loading: true };
+    case actions.RPKMDATA_RECEIVED:
+      const rpkmTable = action.rpkmData
+      return { ...state, rpkmData: rpkmTable, file: action.file, loading: false };
     default:
       return state;
   }

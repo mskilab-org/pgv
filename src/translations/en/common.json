@@ -87,10 +87,16 @@
       "title": "PCA Distribution Probability"
     },
     "coverage-panel": {
-      "header": "Coverage Graph",
+      "header": "Coverage Scatterplot",
       "datapoint": "datapoint",
       "datapoint_plural": "datapoints",
-      "title": "Coverage Track"
+      "title": "Coverage data Track"
+    },
+    "rpkm-panel": {
+      "header": "RPKM Bar Chart",
+      "datapoint": "datapoint",
+      "datapoint_plural": "datapoints",
+      "title": "RPKM data Track"
     },
     "genes-panel": {
       "header": "Genes",

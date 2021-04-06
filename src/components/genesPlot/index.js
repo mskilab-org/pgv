@@ -22,7 +22,7 @@ class GenesPlot extends Component {
       extensions: ["ANGLE_instanced_arrays"],
       container: this.container,
       pixelRatio: window.devicePixelRatio || 1.5,
-      attributes: { antialias: true, depth: false, stencil: true },
+      attributes: { antialias: true, depth: false, stencil: false },
     });
 
     regl.cache = {};
