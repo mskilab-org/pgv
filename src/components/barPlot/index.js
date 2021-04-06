@@ -80,7 +80,6 @@ class BarPlot extends Component {
     let barsEndPoint = results.getColumn("endPoint").toArray();
     let limits = d3.extent(barsY.slice(barsStartPoint.findIndex(d => d >= xDomain[0]),barsStartPoint.findIndex(d => d >= xDomain[1])));
     let domainY = limits[0] !== undefined ? limits : d3.extent(barsY);
-    console.log(limits, domainY)
     let barsFill = results.getColumn("color").toArray();
     let barsStruct = {barsStartPoint, barsEndPoint, barsY, barsFill, domainX, domainY};
    
