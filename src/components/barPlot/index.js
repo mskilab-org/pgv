@@ -69,7 +69,7 @@ class BarPlot extends Component {
   }
 
   updateStage() {
-    let { width, height, results, xDomain } = this.props;
+    let { width, height, results, xDomain, defaultDomain, updateDomain } = this.props;
 
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 2 * margins.gap;
@@ -89,6 +89,26 @@ class BarPlot extends Component {
       barsStruct
     );
     this.bars.render();
+
+    this.genomeScale = d3.scaleLinear().domain(defaultDomain).range([0, stageWidth]);
+    var s = [this.genomeScale(xDomain[0]), this.genomeScale(xDomain[1])];
+
+    this.currentTransform = null;
+
+    this.zoom = d3.zoom()
+      .translateExtent([[0, 0], [stageWidth, stageHeight]])
+      .extent([[0, 0], [stageWidth, stageHeight]])
+      .scaleExtent([1, Infinity])
+      .on('zoom', (event) => {
+        var t = event.transform;
+        var newDomain = t.rescaleX(this.genomeScale).domain().map(Math.floor);
+        if (newDomain.toString !== xDomain) {
+          updateDomain(newDomain[0], newDomain[1]);
+        }
+    });
+
+    d3.select(this.container).attr('preserveAspectRatio', 'xMinYMin meet').call(this.zoom);
+    d3.select(this.container).call(this.zoom.transform, d3.zoomIdentity.scale(stageWidth / (s[1] - s[0])).translate(-s[0], 0));
   }
 
   render() {
@@ -169,9 +189,11 @@ BarPlot.propTypes = {
   xDomain: PropTypes.array,
   results: PropTypes.object,
   title: PropTypes.string,
-  chromoBins: PropTypes.object
+  chromoBins: PropTypes.object,
+  updateDomain: PropTypes.func
 };
 BarPlot.defaultProps = {
   xDomain: [],
+  defaultDomain: []
 };
 export default BarPlot;

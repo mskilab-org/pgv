@@ -7,13 +7,15 @@ import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import { AiOutlineBarChart } from "react-icons/ai";
 import Wrapper from "./index.style";
-import appActions from "../../redux/genome/actions";
+import genomeActions from "../../redux/genome/actions";
+import appActions from "../../redux/app/actions";
 import BarPlot from "../barPlot";
 
 const margins = {
   padding: 0,
 };
-const { getRPKMData } = appActions;
+const { getRPKMData } = genomeActions;
+const { updateDomain } = appActions;
 
 class RPKMPanel extends Component {
   componentDidMount() {
@@ -23,7 +25,7 @@ class RPKMPanel extends Component {
   }
 
   render() {
-    const { t, loading, rpkmData, domain, chromoBins } = this.props;
+    const { t, loading, rpkmData, domain, defaultDomain, chromoBins, updateDomain } = this.props;
     if (!rpkmData) {
       return null;
     }
@@ -49,7 +51,7 @@ class RPKMPanel extends Component {
               {({ width, height }) => {
                 return (
                   <BarPlot
-                    {...{ width: width - 2 * margins.padding, height: height, results: rpkmData, xDomain: domain, chromoBins: chromoBins, title: t("components.rpkm-panel.title")}}
+                    {...{ width: width - 2 * margins.padding, height: height, updateDomain: updateDomain, results: rpkmData, defaultDomain: defaultDomain, xDomain: domain, chromoBins: chromoBins, title: t("components.rpkm-panel.title")}}
                   />
                 );
               }}
@@ -64,10 +66,12 @@ RPKMPanel.propTypes = {};
 RPKMPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
   getRPKMData: (file) => dispatch(getRPKMData(file)),
+  updateDomain: (from, to) => dispatch(updateDomain(from,to))
 });
 const mapStateToProps = (state) => ({
   loading: state.Strains.loading,
   domain: state.App.domain,
+  defaultDomain: state.App.defaultDomain,
   rpkmData: state.Genome.rpkmData,
   chromoBins: state.App.chromoBins
 });
