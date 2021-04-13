@@ -8,6 +8,9 @@ import * as d3 from "d3";
 import { GiDna2 } from "react-icons/gi";
 import Wrapper from "./index.style";
 import GenomePlot from "../genomePlot";
+import appActions from "../../redux/app/actions";
+
+const { updateDomain } = appActions;
 
 const margins = {
   padding: 0,
@@ -15,7 +18,7 @@ const margins = {
 
 class GenomePanel extends Component {
   render() {
-    const { t, genome, domain, chromoBins } = this.props;
+    const { t, genome, domain, defaultDomain, updateDomain, chromoBins } = this.props;
     if (Object.keys(genome).length < 1) return null;
     return (
       <Wrapper>
@@ -43,6 +46,8 @@ class GenomePanel extends Component {
                       height: height,
                       genome: genome,
                       xDomain: domain,
+                      updateDomain: updateDomain,
+                      defaultDomain: defaultDomain,
                       chromoBins: chromoBins,
                     }}
                   />
@@ -58,10 +63,13 @@ class GenomePanel extends Component {
 GenomePanel.propTypes = {
 };
 GenomePanel.defaultProps = {};
-const mapDispatchToProps = (dispatch) => ({});
+const mapDispatchToProps = (dispatch) => ({
+  updateDomain: (from, to) => dispatch(updateDomain(from,to))
+});
 const mapStateToProps = (state) => ({
   loading: state.Strains.loading,
   domain: state.App.domain,
+  defaultDomain: state.App.defaultDomain,
   genome: state.Genome.genome,
   chromoBins: state.App.chromoBins,
 });

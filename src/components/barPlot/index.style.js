@@ -13,7 +13,7 @@ const Wrapper = styled.div`
   svg.plot-container {
     position: absolute;
     top: 0px;
-    pointer-events: none;
+    /*pointer-events: none;*/
   }
 `;
 

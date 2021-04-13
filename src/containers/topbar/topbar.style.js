@@ -2,6 +2,8 @@ import styled from "styled-components";
 
 const TopbarWrapper = styled.div`
   .ant-pro-top-menu {
+    position: fixed;
+    top: 0px;
     padding: 0px;
     height: 48px;
     line-height: 48px;
