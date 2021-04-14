@@ -136,6 +136,12 @@ class Plot {
   rescaleX(domainX) {
     this.dataBufferStroke.domainX = domainX;
     this.dataBufferFill.domainX = domainX;
+    this.fboIntervals = this.regl.framebuffer({
+      width: this.dataBufferFboIntervals.stageWidth,
+      height: this.dataBufferFboIntervals.stageHeight,
+      colorFormat: 'rgba',
+    });
+    this.drawFboIntervals = this.regl({...this.commonSpecIntervals, framebuffer: this.fboIntervals});
     this.dataBufferFboIntervals.domainX = domainX;
     this.render();
   }
