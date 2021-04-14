@@ -4,7 +4,7 @@ class Plot {
     this.positions = [[0.5, 0.0], [0.0, 0.5], [1.0,0.5], [1.0, -0.5], [0.0, -0.5],[0.0, 0.5]];
     this.rectangleHeight = 10.0;
     this.strokeWidth = 0.66;
-    let commonSpecIntervals = {
+    this.commonSpecIntervals = {
       frag: `
       precision highp float;
       varying vec4 vColor;
@@ -99,7 +99,7 @@ class Plot {
       count: this.positions.length,
       instances: regl.prop("instances"),
     };
-    this.draw = regl(commonSpecIntervals);
+    this.draw = regl(this.commonSpecIntervals);
   }
 
   load(
@@ -122,18 +122,28 @@ class Plot {
     color = fill;
     offset = this.strokeWidth;
     this.dataBufferFill = {stageWidth, stageHeight, startPoint, endPoint, color, offset, valY, domainX, domainY, instances};
+    color = this.regl.buffer(intervalsStroke.map((d,i) => i + 3000));
+    offset = 0;
+    this.fboIntervals = this.regl.framebuffer({
+      width: stageWidth,
+      height: stageHeight,
+      colorFormat: 'rgba',
+    });
+    this.drawFboIntervals = this.regl({...this.commonSpecIntervals, framebuffer: this.fboIntervals});
+    this.dataBufferFboIntervals = {stageWidth, stageHeight, startPoint, endPoint, color, offset, valY, domainX, domainY, instances};
   }
 
   rescaleX(domainX) {
     this.dataBufferStroke.domainX = domainX;
     this.dataBufferFill.domainX = domainX;
-    this.draw(this.dataBufferStroke);
-    this.draw(this.dataBufferFill);
+    this.dataBufferFboIntervals.domainX = domainX;
+    this.render();
   }
 
   render() {
     this.draw(this.dataBufferStroke);
     this.draw(this.dataBufferFill);
+    this.drawFboIntervals(this.dataBufferFboIntervals);
   }
 }
 
