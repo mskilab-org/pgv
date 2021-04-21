@@ -133,9 +133,11 @@ class Plot {
     this.dataBufferFboIntervals = {stageWidth, stageHeight, startPoint, endPoint, color, offset, valY, domainX, domainY, instances};
   }
 
-  rescaleX(domainX) {
+  rescaleXY(domainX, domainY) {
     this.dataBufferStroke.domainX = domainX;
     this.dataBufferFill.domainX = domainX;
+    this.dataBufferStroke.domainY = domainY;
+    this.dataBufferFill.domainY = domainY;
     this.fboIntervals = this.regl.framebuffer({
       width: this.dataBufferFboIntervals.stageWidth,
       height: this.dataBufferFboIntervals.stageHeight,
@@ -143,6 +145,7 @@ class Plot {
     });
     this.drawFboIntervals = this.regl({...this.commonSpecIntervals, framebuffer: this.fboIntervals});
     this.dataBufferFboIntervals.domainX = domainX;
+    this.dataBufferFboIntervals.domainY = domainY;
     this.render();
   }
 

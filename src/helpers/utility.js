@@ -20,3 +20,10 @@ export function measureText(string, fontSize = 10) {
     .map(c => c.charCodeAt(0) < widths.length ? widths[c.charCodeAt(0)] : avg)
     .reduce((cur, acc) => acc + cur) * fontSize
 }
+
+export function humanize(str) {
+  return str
+      .replace(/^[\s_]+|[\s_]+$/g, '')
+      .replace(/[_\s]+/g, ' ')
+      .replace(/^[a-z]/, function(m) { return m.toUpperCase(); });
+}

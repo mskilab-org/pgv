@@ -54,14 +54,14 @@ class Home extends Component {
               <GenesPanel/>
             </Col>
           </Row>}
-          {panels.pca.visible && <Row className="ant-panel-container ant-home-map-panel-container">
-            <Col className="gutter-row" span={24}>
-              <CoveragePanel/>
-            </Col>
-          </Row>}
           {panels.rpkm.visible && <Row className="ant-panel-container ant-home-map-panel-container">
             <Col className="gutter-row" span={24}>
               <RPKMPanel/>
+            </Col>
+          </Row>}
+          {panels.coverage.visible && <Row className="ant-panel-container ant-home-map-panel-container">
+            <Col className="gutter-row" span={24}>
+              <CoveragePanel/>
             </Col>
           </Row>}
           <Row className="ant-panel-container ant-home-map-panel-container">
