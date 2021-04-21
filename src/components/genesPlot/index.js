@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import * as d3 from "d3";
-import { Axis, axisPropsFromTickScale, LEFT, BOTTOM } from "react-d3-axis";
+import { Axis, axisPropsFromTickScale, BOTTOM } from "react-d3-axis";
 import Wrapper from "./index.style";
-import { rgbtoInteger, measureText } from "../../helpers/utility";
+import { rgbtoInteger, humanize, measureText } from "../../helpers/utility";
 import Plot from "./plot";
 
 const margins = {
@@ -13,6 +13,7 @@ const margins = {
 class GenesPlot extends Component {
   regl = null;
   container = null;
+  plotContainer = null;
   geneStruct = {};
   stageHeight = 0;
   stageWidth = 0;
@@ -22,7 +23,7 @@ class GenesPlot extends Component {
       extensions: ["ANGLE_instanced_arrays"],
       container: this.container,
       pixelRatio: window.devicePixelRatio || 1.5,
-      attributes: { antialias: true, depth: false, stencil: false },
+      attributes: { antialias: true, depth: false, stencil: true },
     });
 
     regl.cache = {};
@@ -72,6 +73,24 @@ class GenesPlot extends Component {
     }
   }
 
+  tooltipContent(interval) {
+    let attributes = [
+      { label: "iid", value: interval.iid },
+      { label: "title", value: interval.title },
+      { label: "type", value: interval.type },
+      { label: "Chromosome", value: interval.chromosome },
+      { label: "Y", value: interval.y },
+      { label: "Start Point", value: d3.format(",")(interval.startPoint) },
+      { label: "End Point", value: d3.format(",")(interval.endPoint) }
+    ];
+    interval.strand && attributes.push({ label: "Strand", value: interval.strand });
+    interval.sequence && attributes.push({ label: "Sequence", value: interval.sequence });
+    interval.metadata && Object.keys(interval.metadata).forEach((key) => {
+      attributes.push({ label: humanize(key), value: interval.metadata[key] });
+    });
+    return attributes;
+  }
+
   updateStage() {
     let { width, height, genes, xDomain, chromoBins } = this.props;
 
@@ -102,6 +121,57 @@ class GenesPlot extends Component {
       this.geneStruct
     );
     this.plot.render();
+
+    let self = this;
+    d3.select(this.container)
+      .select("canvas")
+      .on("mousemove", function (event) {
+        let position = d3.pointer(event);
+        try {
+          const pixels = self.plot.regl.read({
+            x: position[0],
+            y: self.stageHeight - position[1],
+            width: 1,
+            height: 1,
+            data: new Uint8Array(6),
+            framebuffer: self.plot.fboIntervals,
+          });
+          let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
+          console.log(position, index)
+          if (genes[index]) {
+            let textData = self.tooltipContent(genes[index]);
+            let maxLength = d3.max(textData, (d) =>
+              measureText(`${d.label}: ${d.value}`, 12)
+            );
+            d3.select(self.plotContainer).selectAll("g.tooltip tspan").remove();
+            d3.select(self.plotContainer)
+              .select("g.tooltip rect")
+              .attr("height", textData.length * 16 + 12)
+              .attr("width", maxLength + 30)
+              .attr("y", genes[index].strand === "+" ? 20 - (textData.length * 16) : 20);
+            d3.select(self.plotContainer)
+              .select("g.tooltip")
+              .attr("transform", `translate(${position})`)
+              .select("text")
+              .selectAll("tspan")
+              .data(textData)
+              .enter()
+              .append("tspan")
+              .attr("x", (d, i) => 40)
+              .attr("y", (d, i) => (genes[index].strand === "+" ? 38 - (textData.length * 16) : 38) + i * 16)
+              .html(
+                (e, i) =>
+                  `<tspan font-weight="bold">${e.label}</tspan>: ${e.value}`
+              );
+          } else {
+            d3.select(self.plotContainer)
+              .select("g.tooltip")
+              .attr("transform", `translate(${[-1000, -1000]})`);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      });
   }
 
   handleGeneLabelClick = (gene) => {
@@ -137,7 +207,7 @@ class GenesPlot extends Component {
           style={{ width: stageWidth, height: stageHeight }}
           ref={(elem) => (this.container = elem)}
         />
-        <svg width={width} height={height} className="plot-container">
+        <svg width={width} height={height} className="plot-container" ref={(elem) => (this.plotContainer = elem)}>
           <clipPath id="clipping">
             <rect x={0} y={0} width={stageWidth} height={stageHeight} />
           </clipPath>
@@ -176,6 +246,23 @@ class GenesPlot extends Component {
             <g  key={d} transform={`translate(${[xScale(chromoBins[d].startPlace), 0]})`}>
              <line x1="0" y1="0" x2="0" y2={-stageHeight} stroke="rgb(128, 128, 128)" strokeDasharray="4" />
             </g>)}
+          </g>
+          <g
+            className="tooltip"
+            transform="translate(-1000, -1000)"
+            pointerEvents="none"
+          >
+            <rect
+              x="30"
+              y="20"
+              width="150"
+              height="40"
+              rx="5"
+              ry="5"
+              fill="rgb(97, 97, 97)"
+              fillOpacity="0.97"
+            />
+            <text x="40" y="48" fontSize="12" fill="#FFF"></text>
           </g>
         </svg>
       </Wrapper>
