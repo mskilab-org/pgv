@@ -21,3 +21,24 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
+## Converter scripts
+
+The project contains a number of scripts for converting between the accepted formats. In particular, the projects uses Apache Arrow as the format for rendering scatterplots and barplots on the reference genome.
+
+### `ruby ./scripts/csv2arrow/install.rb`
+
+First step is to call the above to install the required libraries for the CSV to Apache Arrow converter
+
+### `ruby ./scripts/csv2arrow/scatterplot/convert.rb scatterplot.csv`
+
+This scripts converts the given scatterplot.csv CSV input file into the corresponding Apache Arrow file scatterplot.arrow in the same folder location. By default, it assumes the hg19 reference. 
+
+The input CSV file needs to comply with the template given in 
+
+### `./scripts/csv2arrow/scatterplot/csv_template.csv`
+
+If you wish to explicitly specify the reference, please pass the flag
+
+### `--ref hg38` 
+
+The accepted values are hg19, hg38, and covid19
