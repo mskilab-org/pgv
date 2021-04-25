@@ -3,6 +3,7 @@ require 'smarter_csv'
 require 'json'
 
 REFERENCES = ['hg19', 'hg38', 'covid19']
+CSV_HEADERS = ["x","y","chromosome"]
 
 if ARGV.length < 1
   puts "Too few arguments: Input CSV file is missing"
@@ -18,7 +19,7 @@ if !REFERENCES.include?(reference)
   exit
 end
 
-dataInput = JSON.parse(File.read("../settings.json"))
+dataInput = JSON.parse(File.read("./scripts/csv2arrow/settings.json"))
 references = dataInput['coordinates']['sets']
 metadata = references[reference]
 
@@ -61,18 +62,29 @@ begin
     puts "Started parsing input CSV file at #{input_file}"
     t1 = Time.now
     records = SmarterCSV.process(input_file, {col_sep: ','})
+    unless CSV_HEADERS == records.first.keys.map(&:to_s)
+      puts "Improper CSV headers! Expect to be #{CSV_HEADERS} but found #{records.first.keys.map(&:to_s)}"
+      exit
+    end
+    puts "First CSV record is: #{records[0].to_h}"
+    puts "Last CSV record is: #{records[records.length - 1].to_h}"
+    puts "Converting to global reference coordinates"
     records = records.map do |r| 
       chromo = chromoBins["#{r[:chromosome]}"]
       [chromo['startPlace'].to_f + r[:x].to_f, r[:y], chromo['colorValue']]
     end
+    puts "Sorting records by \"x\" attribute in ascending order"
+    records.sort_by!{|x| x.first}
     puts "Loaded #{records.length} records in #{Time.now - t1} seconds"
     puts "Started converting CSV file to Arrow"
     t1 = Time.now
     csv_to_arrow(records, output_file)
     puts "Successfully converted #{input_file} to #{output_file} in #{Time.now - t1} seconds"
     table = Arrow::Table.load(output_file)
-    puts "Arrow file #{output_file} contains #{Arrow::Table.load(output_file).n_rows} rows and columns:"
+    puts "Arrow file #{output_file} contains #{table.n_rows} rows and columns:"
     puts table.schema
+    puts "First Arrow record is: #{table.slice(0).to_h}"
+    puts "Last Arrow record is: #{table.slice(table.n_rows - 1).to_h}"
 rescue Exception => e
     puts "Execution failed with exception: #{e}"
 end
