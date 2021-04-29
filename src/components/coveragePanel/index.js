@@ -13,18 +13,12 @@ import ScatterPlot from "../scatterPlot";
 const margins = {
   padding: 0,
 };
-const { getCoverageData } = appActions;
 
-class CoveragePanel extends Component {
-  componentDidMount() {
-    let params = new URL(decodeURI(document.location)).searchParams;
-    let file = params.get("file");
-    file && this.props.getCoverageData(file);
-  }
+class ScatterPlotPanel extends Component {
 
   render() {
-    const { t, loading, coverageData, domain, chromoBins } = this.props;
-    if (!coverageData) {
+    const { t, loading, data, title, domain, chromoBins } = this.props;
+    if (!data) {
       return null;
     }
     return (
@@ -38,18 +32,18 @@ class CoveragePanel extends Component {
                 <AiOutlineDotChart />
               </span>
               <span className="ant-pro-menu-item-title">
-                {t("components.coverage-panel.header")}
+                {title}
               </span>
             </Space>
           }
-          extra={<p><b>{d3.format(",")(coverageData.length)}</b> {t("components.coverage-panel.datapoint", {count: coverageData.length})}</p>}
+          extra={<p><b>{d3.format(",")(data.length)}</b> {t("components.coverage-panel.datapoint", {count: data.length})}</p>}
         >
           <div className="ant-wrapper">
             <ContainerDimensions>
               {({ width, height }) => {
                 return (
                   <ScatterPlot
-                    {...{ width: width - 2 * margins.padding, height: height, results: coverageData, xDomain: domain, chromoBins: chromoBins, title: t("components.coverage-panel.title")}}
+                    {...{ width: width - 2 * margins.padding, height: height, results: data, xDomain: domain, chromoBins: chromoBins}}
                   />
                 );
               }}
@@ -60,18 +54,13 @@ class CoveragePanel extends Component {
     );
   }
 }
-CoveragePanel.propTypes = {};
-CoveragePanel.defaultProps = {};
+ScatterPlotPanel.propTypes = {};
+ScatterPlotPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
-  getCoverageData: (file) => dispatch(getCoverageData(file)),
 });
 const mapStateToProps = (state) => ({
-  loading: state.Strains.loading,
-  domain: state.App.domain,
-  coverageData: state.Genome.coverageData,
-  chromoBins: state.App.chromoBins
 });
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withTranslation("common")(CoveragePanel));
+)(withTranslation("common")(ScatterPlotPanel));

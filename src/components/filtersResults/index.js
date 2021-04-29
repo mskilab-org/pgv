@@ -28,9 +28,9 @@ class FilterResults extends Component {
                     key={item.file}
                     avatar={<Avatar size={32}>{i + 1}</Avatar>}
                     title={
-                      <Link to={`/?file=${item.file}`}>
+                      <a href={`/?file=${item.file}`}>
                         <h2>{item.file}</h2>
-                      </Link>
+                      </a>
                     }
                     description={
                       <Space size={[4, 8]} wrap={true}>

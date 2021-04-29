@@ -140,7 +140,7 @@ Topbar.defaultProps = {
 const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
-  file: state.Genome.file,
+  file: state.App.file,
   domain: state.App.domain,
   loading: state.App.loading
 });

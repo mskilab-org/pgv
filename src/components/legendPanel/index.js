@@ -14,7 +14,7 @@ const margins = {
 
 class LegendPanel extends Component {
   render() {
-    const { t, selectedCoordinate, genomeRange } = this.props;
+    const { t, selectedCoordinate, genomeRange, domain, defaultDomain, chromoBins } = this.props;
     return (
       <Wrapper>
         <Card
@@ -33,7 +33,7 @@ class LegendPanel extends Component {
         >          
           <ContainerDimensions>
             {({ width }) => {
-              return <Legend className="ant-wrapper" {...{ width: (width - 2 * margins.padding) }} />;
+              return <Legend className="ant-wrapper" {...{ width: (width - 2 * margins.padding), domain, defaultDomain, chromoBins }} />;
             }}
           </ContainerDimensions>
           <Meta description={genomeRange} />
@@ -48,7 +48,5 @@ LegendPanel.defaultProps = {
 };
 const mapDispatchToProps = {};
 const mapStateToProps = (state) => ({
-  selectedCoordinate: state.App.selectedCoordinate,
-  genomeRange: state.App.genomeRange
 });
 export default connect(mapStateToProps, mapDispatchToProps)(withTranslation("common")(LegendPanel));

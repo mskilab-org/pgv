@@ -43,10 +43,14 @@ const initState = {
   genomeLength: 0,
   defaultDomain: [],
   domain: null,
+  datafile: {filename: "", file:"", tags: [], plots: [], reference: ""},
+  strainsList: [],
   chromoBins: {},
   coordinates: [],
   geography: [],
+  tags: [],
   genes: [],
+  plots: [],
   geographyHash: {},
   genomeRange: "",
   panels: {phylogeny: {}, pca: {}, genes: {}, geography: {}, anatomy: {}, coverage: {}, rpkm: {}}
@@ -55,32 +59,38 @@ const initState = {
 export default function appReducer(state = initState, action) {
   let {geographyHash, geography} = state;
   switch (action.type) {
-    case actions.GET_SETTINGS:
-      return { ...state, loading: true };
-    case actions.SETTINGS_RECEIVED:
-      let selectedCoordinate = action.settings.coordinates.default;
-      let { genomeLength, chromoBins } = updateChromoBins(
-        action.settings.coordinates.sets[selectedCoordinate]
-      );
-      geographyHash = {};
-      action.settings.geography.forEach((d, i) => (geographyHash[d.id] = d));
-      let dom = state.domain || [1, genomeLength];
-      return {
-        ...state,
-        genomeLength,
-        defaultDomain: [1, genomeLength],
-        domain: dom,
-        genomeRange: locateGenomeRange(chromoBins, dom[0], dom[1]),
-        chromoBins,
-        selectedCoordinate,
-        coordinates: action.settings.coordinates,
-        defaultGeography: action.settings.geography,
-        geography: action.settings.geography,
-        geographyHash: geographyHash,
-        panels: action.settings.panels,
-        loading: false,
-      };
-    case actions.UPDATE_COORDINATES:
+    case actions.LAUNCH_APP:
+      return { ...state, loading: true};
+    case actions.LAUNCH_APP_SUCCESS:
+      return { ...state, ...action.properties, loading: false };  
+    case actions.LAUNCH_APP_FAILED:
+      return { ...state, missingDataFiles: true, loading: false };      
+    // case actions.GET_SETTINGS:
+    //   return { ...state, loading: true };
+    // case actions.SETTINGS_RECEIVED:
+    //   let selectedCoordinate = action.settings.coordinates.default;
+    //   let { genomeLength, chromoBins } = updateChromoBins(
+    //     action.settings.coordinates.sets[selectedCoordinate]
+    //   );
+    //   geographyHash = {};
+    //   action.settings.geography.forEach((d, i) => (geographyHash[d.id] = d));
+    //   let dom = state.domain || [1, genomeLength];
+    //   return {
+    //     ...state,
+    //     genomeLength,
+    //     defaultDomain: [1, genomeLength],
+    //     domain: dom,
+    //     genomeRange: locateGenomeRange(chromoBins, dom[0], dom[1]),
+    //     chromoBins,
+    //     selectedCoordinate,
+    //     coordinates: action.settings.coordinates,
+    //     defaultGeography: action.settings.geography,
+    //     geography: action.settings.geography,
+    //     geographyHash: geographyHash,
+    //     panels: action.settings.panels,
+    //     loading: false,
+    //   };
+    case actions.UPDATE_COORDINATES: 
       return { ...state, loading: true };
     case actions.COORDINATES_UPDATED:
       let updatedBins = updateChromoBins(

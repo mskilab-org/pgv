@@ -18,7 +18,7 @@ const margins = {
 
 class GenomePanel extends Component {
   render() {
-    const { t, genome, domain, defaultDomain, updateDomain, chromoBins } = this.props;
+    const { t, genome, domain, defaultDomain, title, updateDomain, chromoBins } = this.props;
     if (Object.keys(genome).length < 1) return null;
     return (
       <Wrapper>
@@ -30,7 +30,7 @@ class GenomePanel extends Component {
                 <GiDna2 />
               </span>
               <span className="ant-pro-menu-item-title">
-                {t("components.genome-panel.header")}
+                {title}
               </span>
             </Space>
           }
@@ -43,12 +43,12 @@ class GenomePanel extends Component {
                   <GenomePlot
                     {...{
                       width: width - 2 * margins.padding,
-                      height: height,
-                      genome: genome,
+                      height,
+                      genome,
                       xDomain: domain,
-                      updateDomain: updateDomain,
-                      defaultDomain: defaultDomain,
-                      chromoBins: chromoBins,
+                      updateDomain,
+                      defaultDomain,
+                      chromoBins
                     }}
                   />
                 );
@@ -67,11 +67,6 @@ const mapDispatchToProps = (dispatch) => ({
   updateDomain: (from, to) => dispatch(updateDomain(from,to))
 });
 const mapStateToProps = (state) => ({
-  loading: state.Strains.loading,
-  domain: state.App.domain,
-  defaultDomain: state.App.defaultDomain,
-  genome: state.Genome.genome,
-  chromoBins: state.App.chromoBins,
 });
 export default connect(
   mapStateToProps,

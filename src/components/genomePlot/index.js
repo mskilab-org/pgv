@@ -187,20 +187,21 @@ class GenomePlot extends Component {
         [stageWidth, stageHeight],
       ])
       .scaleExtent([1, Infinity])
-      .on("zoom", (event) => {
+      .on("zoom end", (event) => {
         var t = event.transform;
         var newDomainX = t.rescaleX(this.genomeScale).domain().map(Math.floor);
         if (newDomainX.toString !== xDomain) {
           this.handleZoom(intervals, chromoBins, newDomainX, stageWidth, stageHeight);
+          updateDomain(newDomainX[0], newDomainX[1]);
         }
       })
-      .on("end", (event) => {
-        var t = event.transform;
-        var newDomain = t.rescaleX(this.genomeScale).domain().map(Math.floor);
-        if (newDomain.toString !== xDomain) {
-          updateDomain(newDomain[0], newDomain[1]);
-        }
-      });
+      // .on("end", (event) => {
+      //   var t = event.transform;
+      //   var newDomain = t.rescaleX(this.genomeScale).domain().map(Math.floor);
+      //   if (newDomain.toString !== xDomain) {
+      //     updateDomain(newDomain[0], newDomain[1]);
+      //   }
+      // });
 
     d3.select(this.container)
       .attr("preserveAspectRatio", "xMinYMin meet")

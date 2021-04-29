@@ -12,6 +12,12 @@ const actions = {
   GET_GENES: "GET_GENES",
   GENES_RECEIVED: "GENES_RECEIVED",
   DOMAIN_UPDATED: "DOMAIN_UPDATED",
+  LAUNCH_APP: "LAUNCH_APP",
+  LAUNCH_APP_SUCCESS: "LAUNCH_APP_SUCCESS",
+  LAUNCH_APP_FAILED: "LAUNCH_APP_FAILED",
+  launchApp: () => ({
+    type: actions.LAUNCH_APP,
+  }),
   getSettings: () => ({
     type: actions.GET_SETTINGS,
   }),

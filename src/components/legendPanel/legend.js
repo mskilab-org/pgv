@@ -21,20 +21,45 @@ const margins = {
 class Legend extends Component {
 
   componentDidMount() {
-    const { chromoBins } = this.props;
+    const { domain, defaultDomain,updateDomain } = this.props;
 
     let stageWidth = this.props.width - 2 * margins.legend.padding;
     let stageHeight = margins.legend.height;
     
     this.brush = d3.brushX()
     .extent([[0,margins.brush.gap], [stageWidth, stageHeight - margins.brush.gap]])
+    .on("brush end", (event) => {
+      const selection = event.selection;
+      if (!event.sourceEvent || !selection) return;
+      const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
+ 
+      //updateDomain(from, to);
+    });
+
+    let genomeScale = d3
+    .scaleLinear()
+    .domain(defaultDomain)
+    .range([0, stageWidth]);
     
     d3.select(this.container)
     .append("g")
     .attr("class", "brush-container")
     .attr("transform", `translate(${[margins.legend.padding,0]})`)
-    .call(this.brush);
-    
+    .call(this.brush)
+    .call(this.brush.move, domain.map(genomeScale))
+    .call(g => g.select(".overlay")
+        .datum({type: "selection"})
+        .on("mousedown touchstart", (event) => {
+          const dx = margins.brush.defaultLength; // Use a fixed width when recentering.
+          const [[cx]] = d3.pointers(event);
+          const [x0, x1] = [cx - dx / 2, cx + dx / 2];
+          const [X0, X1] = [0, stageWidth];
+          d3.select(this.container).select("g.brush-container")
+              .call(this.brush.move, x1 > X1 ? [X1 - dx, X1] 
+                  : x0 < X0 ? [X0, X0 + dx] 
+                  : [x0, x1]);
+              }
+        ));
   }
 
   componentDidUpdate() {
@@ -137,19 +162,14 @@ Legend.propTypes = {
   chromoBins: PropTypes.object,
   domain: PropTypes.array,
   defaultDomain: PropTypes.array,
-  width: PropTypes.number.isRequired,
+  width: PropTypes.number.isRequired
 };
 Legend.defaultProps = {
-  chromoBins: {},
-  genomeLength: 0,
   width: 400,
 };
 const mapDispatchToProps = (dispatch) => ({
   updateDomain: (from, to) => dispatch(updateDomain(from,to))
 });
 const mapStateToProps = (state) => ({
-  domain: state.App.domain,
-  defaultDomain: state.App.defaultDomain,
-  chromoBins: state.App.chromoBins,
 });
 export default connect(mapStateToProps, mapDispatchToProps)(Legend);

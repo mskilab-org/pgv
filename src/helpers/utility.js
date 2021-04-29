@@ -27,3 +27,40 @@ export function humanize(str) {
       .replace(/[_\s]+/g, ' ')
       .replace(/^[a-z]/, function(m) { return m.toUpperCase(); });
 }
+
+export function updateChromoBins(coordinateSet) {
+  let genomeLength = coordinateSet.reduce(
+    (acc, elem) => acc + elem.endPoint,
+    0
+  );
+  let boundary = 0;
+  let chromoBins = coordinateSet.reduce((hash, element) => {
+    let chromo = element;
+    chromo.length = chromo.endPoint;
+    chromo.startPlace = boundary + chromo.startPoint;
+    chromo.endPlace = boundary + chromo.endPoint;
+    hash[element.chromosome] = chromo;
+    boundary += chromo.length;
+    return hash;
+  }, {});
+  return { genomeLength, chromoBins };
+}
+
+export function locateGenomeRange(chromoBins, from, to) {
+  let genomeRange = [];
+  Object.keys(chromoBins).forEach((key,i) => {
+    if ((from <= chromoBins[key].endPlace) && (from >= chromoBins[key].startPlace) && 
+    (to <= chromoBins[key].endPlace) && (from >= chromoBins[key].startPlace)) {
+      genomeRange.push(`${key}:${from - chromoBins[key].startPlace + chromoBins[key].startPoint}-${to - chromoBins[key].startPlace + chromoBins[key].startPoint}`);
+    } else if ((from <= chromoBins[key].endPlace) && (from >= chromoBins[key].startPlace) && 
+    (to > chromoBins[key].endPlace)) {
+      genomeRange.push(`${key}:${from - chromoBins[key].startPlace + chromoBins[key].startPoint}-${chromoBins[key].endPoint}`);
+    } else if ((to <= chromoBins[key].endPlace) && (to >= chromoBins[key].startPlace) && 
+    (from < chromoBins[key].startPlace)) {
+      genomeRange.push(`${key}:${chromoBins[key].startPoint}-${to - chromoBins[key].startPlace + chromoBins[key].startPoint}`);
+    } else if ((from <= chromoBins[key].startPlace) && (to >= chromoBins[key].endPlace)) {
+      genomeRange.push(`${key}:${chromoBins[key].startPoint}-${chromoBins[key].endPoint}`);
+    }
+  });
+  return genomeRange.join(' ');
+}

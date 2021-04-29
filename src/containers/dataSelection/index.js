@@ -6,7 +6,7 @@ import * as d3 from "d3";
 import DataSelectionWrapper from "./index.style";
 import { withTranslation } from "react-i18next";
 import FiltersPanel from "../../components/filtersPanel";
-import HomeHeader from "../../components/headerPanel";
+import HeaderPanel from "../../components/headerPanel";
 import FiltersResults from "../../components/filtersResults";
 
 class DataSelection extends Component {
@@ -26,12 +26,27 @@ class DataSelection extends Component {
   };
 
   render() {
-    const { t, tags, loading, missingDataFiles } = this.props;
+    const {
+      t,
+
+      datafile,
+      tags,
+      strainsList,
+      loading,
+      missingDataFiles,
+    } = this.props;
 
     return (
       <DataSelectionWrapper>
         <div className="ant-ds-header-container">
-          <HomeHeader />
+          <HeaderPanel
+            {...{
+              description: [datafile.reference],
+              file: datafile.file,
+              strainsList,
+              tags: datafile.tags
+            }}
+          />
         </div>
         <div className="ant-ds-content-container">
           {missingDataFiles && (
@@ -75,19 +90,16 @@ class DataSelection extends Component {
   }
 }
 
-DataSelection.propTypes = {
-  tags: PropTypes.array,
-};
-DataSelection.defaultProps = {
-  tags: [],
-  loading: true,
-};
+DataSelection.propTypes = {};
+DataSelection.defaultProps = {};
 const mapDispatchToProps = {};
 const mapStateToProps = (state) => ({
-  datafiles: state.Genome.datafiles,
-  missingDataFiles: state.Genome.missingDataFiles,
-  tags: state.Genome.tags,
-  loading: state.Genome.loading,
+  datafiles: state.App.datafiles,
+  datafile: state.App.datafile,
+  strainsList: state.App.strainsList,
+  missingDataFiles: state.App.missingDataFiles,
+  tags: state.App.tags,
+  loading: state.App.loading,
 });
 export default connect(
   mapStateToProps,

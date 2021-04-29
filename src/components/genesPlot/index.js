@@ -137,7 +137,6 @@ class GenesPlot extends Component {
             framebuffer: self.plot.fboIntervals,
           });
           let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
-          console.log(position, index)
           if (genes[index]) {
             let textData = self.tooltipContent(genes[index]);
             let maxLength = d3.max(textData, (d) =>

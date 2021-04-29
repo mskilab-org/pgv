@@ -12,8 +12,8 @@
   },
   "containers": {
     "home": {
-      "category": "{{count}} category",
-      "category_plural": "{{count}} categories",
+      "category": "category",
+      "category_plural": "categories",
       "strain": "strain",
       "strain_plural": "strains"
     },

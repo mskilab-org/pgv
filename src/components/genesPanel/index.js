@@ -61,10 +61,6 @@ GenesPanel.propTypes = {
 GenesPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
-  loading: state.Strains.loading,
-  domain: state.App.domain,
-  genes: state.App.genes,
-  chromoBins: state.App.chromoBins,
 });
 export default connect(
   mapStateToProps,
