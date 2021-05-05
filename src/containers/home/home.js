@@ -10,7 +10,7 @@ import LegendPanel from "../../components/legendPanel";
 import GeographyPanel from "../../components/geographyPanel";
 import PhylogenyPanel from "../../components/phylogenyPanel";
 import PcaPanel from "../../components/pcaPanel";
-import ScatterPlotPanel from "../../components/scatterPlotPanel";
+import ScatterPlotPanel from "../../components/coveragePanel";
 import BarPlotPanel from "../../components/barPlotPanel";
 import GenesPanel from "../../components/genesPanel";
 import GenomePanel from "../../components/genomePanel";
