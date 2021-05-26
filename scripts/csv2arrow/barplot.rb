@@ -19,7 +19,7 @@ if !REFERENCES.include?(reference)
   exit
 end
 
-dataInput = JSON.parse(File.read("./scripts/csv2arrow/settings.json"))
+dataInput = JSON.parse(File.read("./settings.json"))
 references = dataInput['coordinates']['sets']
 metadata = references[reference]
 

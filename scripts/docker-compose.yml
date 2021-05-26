@@ -1,0 +1,10 @@
+version: '3.2'
+services:
+  arrow-service:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: /bin/bash
+    volumes:
+      - ./csv2arrow:/usr/src/csv2arrow
+    tty: true

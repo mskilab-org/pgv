@@ -25,7 +25,13 @@ You will also see any lint errors in the console.
 
 The project contains a number of scripts for converting between the accepted formats. In particular, the projects uses Apache Arrow as the format for rendering scatterplots and barplots on the reference genome.
 
-At the root project folder, run:
+First of all, please make sure you have [Docker](https://docs.docker.com/desktop/) installed and running on your machine.
+
+Then within the scripts folder, run the command
+
+### `docker-compose up --build`
+
+The command above will initiate the scripts_arrow-service_1 docker container on your machine. Then in a new command line run:
 
 ### `ruby ./scripts/csv2arrow/install.rb`
 
@@ -35,13 +41,17 @@ This step is needed to install the required libraries for the CSV to Apache Arro
 
 Assuming installation completed successfully, at the root project folder, run:
 
-### `ruby ./scripts/csv2arrow/scatterplot/convert.rb ./scatterplot.csv`
+### `docker exec -it scripts_arrow-service_1 /bin/bash`
+
+This command will open a console on the container. There you may execute:
+
+### `ruby scatterplot.rb ./scatterplot.csv`
 
 This scripts converts the given scatterplot.csv CSV input file into the corresponding Apache Arrow file ./scatterplot.arrow in the same folder location. By default, it assumes the hg19 reference. 
 
 The input CSV file needs to comply with the template given in:
 
-### `./scripts/csv2arrow/scatterplot/csv_template.csv`
+### `scatterplot_template.csv`
 
 If you wish to explicitly specify the reference, please pass the flag
 
@@ -51,15 +61,15 @@ The accepted values are hg19, hg38, and covid19
 
 ### Apache Arrow converter for BarPlot data
 
-Assuming installation completed successfully, at the root project folder, run:
+Assuming the steps above are executed successfully, run:
 
-### `ruby ./scripts/csv2arrow/barplot/convert.rb ./barplot.csv`
+### `ruby barplot.rb ./barplot.csv`
 
 This scripts converts the given barplot.csv CSV input file into the corresponding Apache Arrow file ./barplot.arrow in the same folder location. By default, it assumes the hg19 reference. 
 
 The input CSV file needs to comply with the template given in:
 
-### `./scripts/csv2arrow/barplot/csv_template.csv`
+### `barplot_template.csv`
 
 If you wish to explicitly specify the reference, please pass the flag
 
