@@ -1,4 +1,7 @@
 {
+  "general": {
+    "error": "Oops! Operation failed with error: {{error}}"
+  },
   "menu": {
     "home": {
       "title": "Dashboard"
@@ -26,6 +29,8 @@
     }
   },
   "components": {
+    "visibility-switch-tooltip": "Toggle visibility",
+    "download-as-png-tooltip": "Download as PNG",
     "filters-panel": {
       "header": "Search Filters",
       "tags-section": {

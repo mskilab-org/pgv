@@ -2,10 +2,25 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { withTranslation } from "react-i18next";
 import { connect } from "react-redux";
-import { PageHeader, Space, Tag } from "antd";
+import { PageHeader, Space, Tag, Button, Tooltip, message } from "antd";
+import { AiOutlineDownload } from "react-icons/ai";
+import { downloadCanvasAsPng } from "../../helpers/utility";
+import html2canvas from 'html2canvas';
 import Wrapper from "./index.style";
 
 class HeaderPanel extends Component {
+
+  onDownloadButtonClicked = () => {
+    html2canvas(document.body).then((canvas) => {
+      downloadCanvasAsPng(
+        canvas,
+        `${this.props.file.replace(/\s+/g, "_").toLowerCase()}.png`
+      );
+  }).catch((error) => {
+    message.error(this.props.t("general.error", { error }));
+  });
+  };
+
   render() {
     const {
       t,
@@ -25,6 +40,19 @@ class HeaderPanel extends Component {
                 <span key={d}>{d}</span>
               ))}
             </Space>
+          }
+          extra={
+            <Space>
+            <Tooltip title={t("components.download-as-png-tooltip")}>
+              <Button
+                type="default"
+                shape="circle"
+                icon={<AiOutlineDownload />}
+                size="small"
+                onClick={() => this.onDownloadButtonClicked()}
+              />
+            </Tooltip>
+          </Space>
           }
           footer={
               <Space>

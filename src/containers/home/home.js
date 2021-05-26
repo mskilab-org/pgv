@@ -45,13 +45,14 @@ class Home extends Component {
           defaultDomain,
           genome: d.data,
           title: d.title,
-          chromoBins: chromoBins}}/>
+          chromoBins: chromoBins,
+          visible: d.visible}}/>
       } else if (d.type === "genes") {
-        plotComponent = <GenesPanel {...{ genes: d.data, domain, chromoBins }} />;
+        plotComponent = <GenesPanel {...{ genes: d.data, domain, chromoBins, visible: false }} />;
       } else if (d.type === "barplot") {
-        plotComponent = <BarPlotPanel {...{ data: d.data, title: d.title, domain, defaultDomain, chromoBins, loading }} />;
+        plotComponent = <BarPlotPanel {...{ data: d.data, title: d.title, domain, defaultDomain, chromoBins, visible: d.visible, loading }} />;
       } else if (d.type === "scatterplot") {
-        plotComponent = <ScatterPlotPanel {...{data: d.data, title: d.title, domain, defaultDomain, chromoBins, loading}} />
+        plotComponent = <ScatterPlotPanel {...{data: d.data, title: d.title, domain, defaultDomain, chromoBins, visible: d.visible, loading}} />
       }
       plotComponents.push(
         <Row key={i} className="ant-panel-container ant-home-map-panel-container">

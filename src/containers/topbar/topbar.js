@@ -3,16 +3,14 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import { Link } from "react-router-dom";
 import { withTranslation } from "react-i18next";
-import { Layout, Menu, Space, Spin, Drawer } from "antd";
+import { Layout, Menu, Space, Spin } from "antd";
 import {
   AiOutlineDashboard,
-  AiOutlineTable,
-  AiOutlineSetting,
+  AiOutlineTable
 } from "react-icons/ai";
 import { LoadingOutlined } from "@ant-design/icons";
 import TopbarWrapper from "./topbar.style";
 import { siteConfig } from "../../settings";
-import SettingsPanel from "../../components/settingsPanel";
 import logo from "../../assets/images/logo.png";
 
 const { Header } = Layout;
@@ -32,14 +30,6 @@ class Topbar extends Component {
     this.setState({ currentPage: e.key });
   };
 
-  handleSettingsClick = () => {
-    this.setState({ visible: true });
-  };
-
-  onSettingsClose = () => {
-    this.setState({ visible: false });
-  };
-
   componentWillReceiveProps(nextProps) {
     // to update the navigation when page refresh
     let pathname = new URL(decodeURI(document.location)).pathname;
@@ -47,7 +37,7 @@ class Topbar extends Component {
   }
 
   render() {
-    const { visible, currentPage } = this.state;
+    const { currentPage } = this.state;
     const { t, file, domain, loading } = this.props;
     let params = file && `?file=${file}&from=${domain[0]}&to=${domain[1]}`;
 
@@ -106,23 +96,8 @@ class Topbar extends Component {
                         }
                       />}
                     </div>
-                    <div
-                      className="ant-pro-option-container ant-pro-settings-container"
-                      onClick={this.handleSettingsClick}
-                    >
-                      <AiOutlineSetting />
-                    </div>
                   </Space>
                 </div>
-                <Drawer
-                  title={t("menu.settings.title")}
-                  placement="right"
-                  closable={true}
-                  onClose={this.onSettingsClose}
-                  visible={visible}
-                >
-                  <SettingsPanel/>
-                </Drawer>
               </div>
             </div>
           </div>
