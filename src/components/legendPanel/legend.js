@@ -33,7 +33,7 @@ class Legend extends Component {
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
  
-      //updateDomain(from, to);
+      updateDomain(from, to);
     });
 
     let genomeScale = d3
