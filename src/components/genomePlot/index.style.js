@@ -6,14 +6,15 @@ const Wrapper = styled.div`
     padding: 0px;
     min-height: 400px;
   }
-  div.genome-plot canvas {
-    margin: ${props => props.margins.gap}px !important;
+  .konvajs-content canvas {
     padding: 0px !important;
   }
-  svg.plot-container {
-    position: absolute;
-    top: 0px;
-    pointer-events: none;
+  .shape.highlighted {
+    fill: white !important;
+  }
+  path.connection.highlighted {
+    stroke-width: 3 !important;
+    opacity: 1;
   }
 `;
 

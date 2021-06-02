@@ -12,6 +12,7 @@ const actions = {
   GET_GENES: "GET_GENES",
   GENES_RECEIVED: "GENES_RECEIVED",
   DOMAIN_UPDATED: "DOMAIN_UPDATED",
+  WINDOW_HISTORY_UPDATED: "WINDOW_HISTORY_UPDATED",
   LAUNCH_APP: "LAUNCH_APP",
   LAUNCH_APP_SUCCESS: "LAUNCH_APP_SUCCESS",
   LAUNCH_APP_FAILED: "LAUNCH_APP_FAILED",
@@ -42,11 +43,12 @@ const actions = {
     type: actions.GET_GENES,
     coordinate: coordinate
   }),
-  updateDomain: (from, to) => ({
+  updateDomain: (from, to, shouldChangeHistory) => ({
     type: actions.DOMAIN_UPDATED,
     from: from,
-    to: to
-  })
+    to: to,
+    shouldChangeHistory: shouldChangeHistory
+  }),
 };
 
 export default actions;

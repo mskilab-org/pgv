@@ -128,12 +128,14 @@ export default function appReducer(state = initState, action) {
     case actions.GENES_RECEIVED:
       return { ...state, genes: action.genes, loading: false };
     case actions.DOMAIN_UPDATED:
-      let url = new URL(decodeURI(document.location));
-      let params = new URLSearchParams(url.search);
-      params.set("from", +action.from);
-      params.set("to", +action.to);
-      let newURL = `${url.origin}/?${params.toString()}`; 
-      window.history.replaceState(newURL, 'Pan Genome Viewer', newURL);
+      if (action.shouldChangeHistory) {
+        let url = new URL(decodeURI(document.location));
+        let params = new URLSearchParams(url.search);
+        params.set("from", +action.from);
+        params.set("to", +action.to);
+        let newURL = `${url.origin}/?${params.toString()}`; 
+        window.history.replaceState(newURL, 'Pan Genome Viewer', newURL);
+      }
       return { ...state, genomeRange: locateGenomeRange(state.chromoBins, +action.from, +action.to), domain: [+action.from, +action.to] };
     default:
       return state;

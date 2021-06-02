@@ -52,7 +52,7 @@ class GenomePanel extends Component {
       defaultDomain,
       title,
       updateDomain,
-      chromoBins,
+      chromoBins
     } = this.props;
     const { checked } = this.state;
     if (Object.keys(genome).length < 1) return null;
@@ -108,7 +108,7 @@ class GenomePanel extends Component {
                         xDomain: domain,
                         updateDomain,
                         defaultDomain,
-                        chromoBins,
+                        chromoBins
                       }}
                     />
                   );

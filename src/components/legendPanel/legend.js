@@ -21,19 +21,24 @@ const margins = {
 class Legend extends Component {
 
   componentDidMount() {
-    const { domain, defaultDomain,updateDomain } = this.props;
+    const { domain, defaultDomain, updateDomain, updateWindowHistory } = this.props;
 
     let stageWidth = this.props.width - 2 * margins.legend.padding;
     let stageHeight = margins.legend.height;
     
     this.brush = d3.brushX()
     .extent([[0,margins.brush.gap], [stageWidth, stageHeight - margins.brush.gap]])
-    .on("brush end", (event) => {
+    .on("brush", (event) => {
       const selection = event.selection;
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
  
-      updateDomain(from, to);
+      updateDomain(from, to, false);
+    }).on("end", (event) => {
+      const selection = event.selection;
+      if (!event.sourceEvent || !selection) return;
+      const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
+      updateDomain(from, to, true);
     });
 
     let genomeScale = d3
@@ -72,12 +77,17 @@ class Legend extends Component {
       .range([0, stageWidth]);
 
     this.brush
-    .on("brush end", (event) => {
+    .on("brush", (event) => {
       const selection = event.selection;
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
  
-      updateDomain(from, to);
+      updateDomain(from, to, false);
+    }).on("end", (event) => {
+      const selection = event.selection;
+      if (!event.sourceEvent || !selection) return;
+      const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
+      updateDomain(from, to, true);
     });
 
     d3.select(this.container).select("g.brush-container")
@@ -168,7 +178,7 @@ Legend.defaultProps = {
   width: 400,
 };
 const mapDispatchToProps = (dispatch) => ({
-  updateDomain: (from, to) => dispatch(updateDomain(from,to))
+  updateDomain: (from, to, shouldChangeHistory) => dispatch(updateDomain(from,to,shouldChangeHistory))
 });
 const mapStateToProps = (state) => ({
 });
