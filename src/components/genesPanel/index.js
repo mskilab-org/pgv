@@ -44,7 +44,7 @@ class GenesPanel extends Component {
   render() {
     const { t, genes, domain, chromoBins } = this.props;
     const { checked } = this.state;
-    const geneTypes = genes.filter((d,i) => d.type === 'gene');
+    const geneTypes = genes//.filter((d,i) => d.type === 'gene');
     if (genes.length < 1) return null;
     return (
       <Wrapper>

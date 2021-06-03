@@ -51,7 +51,9 @@ class GenomePlot extends Component {
         .darker()
         .toString();
       intervalBins[d.iid] = interval;
-      intervals.push(interval);
+      if ((interval.startPlace <= xDomain[1]) && (interval.endPlace >= xDomain[0])) {
+        intervals.push(interval);
+      }
     });
     let yDomain = [
       0,
@@ -81,7 +83,12 @@ class GenomePlot extends Component {
         connection.sink.scale = xScale;
       }
       connection.touchScale = xScale;
-      connections.push(connection);
+      if (
+        (connection.source && (connection.source.place <= xDomain[1] && connection.source.place >= xDomain[0]))
+        || (connection.sink && (connection.sink.place <= xDomain[1] && connection.sink.place >= xDomain[0]))
+      ) {
+        connections.push(connection);
+      }
     });
 
     return (
