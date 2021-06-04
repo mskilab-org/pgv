@@ -13,6 +13,8 @@ const margins = {
 };
 
 class GenomePlot extends Component {
+  connections = [];
+  intervals = [];
   state = {
     tooltip: {
       shapeId: -1,
@@ -21,15 +23,24 @@ class GenomePlot extends Component {
       text: ""
     }
   }
-  handleShapeMouseOut = () => {
-    this.setState({tooltip: {visible: false}});
-  }
 
-  handleShapeMouseOver = (e, shape, visible) => {
+  handleMouseMove = (e) => {
     const { width, height } = this.props;
-    let diffY = d3.min([0, height - e.nativeEvent.offsetY - shape.tooltipContent.length * 16 - 12]);
-    let diffX = d3.min([0, width - e.nativeEvent.offsetX - d3.max(shape.tooltipContent, (d) => measureText(`${d.label}: ${d.value}`, 12)) - 30]);
-    this.setState({tooltip: {shapeId: shape.primaryKey, visible: true, x: (e.nativeEvent.offsetX + diffX), y: (e.nativeEvent.offsetY + diffY), text: shape.tooltipContent}})
+    let primaryKey = d3.select(e.target) && d3.select(e.target).attr("id");
+    let shapeType = d3.select(e.target) && d3.select(e.target).attr("type");
+    let shape = null;
+    if (primaryKey) {
+      if (shapeType === "interval") {
+        shape = this.intervals.find(e => e.primaryKey === primaryKey);
+     } else if (shapeType === "connection") {
+       shape = this.connections.find(e => e.primaryKey === primaryKey);
+      }
+      let diffY = d3.min([0, height - e.nativeEvent.offsetY - shape.tooltipContent.length * 16 - 12]);
+      let diffX = d3.min([0, width - e.nativeEvent.offsetX - d3.max(shape.tooltipContent, (d) => measureText(`${d.label}: ${d.value}`, 12)) - 30]);
+      this.state.tooltip.shapeId !== shape.primaryKey && this.setState({tooltip: {shapeId: shape.primaryKey, visible: true, x: (e.nativeEvent.offsetX + diffX), y: (e.nativeEvent.offsetY + diffY), text: shape.tooltipContent}})
+    } else {
+      this.state.tooltip.visible && this.setState({tooltip: {shapeId: null, visible: false}})
+    }
   }
 
   render() {
@@ -55,6 +66,7 @@ class GenomePlot extends Component {
         intervals.push(interval);
       }
     });
+    this.intervals = intervals;
     let yDomain = [
       0,
       d3.max(
@@ -90,10 +102,11 @@ class GenomePlot extends Component {
         connections.push(connection);
       }
     });
+    this.connections = connections;
 
     return (
       <Wrapper className="ant-wrapper">
-        <svg width={width} height={height}>
+        <svg width={width} height={height} onMouseMove={(e) => this.handleMouseMove(e)}>
         <defs>
           <clipPath id="cuttOffViewPane">
             <rect x={0} y={0} width={stageWidth} height={2 * stageHeight} />
@@ -111,26 +124,26 @@ class GenomePlot extends Component {
           <g transform={`translate(${[margins.gap,margins.gap]})`} clipPath="url(#cuttOffViewPane)">
             {intervals.map((d, i) => (
               <rect
+                id={d.primaryKey}
+                type="interval"
                 key={i}
                 className={`shape ${d.primaryKey === tooltip.shapeId ? "highlighted" : ""}`}
                 transform={`translate(${[xScale(d.startPlace),yScale(d.y) - 0.5 * margins.bar]})`}
                 width={xScale(d.endPlace) - xScale(d.startPlace)}
                 height={margins.bar}
                 style={{fill: d.fill, stroke: d.stroke, strokeWidth: 1}}
-                onMouseOver={(e) => this.handleShapeMouseOver(e, d)}
-                onMouseOut={(e) => this.handleShapeMouseOut()}
               />
             ))}
           </g>
           <g transform={`translate(${[margins.gap,margins.gap]})`} clipPath="url(#cuttOffViewPane)">
             {connections.map((d, i) => (
               <path
+                id={d.primaryKey}
+                type="connection"
                 key={d.identifier}
                 className={`connection ${d.primaryKey === tooltip.shapeId ? "highlighted" : ""}`}
                 d={d.render}
-                style={{fill: d.fill, stroke: d.color, strokeWidth: d.strokeWidth, strokeDasharray: d.dash, opacity: d.opacity }}
-                onMouseOver={(e) => this.handleShapeMouseOver(e, d)}
-                onMouseOut={(e) => this.handleShapeMouseOut()}
+                style={{fill: d.fill, stroke: d.color, strokeWidth: d.strokeWidth, strokeDasharray: d.dash, opacity: d.opacity, pointerEvents: 'visibleStroke' }}
               />
             ))}
           </g>
