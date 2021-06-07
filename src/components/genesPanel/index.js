@@ -42,10 +42,9 @@ class GenesPanel extends Component {
   };
 
   render() {
-    const { t, genes, domain, chromoBins } = this.props;
+    const { t, genes } = this.props;
     const { checked } = this.state;
-    const geneTypes = genes//.filter((d,i) => d.type === 'gene');
-    if (genes.length < 1) return null;
+    if (!genes) return null;
     return (
       <Wrapper>
         <Card
@@ -58,7 +57,7 @@ class GenesPanel extends Component {
               <span className="ant-pro-menu-item-title">
                 {t("components.genes-panel.header")}
               </span>
-              <span><b>{d3.format(",")((geneTypes.length))}</b> {t("components.genes-panel.gene", {count: geneTypes.length})}</span>
+              <span><b>{d3.format(",")((genes.count()))}</b> {t("components.genes-panel.gene", {count: genes.count()})}</span>
             </Space>
           }
           extra={
@@ -89,9 +88,7 @@ class GenesPanel extends Component {
                     {...{
                       width: width - 2 * margins.padding,
                       height: height,
-                      genes: geneTypes,
-                      xDomain: domain,
-                      chromoBins: chromoBins,
+                      genes: genes
                     }}
                   />
                 );

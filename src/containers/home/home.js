@@ -28,31 +28,26 @@ class Home extends Component {
       loading,
       panels,
       selectedCoordinate,
-      genomeRange,
-      domain,
-      defaultDomain,
       chromoBins,
       plots
     } = this.props;
 
     let plotComponents = [];
-    plots.forEach((d,i) => {
+    plots.forEach((d,i) => {  
       let plotComponent = null;
       if (d.type === "genome") {
         plotComponent = <GenomePanel {...{
           loading,
-          domain,
-          defaultDomain,
           genome: d.data,
           title: d.title,
           chromoBins: chromoBins,
           visible: d.visible}}/>
       } else if (d.type === "genes") {
-        plotComponent = <GenesPanel {...{ genes: d.data, domain, chromoBins, visible: false }} />;
+        plotComponent = <GenesPanel {...{ genes: d.data, chromoBins, visible: false }} />;
       } else if (d.type === "barplot") {
-        plotComponent = <BarPlotPanel {...{ data: d.data, title: d.title, domain, defaultDomain, chromoBins, visible: d.visible, loading }} />;
+        plotComponent = <BarPlotPanel {...{ data: d.data, title: d.title, chromoBins, visible: d.visible, loading }} />;
       } else if (d.type === "scatterplot") {
-        plotComponent = <ScatterPlotPanel {...{data: d.data, title: d.title, domain, defaultDomain, chromoBins, visible: d.visible, loading}} />
+        plotComponent = <ScatterPlotPanel {...{data: d.data, title: d.title, chromoBins, visible: d.visible, loading}} />
       }
       plotComponents.push(
         <Row key={i} className="ant-panel-container ant-home-map-panel-container">
@@ -80,11 +75,7 @@ class Home extends Component {
               <Col className="gutter-row" span={24}>
                 <LegendPanel
                   {...{
-                    selectedCoordinate,
-                    genomeRange,
-                    domain,
-                    defaultDomain,
-                    chromoBins,
+                    selectedCoordinate
                   }}
                 />
               </Col>
@@ -147,13 +138,10 @@ const mapStateToProps = (state) => ({
   panels: state.App.panels,
   file: state.App.file,
   tags: state.App.tags,
-  defaultDomain: state.App.defaultDomain,
   datafile: state.App.datafile,
   datafiles: state.App.datafiles,
   strainsList: state.Strains.strainsList,
   selectedCoordinate: state.App.selectedCoordinate,
-  genomeRange: state.App.genomeRange,
-  domain: state.App.domain,
   chromoBins: state.App.chromoBins,
   plots: state.App.plots,
   loading: state.App.loading,

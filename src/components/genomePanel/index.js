@@ -11,9 +11,6 @@ import { downloadCanvasAsPng } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
 import GenomePlot from "../genomePlot";
-import appActions from "../../redux/app/actions";
-
-const { updateDomain } = appActions;
 
 const margins = {
   padding: 0,
@@ -48,11 +45,7 @@ class GenomePanel extends Component {
     const {
       t,
       genome,
-      domain,
-      defaultDomain,
       title,
-      updateDomain,
-      chromoBins
     } = this.props;
     const { checked } = this.state;
     if (Object.keys(genome).length < 1) return null;
@@ -104,11 +97,7 @@ class GenomePanel extends Component {
                       {...{
                         width: width - 2 * margins.padding,
                         height,
-                        genome,
-                        xDomain: domain,
-                        updateDomain,
-                        defaultDomain,
-                        chromoBins
+                        genome
                       }}
                     />
                   );
@@ -124,7 +113,6 @@ class GenomePanel extends Component {
 GenomePanel.propTypes = {};
 GenomePanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
-  updateDomain: (from, to) => dispatch(updateDomain(from, to)),
 });
 const mapStateToProps = (state) => ({});
 export default connect(

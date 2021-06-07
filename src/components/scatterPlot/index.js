@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import * as d3 from "d3";
+import { connect } from "react-redux";
+import { withTranslation } from "react-i18next";
 import { Axis, axisPropsFromTickScale, LEFT, BOTTOM } from "react-d3-axis";
 import Points from "./points";
 import Wrapper from "./index.style";
@@ -172,4 +174,14 @@ ScatterPlot.propTypes = {
 ScatterPlot.defaultProps = {
   xDomain: [],
 };
-export default ScatterPlot;
+
+const mapDispatchToProps = (dispatch) => ({
+});
+const mapStateToProps = (state) => ({
+  xDomain: state.App.domain,
+  chromoBins: state.App.chromoBins
+});
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withTranslation("common")(ScatterPlot));

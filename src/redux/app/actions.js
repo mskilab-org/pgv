@@ -43,11 +43,12 @@ const actions = {
     type: actions.GET_GENES,
     coordinate: coordinate
   }),
-  updateDomain: (from, to, shouldChangeHistory) => ({
+  updateDomain: (from, to, shouldChangeHistory, eventSource) => ({
     type: actions.DOMAIN_UPDATED,
     from: from,
     to: to,
-    shouldChangeHistory: shouldChangeHistory
+    shouldChangeHistory: shouldChangeHistory,
+    eventSource: eventSource
   }),
 };
 

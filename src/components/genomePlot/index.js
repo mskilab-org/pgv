@@ -1,11 +1,16 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
+import { connect } from "react-redux";
+import { withTranslation } from "react-i18next";
 import * as d3 from "d3";
 import Wrapper from "./index.style";
 import Connection from "./connection";
 import Interval from "./interval";
 import { measureText } from "../../helpers/utility";
 import Grid from "./grid";
+import appActions from "../../redux/app/actions";
+
+const { updateDomain } = appActions;
 
 const margins = {
   gap: 24,
@@ -190,4 +195,14 @@ GenomePlot.defaultProps = {
   xDomain: [],
   defaultDomain: [],
 };
-export default GenomePlot;
+const mapDispatchToProps = (dispatch) => ({
+  updateDomain: (from, to) => dispatch(updateDomain(from, to)),
+});
+const mapStateToProps = (state) => ({
+  xDomain: state.App.domain,
+  chromoBins: state.App.chromoBins
+});
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withTranslation("common")(GenomePlot));

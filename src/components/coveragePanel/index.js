@@ -42,7 +42,7 @@ class ScatterPlotPanel extends Component {
   };
 
   render() {
-    const { t, loading, data, title, domain, chromoBins } = this.props;
+    const { t, loading, data, title } = this.props;
     const { checked } = this.state;
     if (!data) {
       return null;
@@ -58,7 +58,7 @@ class ScatterPlotPanel extends Component {
                 <AiOutlineDotChart />
               </span>
               <span className="ant-pro-menu-item-title">
-                {title}
+                <Space>{title}<span><b>{d3.format(",")(data.length)}</b> {t("components.coverage-panel.datapoint", {count: data.length})}</span></Space>
               </span>
             </Space>
           }
@@ -88,7 +88,7 @@ class ScatterPlotPanel extends Component {
               {({ width, height }) => {
                 return (
                   <ScatterPlot
-                    {...{ width: width - 2 * margins.padding, height: height, results: data, xDomain: domain, chromoBins: chromoBins}}
+                    {...{ width: width - 2 * margins.padding, height: height, results: data}}
                   />
                 );
               }}

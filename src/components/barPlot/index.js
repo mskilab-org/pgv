@@ -1,14 +1,19 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import * as d3 from "d3";
+import { connect } from "react-redux";
+import { withTranslation } from "react-i18next";
 import { Axis, axisPropsFromTickScale, LEFT, BOTTOM } from "react-d3-axis";
 import Bars from "./bars";
 import Wrapper from "./index.style";
+import appActions from "../../redux/app/actions";
 
 const margins = {
   gap: 24,
   yTicksCount: 10
 };
+
+const { updateDomain } = appActions;
 
 class BarPlot extends Component {
   regl = null;
@@ -196,4 +201,15 @@ BarPlot.defaultProps = {
   xDomain: [],
   defaultDomain: []
 };
-export default BarPlot;
+const mapDispatchToProps = (dispatch) => ({
+  updateDomain: (from, to) => dispatch(updateDomain(from,to))
+});
+const mapStateToProps = (state) => ({
+  xDomain: state.App.domain,
+  defaultDomain: state.App.defaultDomain,
+  chromoBins: state.App.chromoBins
+});
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withTranslation("common")(BarPlot));

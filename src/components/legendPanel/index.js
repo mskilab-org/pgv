@@ -7,6 +7,7 @@ import { Card, Space } from "antd";
 import { connect } from "react-redux";
 import Legend from "./legend";
 import Wrapper from "./index.style";
+import GenomeRangePanel from "./genomeRangePanel";
 const { Meta } = Card;
 const margins = {
   padding: 12
@@ -14,7 +15,7 @@ const margins = {
 
 class LegendPanel extends Component {
   render() {
-    const { t, selectedCoordinate, genomeRange, domain, defaultDomain, chromoBins } = this.props;
+    const { t, selectedCoordinate } = this.props;
     return (
       <Wrapper>
         <Card
@@ -33,10 +34,10 @@ class LegendPanel extends Component {
         >          
           <ContainerDimensions>
             {({ width }) => {
-              return <Legend className="ant-wrapper" {...{ width: (width - 2 * margins.padding), domain, defaultDomain, chromoBins }} />;
+              return <Legend className="ant-wrapper" {...{ width: (width - 2 * margins.padding) }} />;
             }}
           </ContainerDimensions>
-          <Meta description={genomeRange} />
+          <Meta description={<GenomeRangePanel/>} />
         </Card>
       </Wrapper>
     );

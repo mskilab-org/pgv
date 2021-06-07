@@ -10,14 +10,11 @@ import { AiOutlineDownload } from "react-icons/ai";
 import { downloadCanvasAsPng } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
-import appActions from "../../redux/app/actions";
 import BarPlot from "../barPlot";
 
 const margins = {
   padding: 0,
 };
-
-const { updateDomain } = appActions;
 
 class BarPlotPanel extends Component {
   container = null;
@@ -45,7 +42,7 @@ class BarPlotPanel extends Component {
   };
 
   render() {
-    const { t, loading, data, title, domain, defaultDomain, chromoBins, updateDomain } = this.props;
+    const { t, loading, data, title } = this.props;
     const { checked } = this.state;
     if (!data) {
       return null;
@@ -92,7 +89,7 @@ class BarPlotPanel extends Component {
               {({ width, height }) => {
                 return (
                   <BarPlot
-                    {...{ width: width - 2 * margins.padding, height: height, updateDomain: updateDomain, results: data, defaultDomain: defaultDomain, xDomain: domain, chromoBins: chromoBins}}
+                    {...{ width: width - 2 * margins.padding, height: height, results: data}}
                   />
                 );
               }}
@@ -106,7 +103,6 @@ class BarPlotPanel extends Component {
 BarPlotPanel.propTypes = {};
 BarPlotPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
-  updateDomain: (from, to) => dispatch(updateDomain(from,to))
 });
 const mapStateToProps = (state) => ({
 });

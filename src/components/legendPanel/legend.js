@@ -21,7 +21,7 @@ const margins = {
 class Legend extends Component {
 
   componentDidMount() {
-    const { domain, defaultDomain, updateDomain, updateWindowHistory } = this.props;
+    const { domain, defaultDomain, updateDomain } = this.props;
 
     let stageWidth = this.props.width - 2 * margins.legend.padding;
     let stageHeight = margins.legend.height;
@@ -33,12 +33,12 @@ class Legend extends Component {
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
  
-      updateDomain(from, to, false);
+      updateDomain(from, to, false, "brush");
     }).on("end", (event) => {
       const selection = event.selection;
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
-      updateDomain(from, to, true);
+      updateDomain(from, to, true, "brush");
     });
 
     let genomeScale = d3
@@ -67,7 +67,11 @@ class Legend extends Component {
         ));
   }
 
-  componentDidUpdate() {
+  shouldComponentUpdate(nextProps) {
+    return nextProps.eventSource !== "brush";
+  }
+
+  componentDidUpdate() { console.log('here')
     const { defaultDomain, domain, updateDomain } = this.props;
     let stageWidth = this.props.width - 2 * margins.legend.padding;
 
@@ -82,12 +86,12 @@ class Legend extends Component {
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
  
-      updateDomain(from, to, false);
+      updateDomain(from, to, false, "brush");
     }).on("end", (event) => {
       const selection = event.selection;
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
-      updateDomain(from, to, true);
+      updateDomain(from, to, true, "brush");
     });
 
     d3.select(this.container).select("g.brush-container")
@@ -178,8 +182,12 @@ Legend.defaultProps = {
   width: 400,
 };
 const mapDispatchToProps = (dispatch) => ({
-  updateDomain: (from, to, shouldChangeHistory) => dispatch(updateDomain(from,to,shouldChangeHistory))
+  updateDomain: (from, to, shouldChangeHistory, eventSource) => dispatch(updateDomain(from,to,shouldChangeHistory, eventSource))
 });
 const mapStateToProps = (state) => ({
+  domain: state.App.domain,
+  chromoBins: state.App.chromoBins,
+  defaultDomain: state.App.defaultDomain,
+  eventSource: state.App.eventSource
 });
 export default connect(mapStateToProps, mapDispatchToProps)(Legend);
