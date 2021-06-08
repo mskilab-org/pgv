@@ -44,7 +44,7 @@ export default function appReducer(state = initState, action) {
         let newURL = `${url.origin}/?${params.toString()}`; 
         window.history.replaceState(newURL, 'Pan Genome Viewer', newURL);
       }
-      return { ...state, eventSource: action.eventSource, domain: [+action.from, +action.to] };
+      return { ...state, shouldChangeHistory: action.shouldChangeHistory, eventSource: action.eventSource, domain: [+action.from, +action.to] };
     default:
       return state;
   }

@@ -108,7 +108,7 @@ class BarPlot extends Component {
         var t = event.transform;
         var newDomain = t.rescaleX(this.genomeScale).domain().map(Math.floor);
         if (newDomain.toString !== xDomain) {
-          updateDomain(newDomain[0], newDomain[1]);
+          updateDomain(newDomain[0], newDomain[1], "zoom");
         }
     });
 
@@ -202,7 +202,7 @@ BarPlot.defaultProps = {
   defaultDomain: []
 };
 const mapDispatchToProps = (dispatch) => ({
-  updateDomain: (from, to) => dispatch(updateDomain(from,to))
+  updateDomain: (from, to, eventSource) => dispatch(updateDomain(from,to, eventSource))
 });
 const mapStateToProps = (state) => ({
   xDomain: state.App.domain,

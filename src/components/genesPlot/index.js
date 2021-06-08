@@ -19,6 +19,11 @@ class GenesPlot extends Component {
   geneStruct = {};
   stageHeight = 0;
   stageWidth = 0;
+  geneTypes = null;
+  geneTitles = null;
+  geneStartPlace = null;
+  geneEndPlace = null;
+  geneYPos = null;
 
   componentDidMount() {
     const regl = require("regl")({
@@ -56,6 +61,7 @@ class GenesPlot extends Component {
         this.regl.poll();
         this.updateStage();
     }
+    
     if (prevProps.xDomain.toString() !== this.props.xDomain.toString()) {
 
       this.regl.clear({
@@ -100,28 +106,20 @@ class GenesPlot extends Component {
     this.stageHeight = height - 2 * margins.gap;
     this.regl.poll();
     
-    let geneBins = {}, genesStartPoint = [], genesEndPoint = [], domainY = [0,0], genesY = [], domainX = xDomain, genesFill = [], genesStroke = [];
-    // genes.forEach((d,i) => {
-    //   d.y = d.strand === "+" ? 1 : 3;
-    //   d.startPlace = chromoBins[`${d.chromosome}`].startPlace + d.startPoint;
-    //   genesStartPoint.push(d.startPlace);
-    //   d.endPlace = chromoBins[`${d.chromosome}`].startPlace + d.endPoint;
-    //   genesEndPoint.push(d.endPlace);
-    //   genesY.push(+d.y);
-    //   genesFill.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color)));
-    //   genesStroke.push(rgbtoInteger(d3.rgb(chromoBins[`${d.chromosome}`].color).darker()));
-    //   domainY = [d3.min([domainY[0], +d.y]), d3.max([domainY[1], +d.y])];
-    //   geneBins[d.iid] = d;
-    // });
-    //let places = d3.extent(genes.getColumn("startPlace").toArray().filter((d,i) => d >= xDomain[0] && d <= xDomain[1]), );
-    genesStartPoint = genes.getColumn("startPlace").toArray();
-    genesEndPoint = genes.getColumn("endPlace").toArray();
-    genesY = genes.getColumn("y").toArray();
-    genesFill = genes.getColumn("color").toArray();
-    genesStroke = Array(genes.count()).fill(0);
+    this.geneTypes = genes.getColumn("type").toArray();
+    this.geneTitles = genes.getColumn("title").toArray();
+    this.geneStartPlace = genes.getColumn("startPlace").toArray();
+    this.geneEndPlace = genes.getColumn("endPlace").toArray();
+    this.geneYPos = genes.getColumn("y").toArray();
 
-    domainY = [-2,2];
-    this.geneStruct = {genesStartPoint, genesEndPoint, genesY, genesFill, genesStroke, domainX, domainY};
+    this.geneStruct = {
+      genesStartPoint: this.geneStartPlace, 
+      genesEndPoint: this.geneEndPlace, 
+      genesY: this.geneYPos, 
+      genesFill: genes.getColumn("color").toArray(), 
+      genesStroke: genes.getColumn("color").toArray(), 
+      domainX: xDomain, 
+      domainY: [-2,2]};
 
     this.plot.load(
       this.stageWidth,
@@ -145,8 +143,9 @@ class GenesPlot extends Component {
             framebuffer: self.plot.fboIntervals,
           });
           let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
-          if (genes[index]) {
-            let textData = self.tooltipContent(genes[index]);
+          if (genes.get(index)) {
+            let selectedGene = genes.get(index).toJSON();
+            let textData = self.tooltipContent(selectedGene);
             let maxLength = d3.max(textData, (d) =>
               measureText(`${d.label}: ${d.value}`, 12)
             );
@@ -155,7 +154,7 @@ class GenesPlot extends Component {
               .select("g.tooltip rect")
               .attr("height", textData.length * 16 + 12)
               .attr("width", maxLength + 30)
-              .attr("y", genes[index].strand === "+" ? 20 - (textData.length * 16) : 20);
+              .attr("y", selectedGene.strand === "+" ? 20 - (textData.length * 16) : 20);
             d3.select(self.plotContainer)
               .select("g.tooltip")
               .attr("transform", `translate(${position})`)
@@ -165,7 +164,7 @@ class GenesPlot extends Component {
               .enter()
               .append("tspan")
               .attr("x", (d, i) => 40)
-              .attr("y", (d, i) => (genes[index].strand === "+" ? 38 - (textData.length * 16) : 38) + i * 16)
+              .attr("y", (d, i) => (selectedGene.strand === "+" ? 38 - (textData.length * 16) : 38) + i * 16)
               .html(
                 (e, i) =>
                   `<tspan font-weight="bold">${e.label}</tspan>: ${e.value}`
@@ -176,7 +175,27 @@ class GenesPlot extends Component {
               .attr("transform", `translate(${[-1000, -1000]})`);
           }
         } catch (error) {
-          console.error(error);
+          //console.error(error);
+        }
+      })
+      .on("click", function (event) {
+        let position = d3.pointer(event);
+        try {
+          const pixels = self.plot.regl.read({
+            x: position[0],
+            y: self.stageHeight - position[1],
+            width: 1,
+            height: 1,
+            data: new Uint8Array(6),
+            framebuffer: self.plot.fboIntervals,
+          });
+          let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
+          if (genes.get(index)) {
+
+            window.open(`https://www.genecards.org/cgi-bin/carddisp.pl?gene=${genes.get(index).toJSON().title}`, '_blank').focus();
+          }
+        } catch (error) {
+
         }
       });
   }
@@ -186,27 +205,36 @@ class GenesPlot extends Component {
   }
 
   render() {
-    const { width, height, xDomain, genes, title, chromoBins } = this.props;
+    const { width, height, xDomain, genes, title, chromoBins, shouldChangeHistory } = this.props;
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 2 * margins.gap;
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     const yScale = d3
       .scaleLinear()
-      .domain([0, 4])
+      .domain([-2, 2])
       .range([stageHeight, 0]);
     let texts = [];
-    let startPosNext = {"+": -1, "-": -1};
-    // genes.forEach((d,i) => {
-    //   let isGene = (d.type === "gene")
-    //   let startPos = chromoBins[`${d.chromosome}`].startPlace + d.startPoint;
-    //   let xPos = xScale(startPos);
-    //   let textLength = measureText(d.title, 10);
-    //   let yPos = yScale(d.strand === "+" ? 1 : 3);
-    //   if (isGene && (xPos > 0) && (xPos < stageWidth) && (xPos > startPosNext[d.strand])) {
-    //     texts.push(<text key={d.iid} x={xPos} y={yPos} dy={-10} onClick={() => this.handleGeneLabelClick(d)} fontFamily="Arial" fontSize={10} textAnchor="start">{d.title}</text>);
-    //     startPosNext[d.strand] = xPos + textLength;
-    //   }
-    // });
+    if (!this.geneTypes || shouldChangeHistory) {
+    let startPosNext = {"1": -1, "-1": -1};
+    this.geneTypes = this.geneTypes || genes.getColumn("type").toArray();
+    this.geneTitles = this.geneTitles || genes.getColumn("title").toArray();
+    this.geneStartPlace = this.geneStartPlace || genes.getColumn("startPlace").toArray();
+    this.geneEndPlace = this.geneEndPlace || genes.getColumn("endPlace").toArray();
+    this.geneYPos = this.geneYPos || genes.getColumn("y").toArray();
+    for (let i = 0; i < genes.count(); i++) {
+      if (this.geneStartPlace[i] <= xDomain[1] && this.geneStartPlace[i] >= xDomain[0] && this.geneTypes[i] === "gene") {
+        let isGene = (this.geneTypes[i] === "gene")
+        let xPos = xScale(this.geneStartPlace[i]);
+        let textLength = measureText(this.geneTitles[i], 10);
+        let yPos = yScale(this.geneYPos[i]);
+        if (isGene && (xPos > 0) && (xPos < stageWidth) && (xPos > startPosNext[this.geneYPos[i].toString()])) {
+          let d = genes.get(i).toJSON();
+          texts.push(<text key={d.iid} x={xPos} y={yPos} dy={-10} fontFamily="Arial" fontSize={10} textAnchor="start">{d.title}</text>);
+          startPosNext[d.y] = xPos + textLength;
+        }
+      }
+    };
+  }
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div
@@ -280,7 +308,7 @@ GenesPlot.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   xDomain: PropTypes.array,
-  genes: PropTypes.array,
+  genes: PropTypes.object,
   title: PropTypes.string,
   chromoBins: PropTypes.object
 };
@@ -290,7 +318,8 @@ GenesPlot.defaultProps = {
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   xDomain: state.App.domain,
-  chromoBins: state.App.chromoBins
+  chromoBins: state.App.chromoBins,
+  shouldChangeHistory: state.App.shouldChangeHistory
 });
 export default connect(
   mapStateToProps,
