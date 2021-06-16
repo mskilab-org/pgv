@@ -19,6 +19,7 @@ const margins = {
 };
 
 class Legend extends Component {
+  brush = null;
 
   componentDidMount() {
     const { domain, defaultDomain, updateDomain } = this.props;
@@ -32,13 +33,16 @@ class Legend extends Component {
       const selection = event.selection;
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
- 
-      updateDomain(from, to, false, "brush");
+      if ([from, to].toString() !== domain.toString()) {
+        updateDomain(from, to, false, "brush");
+      }
     }).on("end", (event) => {
       const selection = event.selection;
       if (!event.sourceEvent || !selection) return;
       const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
-      updateDomain(from, to, true, "brush");
+      if ([from, to].toString() !== domain.toString()) {
+        updateDomain(from, to, true, "brush");
+      }
     });
 
     let genomeScale = d3
@@ -68,11 +72,11 @@ class Legend extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return nextProps.eventSource !== "brush";
+    return nextProps.domain.toString() !== this.props.domain.toString();
   }
 
-  componentDidUpdate() { console.log('here')
-    const { defaultDomain, domain, updateDomain } = this.props;
+  componentDidUpdate() {
+    const { defaultDomain, domain } = this.props;
     let stageWidth = this.props.width - 2 * margins.legend.padding;
 
     let genomeScale = d3
@@ -80,36 +84,10 @@ class Legend extends Component {
       .domain(defaultDomain)
       .range([0, stageWidth]);
 
-    this.brush
-    .on("brush", (event) => {
-      const selection = event.selection;
-      if (!event.sourceEvent || !selection) return;
-      const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
- 
-      updateDomain(from, to, false, "brush");
-    }).on("end", (event) => {
-      const selection = event.selection;
-      if (!event.sourceEvent || !selection) return;
-      const [from, to] = selection.map(genomeScale.invert).map(Math.floor);
-      updateDomain(from, to, true, "brush");
-    });
-
     d3.select(this.container).select("g.brush-container")
     .call(this.brush)
     .call(this.brush.move, domain.map(genomeScale))
-    .call(g => g.select(".overlay")
-        .datum({type: "selection"})
-        .on("mousedown touchstart", (event) => {
-          const dx = margins.brush.defaultLength; // Use a fixed width when recentering.
-          const [[cx]] = d3.pointers(event);
-          const [x0, x1] = [cx - dx / 2, cx + dx / 2];
-          const [X0, X1] = [0, stageWidth];
-          d3.select(this.container).select("g.brush-container")
-              .call(this.brush.move, x1 > X1 ? [X1 - dx, X1] 
-                  : x0 < X0 ? [X0, X0 + dx] 
-                  : [x0, x1]);
-              }
-        ));
+    
   }
 
   render() {

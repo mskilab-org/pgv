@@ -105,8 +105,8 @@
     },
     "genes-panel": {
       "header": "Genes",
-      "gene": "gene",
-      "gene_plural": "genes"
+      "gene": "record",
+      "gene_plural": "records"
     },
     "genome-panel": {
       "header": "Genome Graph",

@@ -7,30 +7,89 @@ import { Axis, axisPropsFromTickScale, BOTTOM } from "react-d3-axis";
 import Wrapper from "./index.style";
 import { humanize, measureText } from "../../helpers/utility";
 import Plot from "./plot";
+import appActions from "../../redux/app/actions";
+
+const { updateDomain } = appActions;
 
 const margins = {
   gap: 24,
 };
 
 class GenesPlot extends Component {
-  regl = null;
-  container = null;
-  plotContainer = null;
-  geneStruct = {};
-  stageHeight = 0;
-  stageWidth = 0;
-  geneTypes = null;
-  geneTitles = null;
-  geneStartPlace = null;
-  geneEndPlace = null;
-  geneYPos = null;
+  constructor(props) {
+    super(props);
+    this.zoom = null;
+    this.container = null;
+    this.plotContainer = null;
+    this.grid = null;
+    let { width, height, genes, defaultDomain, xDomain } = this.props;
+
+    let stageWidth = width - 2 * margins.gap;
+    let stageHeight = height - 2 * margins.gap;
+    let genomeScale = d3
+      .scaleLinear()
+      .domain(defaultDomain)
+      .range([0, stageWidth]);
+    this.zoom = d3
+      .zoom()
+      .translateExtent([
+        [0, 0],
+        [stageWidth, stageHeight],
+      ])
+      .extent([
+        [0, 0],
+        [stageWidth, stageHeight],
+      ])
+      .scaleExtent([1, Infinity])
+      .on("zoom", (event) => this.zoomed(event, false))
+      .on("end", (event) => this.zoomed(event, true));
+
+    let geneStruct = {
+      geneTypes: genes.getColumn("type").toArray(),
+      geneTitles: genes.getColumn("title").toArray(),
+      genesStartPoint: genes.getColumn("startPlace").toArray(),
+      genesEndPoint: genes.getColumn("endPlace").toArray(),
+      genesY: genes.getColumn("y").toArray(),
+      genesFill: genes.getColumn("color").toArray(),
+      genesStroke: genes.getColumn("color").toArray(),
+      domainX: xDomain,
+      domainY: [-3, 3],
+    };
+
+    this.state = {
+      stageWidth,
+      stageHeight,
+      xDomain,
+      genomeScale,
+      geneStruct,
+      tooltip: {
+        visible: false,
+        shapeId: -1,
+        x: -1000,
+        y: -1000,
+        text: ""
+      }
+    };
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return nextProps.xDomain.toString() !== this.props.xDomain.toString() || (nextState.tooltip.shapeId !== this.state.tooltip.shapeId);
+  }
 
   componentDidMount() {
+    const { xDomain, genomeScale, stageWidth, stageHeight, geneStruct } =
+      this.state;
+    var s = [genomeScale(xDomain[0]), genomeScale(xDomain[1])];
     const regl = require("regl")({
       extensions: ["ANGLE_instanced_arrays"],
       container: this.container,
       pixelRatio: window.devicePixelRatio || 1.5,
-      attributes: { antialias: true, depth: false, stencil: true, preserveDrawingBuffer: true },
+      attributes: {
+        antialias: true,
+        depth: false,
+        stencil: true,
+        preserveDrawingBuffer: true,
+      },
     });
 
     regl.cache = {};
@@ -41,43 +100,113 @@ class GenesPlot extends Component {
       stencil: true,
     });
     this.plot = new Plot(this.regl);
-    this.geneStruct = {};
-    this.stageHeight = 0;
-    this.stageWidth = 0;
-    this.updateStage();
+    this.plot.load(stageWidth, stageHeight, geneStruct);
+    this.plot.render();
+    d3.select(this.container)
+      .attr("preserveAspectRatio", "xMinYMin meet")
+      .call(this.zoom);
+    d3.select(this.container).call(
+      this.zoom.transform,
+      d3.zoomIdentity.scale(stageWidth / (s[1] - s[0])).translate(-s[0], 0)
+    );
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate() {
+    let { xDomain } = this.props;
+    const { genomeScale, stageWidth } = this.state;
+    var s = [genomeScale(xDomain[0]), genomeScale(xDomain[1])];
+    d3.select(this.container)
+      .attr("preserveAspectRatio", "xMinYMin meet")
+      .call(this.zoom);
+    d3.select(this.container).call(
+      this.zoom.transform,
+      d3.zoomIdentity.scale(stageWidth / (s[1] - s[0])).translate(-s[0], 0)
+    );
+  }
 
-    if ((prevProps.genes.length !== this.props.genes.length) 
-      || (prevProps.chromoBins !== this.props.chromoBins)
-      || (prevProps.width !== this.props.width)
-      || (prevProps.height !== this.props.height)) {
-        this.regl.clear({
-          color: [0, 0, 0, 0.05],
-          depth: false,
-        });
-    
-        this.regl.poll();
-        this.updateStage();
-    }
-    
-    if (prevProps.xDomain.toString() !== this.props.xDomain.toString()) {
-
+  zoomed(event, shouldChangeHistory) {
+    let newDomain = event.transform
+      .rescaleX(this.state.genomeScale)
+      .domain()
+      .map(Math.floor);
+    if (newDomain.toString() !== this.props.xDomain.toString()) {
+      this.regl.cache = {};
       this.regl.clear({
         color: [0, 0, 0, 0.05],
         depth: false,
+        stencil: true
       });
   
       this.regl.poll();
 
-      this.plot.rescaleX(this.props.xDomain);
+      this.plot.rescaleX(newDomain);
+      this.setState({ xDomain: newDomain }, () => {
+         this.props.updateDomain(newDomain[0], newDomain[1], shouldChangeHistory, "zoom");
+      });
     }
   }
 
   componentWillUnmount() {
     if (this.regl) {
       this.regl.destroy();
+    }
+  }
+
+  handleMouseMove = (event) => {
+    const { stageHeight } = this.state;
+    const { genes, width, height } = this.props;
+    let position = [d3.pointer(event)[0] - margins.gap, d3.pointer(event)[1] - margins.gap];
+    try {
+      const pixels = this.plot.regl.read({
+        x: position[0],
+        y: stageHeight - position[1],
+        width: 1,
+        height: 1,
+        data: new Uint8Array(6),
+        framebuffer: this.plot.fboIntervals,
+      });
+      let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
+      if (genes.get(index)) {
+        let selectedGene = genes.get(index).toJSON();
+        let textData = this.tooltipContent(selectedGene);
+        let diffY = d3.min([0, height - event.nativeEvent.offsetY - textData.length * 16 - 12]);
+        let diffX = d3.min([0, width - event.nativeEvent.offsetX - d3.max(textData, (d) => measureText(`${d.label}: ${d.value}`, 12)) - 30]);
+        this.state.tooltip.shapeId !== selectedGene.iid && this.setState({tooltip: {shapeId: selectedGene.iid, visible: true, x: (event.nativeEvent.offsetX + diffX), y: (event.nativeEvent.offsetY + diffY), text: textData}})
+      } else {
+        this.state.tooltip.visible && this.setState({tooltip: {shapeId: null, visible: false}})
+      }
+    } catch (error) {
+      //console.error(error);
+    }
+  }
+
+  handleClick = (event) => {
+    const { stageHeight } = this.state;
+    const { genes } = this.props;
+    let position = [d3.pointer(event)[0] - margins.gap, d3.pointer(event)[1] - margins.gap];
+    try {
+      const pixels = this.plot.regl.read({
+        x: position[0],
+        y: stageHeight - position[1],
+        width: 1,
+        height: 1,
+        data: new Uint8Array(6),
+        framebuffer: this.plot.fboIntervals,
+      });
+      let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
+      let selectedGene = genes.get(index)
+      if (selectedGene) {
+        window
+              .open(
+                `https://www.genecards.org/cgi-bin/carddisp.pl?gene=${
+                  selectedGene.toJSON().title
+                }`,
+                "_blank"
+              )
+              .focus();
+      }
+    } catch (error) {
+      //console.error(error);
     }
   }
 
@@ -89,217 +218,217 @@ class GenesPlot extends Component {
       { label: "Chromosome", value: interval.chromosome },
       { label: "Y", value: interval.y },
       { label: "Start Point", value: d3.format(",")(interval.startPoint) },
-      { label: "End Point", value: d3.format(",")(interval.endPoint) }
+      { label: "End Point", value: d3.format(",")(interval.endPoint) },
     ];
-    interval.strand && attributes.push({ label: "Strand", value: interval.strand });
-    interval.sequence && attributes.push({ label: "Sequence", value: interval.sequence });
-    interval.metadata && Object.keys(interval.metadata).forEach((key) => {
-      attributes.push({ label: humanize(key), value: interval.metadata[key] });
-    });
+    interval.strand &&
+      attributes.push({ label: "Strand", value: interval.strand });
+    interval.sequence &&
+      attributes.push({ label: "Sequence", value: interval.sequence });
+    interval.metadata &&
+      Object.keys(interval.metadata).forEach((key) => {
+        attributes.push({
+          label: humanize(key),
+          value: interval.metadata[key],
+        });
+      });
     return attributes;
   }
 
-  updateStage() {
-    let { width, height, genes, xDomain } = this.props;
-
-    this.stageWidth = width - 2 * margins.gap;
-    this.stageHeight = height - 2 * margins.gap;
-    this.regl.poll();
-    
-    this.geneTypes = genes.getColumn("type").toArray();
-    this.geneTitles = genes.getColumn("title").toArray();
-    this.geneStartPlace = genes.getColumn("startPlace").toArray();
-    this.geneEndPlace = genes.getColumn("endPlace").toArray();
-    this.geneYPos = genes.getColumn("y").toArray();
-
-    this.geneStruct = {
-      genesStartPoint: this.geneStartPlace, 
-      genesEndPoint: this.geneEndPlace, 
-      genesY: this.geneYPos, 
-      genesFill: genes.getColumn("color").toArray(), 
-      genesStroke: genes.getColumn("color").toArray(), 
-      domainX: xDomain, 
-      domainY: [-2,2]};
-
-    this.plot.load(
-      this.stageWidth,
-      this.stageHeight,
-      this.geneStruct
-    );
-    this.plot.render();
-
-    let self = this;
-    d3.select(this.container)
-      .select("canvas")
-      .on("mousemove", function (event) {
-        let position = d3.pointer(event);
-        try {
-          const pixels = self.plot.regl.read({
-            x: position[0],
-            y: self.stageHeight - position[1],
-            width: 1,
-            height: 1,
-            data: new Uint8Array(6),
-            framebuffer: self.plot.fboIntervals,
-          });
-          let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
-          if (genes.get(index)) {
-            let selectedGene = genes.get(index).toJSON();
-            let textData = self.tooltipContent(selectedGene);
-            let maxLength = d3.max(textData, (d) =>
-              measureText(`${d.label}: ${d.value}`, 12)
-            );
-            d3.select(self.plotContainer).selectAll("g.tooltip tspan").remove();
-            d3.select(self.plotContainer)
-              .select("g.tooltip rect")
-              .attr("height", textData.length * 16 + 12)
-              .attr("width", maxLength + 30)
-              .attr("y", selectedGene.strand === "+" ? 20 - (textData.length * 16) : 20);
-            d3.select(self.plotContainer)
-              .select("g.tooltip")
-              .attr("transform", `translate(${position})`)
-              .select("text")
-              .selectAll("tspan")
-              .data(textData)
-              .enter()
-              .append("tspan")
-              .attr("x", (d, i) => 40)
-              .attr("y", (d, i) => (selectedGene.strand === "+" ? 38 - (textData.length * 16) : 38) + i * 16)
-              .html(
-                (e, i) =>
-                  `<tspan font-weight="bold">${e.label}</tspan>: ${e.value}`
-              );
-          } else {
-            d3.select(self.plotContainer)
-              .select("g.tooltip")
-              .attr("transform", `translate(${[-1000, -1000]})`);
-          }
-        } catch (error) {
-          //console.error(error);
-        }
-      })
-      .on("click", function (event) {
-        let position = d3.pointer(event);
-        try {
-          const pixels = self.plot.regl.read({
-            x: position[0],
-            y: self.stageHeight - position[1],
-            width: 1,
-            height: 1,
-            data: new Uint8Array(6),
-            framebuffer: self.plot.fboIntervals,
-          });
-          let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
-          if (genes.get(index)) {
-
-            window.open(`https://www.genecards.org/cgi-bin/carddisp.pl?gene=${genes.get(index).toJSON().title}`, '_blank').focus();
-          }
-        } catch (error) {
-
-        }
-      });
-  }
-
-  handleGeneLabelClick = (gene) => {
-    window.open(`https://www.genecards.org/cgi-bin/carddisp.pl?gene=${gene.title}`, '_blank').focus();
-  }
-
   render() {
-    const { width, height, xDomain, genes, title, chromoBins, shouldChangeHistory } = this.props;
-    let stageWidth = width - 2 * margins.gap;
-    let stageHeight = height - 2 * margins.gap;
+    const { width, height, chromoBins, genes, title } =
+      this.props;
+    const { xDomain, stageWidth, stageHeight, geneStruct, tooltip } = this.state;
+    const { geneTypes, genesStartPoint, geneTitles, genesY } = geneStruct;
+
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
-    const yScale = d3
-      .scaleLinear()
-      .domain([-2, 2])
-      .range([stageHeight, 0]);
+    const yScale = d3.scaleLinear().domain([-3, 3]).range([stageHeight, 0]);
     let texts = [];
-    if (!this.geneTypes || shouldChangeHistory) {
-    let startPosNext = {"1": -1, "-1": -1};
-    this.geneTypes = this.geneTypes || genes.getColumn("type").toArray();
-    this.geneTitles = this.geneTitles || genes.getColumn("title").toArray();
-    this.geneStartPlace = this.geneStartPlace || genes.getColumn("startPlace").toArray();
-    this.geneEndPlace = this.geneEndPlace || genes.getColumn("endPlace").toArray();
-    this.geneYPos = this.geneYPos || genes.getColumn("y").toArray();
-    for (let i = 0; i < genes.count(); i++) {
-      if (this.geneStartPlace[i] <= xDomain[1] && this.geneStartPlace[i] >= xDomain[0] && this.geneTypes[i] === "gene") {
-        let isGene = (this.geneTypes[i] === "gene")
-        let xPos = xScale(this.geneStartPlace[i]);
-        let textLength = measureText(this.geneTitles[i], 10);
-        let yPos = yScale(this.geneYPos[i]);
-        if (isGene && (xPos > 0) && (xPos < stageWidth) && (xPos > startPosNext[this.geneYPos[i].toString()])) {
-          let d = genes.get(i).toJSON();
-          texts.push(<text key={d.iid} x={xPos} y={yPos} dy={-10} fontFamily="Arial" fontSize={10} textAnchor="start">{d.title}</text>);
-          startPosNext[d.y] = xPos + textLength;
+    if (true) {
+      let startPosNext = { 1: -1, "-1": -1 };
+      for (let i = 0; i < genes.count(); i++) {
+        if (
+          genesStartPoint[i] <= xDomain[1] &&
+          genesStartPoint[i] >= xDomain[0] &&
+          geneTypes[i] === "gene"
+        ) {
+          let isGene = geneTypes[i] === "gene";
+          let xPos = xScale(genesStartPoint[i]);
+          let textLength = measureText(geneTitles[i], 10);
+          let yPos = yScale(genesY[i]);
+          if (
+            isGene &&
+            xPos > 0 &&
+            xPos < stageWidth &&
+            xPos > startPosNext[genesY[i].toString()]
+          ) {
+            let d = genes.get(i).toJSON();
+            texts.push(
+              <text
+                key={d.iid}
+                x={xPos}
+                y={yPos}
+                dy={-10}
+                fontFamily="Arial"
+                fontSize={10}
+                textAnchor="start"
+              >
+                {d.title}
+              </text>
+            );
+            startPosNext[d.y] = xPos + textLength;
+          }
         }
       }
-    };
-  }
+    }
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div
           className="genome-plot"
           style={{ width: stageWidth, height: stageHeight }}
           ref={(elem) => (this.container = elem)}
+          onMouseMove={(e) => this.handleMouseMove(e)}
+          onClick={(e) => this.handleClick(e)}
         />
-        <svg width={width} height={height} className="plot-container" ref={(elem) => (this.plotContainer = elem)}>
-          <clipPath id="clipping">
-            <rect x={0} y={0} width={stageWidth} height={stageHeight} />
-          </clipPath>
-          <text
-            transform={`translate(${[width / 2, margins.gap]})`}
-            textAnchor="middle"
-            fontSize={16}
-            dy="-4"
+        {(
+          <svg
+            width={width}
+            height={height}
+            className="plot-container"
+            ref={(elem) => (this.plotContainer = elem)}
           >
-            {title}
-          </text>
-          <g clipPath="url(#clipping)" className="labels-container" transform={`translate(${[margins.gap, margins.gap]})`}>
-            {texts}
-          </g>
-          <g clipPath="url(#clipping)"
-            transform={`translate(${[margins.gap, stageHeight + margins.gap]})`}
-          >
-            {Object.keys(chromoBins).map((d,i) => {
-            let xxScale = d3.scaleLinear().domain([chromoBins[d].startPoint, chromoBins[d].endPoint]).range([0, xScale(chromoBins[d].endPlace) - xScale(chromoBins[d].startPlace)]);
-            let tickCount = d3.max([Math.floor((xxScale.range()[1] - xxScale.range()[0]) / 40), 2]);
-            let ticks = xxScale.ticks(tickCount);
-            ticks[ticks.length - 1] = xxScale.domain()[1];
-            return (xScale(chromoBins[d].startPlace) <= stageWidth) && <g key={d} transform={`translate(${[xScale(chromoBins[d].startPlace), 0]})`}>
-              <Axis
-              {...axisPropsFromTickScale(xxScale, tickCount)}
-              values={ticks}
-              format={(e) => d3.format("~s")(e)}
-              style={{ orient: BOTTOM }}
-            />
-            </g>})}
-          </g>
-          <g
-            transform={`translate(${[margins.gap, stageHeight + margins.gap]})`}
-          >
-            {Object.keys(chromoBins).map((d,i) => 
-            <g  key={d} transform={`translate(${[xScale(chromoBins[d].startPlace), 0]})`}>
-             <line x1="0" y1="0" x2="0" y2={-stageHeight} stroke="rgb(128, 128, 128)" strokeDasharray="4" />
-            </g>)}
-          </g>
-          <g
+            <clipPath id="clipping">
+              <rect x={0} y={0} width={stageWidth} height={stageHeight} />
+            </clipPath>
+            <text
+              transform={`translate(${[width / 2, margins.gap]})`}
+              textAnchor="middle"
+              fontSize={16}
+              dy="-4"
+            >
+              {title}
+            </text>
+            <g
+              className="labels-container"
+              transform={`translate(${[0, margins.gap]})`}
+            >
+             <text
+              transform={`translate(${[0, yScale(1)]})rotate(90)`}
+              textAnchor="middle"
+              fontSize={16}
+              dy="-4"
+            >
+              {"-"}
+            </text>
+            <text
+              transform={`translate(${[0, yScale(-1)]})rotate(90)`}
+              textAnchor="middle"
+              fontSize={16}
+              dy="-4"
+            >
+              {"+"}
+            </text>
+            </g>
+            <g
+              clipPath="url(#clipping)"
+              className="labels-container"
+              transform={`translate(${[margins.gap, margins.gap]})`}
+            >
+              {texts}
+            </g>
+            <g
+              clipPath="url(#clipping)"
+              transform={`translate(${[
+                margins.gap,
+                stageHeight + margins.gap,
+              ]})`}
+            >
+              {false &&
+                Object.keys(chromoBins).map((d, i) => {
+                  let xxScale = d3
+                    .scaleLinear()
+                    .domain([chromoBins[d].startPoint, chromoBins[d].endPoint])
+                    .range([
+                      0,
+                      xScale(chromoBins[d].endPlace) -
+                        xScale(chromoBins[d].startPlace),
+                    ]);
+                  let tickCount = d3.max([
+                    Math.floor((xxScale.range()[1] - xxScale.range()[0]) / 40),
+                    2,
+                  ]);
+                  let ticks = xxScale.ticks(tickCount);
+                  ticks[ticks.length - 1] = xxScale.domain()[1];
+                  return (
+                    xScale(chromoBins[d].startPlace) <= stageWidth && (
+                      <g
+                        key={d}
+                        transform={`translate(${[
+                          xScale(chromoBins[d].startPlace),
+                          0,
+                        ]})`}
+                      >
+                        <Axis
+                          {...axisPropsFromTickScale(xxScale, tickCount)}
+                          values={ticks}
+                          format={(e) => d3.format("~s")(e)}
+                          style={{ orient: BOTTOM }}
+                        />
+                      </g>
+                    )
+                  );
+                })}
+            </g>
+            <g
+              transform={`translate(${[
+                margins.gap,
+                stageHeight + margins.gap,
+              ]})`}
+            >
+              {Object.keys(chromoBins).map((d, i) => (
+                <g
+                  key={d}
+                  transform={`translate(${[
+                    xScale(chromoBins[d].startPlace),
+                    0,
+                  ]})`}
+                >
+                  <line
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2={-stageHeight}
+                    stroke="rgb(128, 128, 128)"
+                    strokeDasharray="4"
+                  />
+                </g>
+              ))}
+            </g>
+            {tooltip.visible && <g
             className="tooltip"
-            transform="translate(-1000, -1000)"
+            transform={`translate(${[tooltip.x + 30, tooltip.y]})`}
             pointerEvents="none"
           >
             <rect
-              x="30"
-              y="20"
-              width="150"
-              height="40"
+              x="0"
+              y="0"
+              width={d3.max(tooltip.text, (d) =>
+                measureText(`${d.label}: ${d.value}`, 12) + 30
+              )}
+              height={tooltip.text.length * 16 + 12}
               rx="5"
               ry="5"
               fill="rgb(97, 97, 97)"
               fillOpacity="0.97"
             />
-            <text x="40" y="48" fontSize="12" fill="#FFF"></text>
-          </g>
-        </svg>
+            <text x="10" y="28" fontSize="12" fill="#FFF">
+              {tooltip.text.map((d,i) => 
+                <tspan key={i} x={10} y={18 + i * 16}>
+                  <tspan fontWeight="bold">{d.label}</tspan>: {d.value}
+                </tspan>)}
+            </text>
+          </g>}
+          </svg>
+        )}
       </Wrapper>
     );
   }
@@ -310,16 +439,19 @@ GenesPlot.propTypes = {
   xDomain: PropTypes.array,
   genes: PropTypes.object,
   title: PropTypes.string,
-  chromoBins: PropTypes.object
+  chromoBins: PropTypes.object,
 };
 GenesPlot.defaultProps = {
   xDomain: [],
 };
-const mapDispatchToProps = (dispatch) => ({});
+const mapDispatchToProps = (dispatch) => ({
+  updateDomain: (from, to, shouldChangeHistory, eventSource) => dispatch(updateDomain(from,to,shouldChangeHistory, eventSource))
+});
 const mapStateToProps = (state) => ({
   xDomain: state.App.domain,
   chromoBins: state.App.chromoBins,
-  shouldChangeHistory: state.App.shouldChangeHistory
+  defaultDomain: state.App.defaultDomain,
+  shouldChangeHistory: state.App.shouldChangeHistory,
 });
 export default connect(
   mapStateToProps,
