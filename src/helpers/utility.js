@@ -51,6 +51,11 @@ export function humanize(str) {
     });
 }
 
+export function magnitude(n) {
+  let order = Math.floor(Math.log(n) / Math.LN10 + 0.000000001); // because float math sucks like that
+  return Math.pow(10, order);
+}
+
 export function updateChromoBins(coordinateSet) {
   let genomeLength = coordinateSet.reduce(
     (acc, elem) => acc + elem.endPoint,
@@ -62,8 +67,9 @@ export function updateChromoBins(coordinateSet) {
     chromo.length = chromo.endPoint;
     chromo.startPlace = boundary + chromo.startPoint;
     chromo.endPlace = boundary + chromo.endPoint;
+    chromo.scaleToGenome = d3.scaleLinear().domain([chromo.startPoint, chromo.endPoint]).range([chromo.startPlace, chromo.endPlace]);
     hash[element.chromosome] = chromo;
-    boundary += chromo.length;
+    boundary += chromo.length;   
     return hash;
   }, {});
   return { genomeLength, chromoBins };

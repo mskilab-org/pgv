@@ -36,7 +36,7 @@ export default function appReducer(state = initState, action) {
       geography.forEach((d, i) => (geographyHash[d.id] = d));
       return { ...state, geography, file: action.file, geographyHash, loading: false };
     case actions.DOMAIN_UPDATED:
-      if (action.shouldChangeHistory) {
+      if (true || action.shouldChangeHistory) {
         let url = new URL(decodeURI(document.location));
         let params = new URLSearchParams(url.search);
         params.set("from", +action.from);

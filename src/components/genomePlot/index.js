@@ -7,8 +7,7 @@ import Wrapper from "./index.style";
 import Connection from "./connection";
 import Interval from "./interval";
 import { measureText } from "../../helpers/utility";
-import Grid from "./grid";
-import { Axis, axisPropsFromTickScale, BOTTOM } from "react-d3-axis";
+import Grid from "../grid/index";
 import appActions from "../../redux/app/actions";
 
 const { updateDomain } = appActions;
@@ -159,7 +158,7 @@ class GenomePlot extends Component {
           (d) => d.startPlace <= xDomain[1] && d.endPlace >= xDomain[0]
         ),
         (d) => d.y
-      ) + 1,
+      ) + 3,
     ];
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     const yScale = d3
@@ -177,8 +176,8 @@ class GenomePlot extends Component {
           </clipPath>
           </defs>
           <g transform={`translate(${[margins.gap,margins.gap]})`} >
-            <g ref={(elem) => (this.grid = elem)} clipPath="url(#cuttOffViewPane)">
-              {false && <Grid
+            <g ref={(elem) => (this.grid = elem)} clipPath="url(#cuttOffViewPane0)">
+              {<Grid
                 scaleX={xScale}
                 scaleY={yScale}
                 axisWidth={stageWidth}
