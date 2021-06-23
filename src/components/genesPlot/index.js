@@ -7,6 +7,7 @@ import { Axis, axisPropsFromTickScale, BOTTOM } from "react-d3-axis";
 import Wrapper from "./index.style";
 import { humanize, measureText } from "../../helpers/utility";
 import Plot from "./plot";
+import Grid from "../grid/index";
 import appActions from "../../redux/app/actions";
 
 const { updateDomain } = appActions;
@@ -96,7 +97,7 @@ class GenesPlot extends Component {
     this.regl = regl;
 
     this.regl.clear({
-      color: [0, 0, 0, 0.05],
+      color: [0, 0, 0, 0.0],
       stencil: true,
     });
     this.plot = new Plot(this.regl);
@@ -132,7 +133,7 @@ class GenesPlot extends Component {
     if (newDomain.toString() !== this.props.xDomain.toString()) {
       this.regl.cache = {};
       this.regl.clear({
-        color: [0, 0, 0, 0.05],
+        color: [0, 0, 0, 0.0],
         depth: false,
         stencil: true
       });
@@ -335,73 +336,15 @@ class GenesPlot extends Component {
             >
               {texts}
             </g>
-            <g
-              clipPath="url(#clipping)"
-              transform={`translate(${[
-                margins.gap,
-                stageHeight + margins.gap,
-              ]})`}
-            >
-              {false &&
-                Object.keys(chromoBins).map((d, i) => {
-                  let xxScale = d3
-                    .scaleLinear()
-                    .domain([chromoBins[d].startPoint, chromoBins[d].endPoint])
-                    .range([
-                      0,
-                      xScale(chromoBins[d].endPlace) -
-                        xScale(chromoBins[d].startPlace),
-                    ]);
-                  let tickCount = d3.max([
-                    Math.floor((xxScale.range()[1] - xxScale.range()[0]) / 40),
-                    2,
-                  ]);
-                  let ticks = xxScale.ticks(tickCount);
-                  ticks[ticks.length - 1] = xxScale.domain()[1];
-                  return (
-                    xScale(chromoBins[d].startPlace) <= stageWidth && (
-                      <g
-                        key={d}
-                        transform={`translate(${[
-                          xScale(chromoBins[d].startPlace),
-                          0,
-                        ]})`}
-                      >
-                        <Axis
-                          {...axisPropsFromTickScale(xxScale, tickCount)}
-                          values={ticks}
-                          format={(e) => d3.format("~s")(e)}
-                          style={{ orient: BOTTOM }}
-                        />
-                      </g>
-                    )
-                  );
-                })}
-            </g>
-            <g
-              transform={`translate(${[
-                margins.gap,
-                stageHeight + margins.gap,
-              ]})`}
-            >
-              {Object.keys(chromoBins).map((d, i) => (
-                <g
-                  key={d}
-                  transform={`translate(${[
-                    xScale(chromoBins[d].startPlace),
-                    0,
-                  ]})`}
-                >
-                  <line
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2={-stageHeight}
-                    stroke="rgb(128, 128, 128)"
-                    strokeDasharray="4"
-                  />
-                </g>
-              ))}
+            <g transform={`translate(${[margins.gap,margins.gap]})`} >
+              {<Grid
+                showY={false}
+                scaleX={xScale}
+                scaleY={yScale}
+                axisWidth={stageWidth}
+                axisHeight={stageHeight}
+                chromoBins={chromoBins}
+              />}
             </g>
             {tooltip.visible && <g
             className="tooltip"

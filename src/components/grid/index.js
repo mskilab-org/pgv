@@ -141,7 +141,7 @@ class Grid extends Component {
 
 
   render() {
-    const { scaleX, axisWidth, axisHeight, chromoBins, fontSize, gap } =
+    const { showY, axisWidth, axisHeight, gap } =
       this.props;
     return (
       <Wrapper className="axis axis-container" ref={(elem) => (this.container = elem)}>
@@ -150,7 +150,7 @@ class Grid extends Component {
             <rect x={0} y={-3 * axisHeight} width={axisWidth} height={6 * axisHeight} />
           </clipPath>
           </defs>
-        <g className="axis--y y-axis-container" transform={`translate(${[gap, 0]})`}></g>
+        {showY && <g className="axis--y y-axis-container" transform={`translate(${[gap, 0]})`}></g>}
         <g clipPath="" className="axis--x x-axis-container" transform={`translate(${[0, axisHeight]})`}></g>
         <g clipPath="url(#cutt-off-clip)" className="separators-container" transform={`translate(${[0, 0]})`}></g>
       </Wrapper>
@@ -166,6 +166,7 @@ Grid.propTypes = {
 Grid.defaultProps = {
   gap: 0,
   fontSize: 10,
+  showY: true
 };
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({

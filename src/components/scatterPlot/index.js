@@ -3,7 +3,7 @@ import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
-import { Axis, axisPropsFromTickScale, LEFT, BOTTOM } from "react-d3-axis";
+import Grid from "../grid/index";
 import Points from "./points";
 import Wrapper from "./index.style";
 
@@ -28,7 +28,7 @@ class ScatterPlot extends Component {
     this.regl = regl;
 
     this.regl.clear({
-      color: [0, 0, 0, 0.05],
+      color: [0, 0, 0, 0.0],
       stencil: true,
     });
     this.points = new Points(this.regl);
@@ -41,7 +41,7 @@ class ScatterPlot extends Component {
       || (prevProps.width !== this.props.width)
       || (prevProps.height !== this.props.height)) {
         this.regl.clear({
-          color: [0, 0, 0, 0.05],
+          color: [0, 0, 0, 0.0],
           depth: false,
         });
     
@@ -51,7 +51,7 @@ class ScatterPlot extends Component {
     if (prevProps.xDomain.toString() !== this.props.xDomain.toString()) {
   
       this.regl.clear({
-        color: [0, 0, 0, 0.05],
+        color: [0, 0, 0, 0.0],
         depth: false,
       });
   
@@ -126,30 +126,15 @@ class ScatterPlot extends Component {
           >
             {title}
           </text>
-          <g transform={`translate(${[margins.gap, margins.gap]})`}>
-            <Axis
-              {...axisPropsFromTickScale(yScale, margins.yTicksCount)}
-              values={yTicks}
-              style={{ orient: LEFT }}
-            />
-          </g>
-          <g clipPath="url(#clipping)"
-            transform={`translate(${[margins.gap, stageHeight + margins.gap]})`}
-          >
-            {Object.keys(chromoBins).map((d,i) => {
-            let xxScale = d3.scaleLinear().domain([chromoBins[d].startPoint, chromoBins[d].endPoint]).range([0, xScale(chromoBins[d].endPlace) - xScale(chromoBins[d].startPlace)]);
-            let tickCount = d3.max([Math.floor((xxScale.range()[1] - xxScale.range()[0]) / 40), 2]);
-            let ticks = xxScale.ticks(tickCount);
-            ticks[ticks.length - 1] = xxScale.domain()[1];
-            return (xScale(chromoBins[d].startPlace) <= stageWidth) && <g key={d} transform={`translate(${[xScale(chromoBins[d].startPlace), 0]})`}>
-              <Axis
-              {...axisPropsFromTickScale(xxScale, tickCount)}
-              values={ticks}
-              format={(e) => d3.format("~s")(e)}
-              style={{ orient: BOTTOM }}
-            />
-            </g>})}
-          </g>
+          <g transform={`translate(${[margins.gap,margins.gap]})`} >
+          {<Grid
+            scaleX={xScale}
+            scaleY={yScale}
+            axisWidth={stageWidth}
+            axisHeight={stageHeight}
+            chromoBins={chromoBins}
+          />}
+        </g>
           <g
             transform={`translate(${[margins.gap, stageHeight + margins.gap]})`}
           >
