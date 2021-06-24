@@ -10,6 +10,9 @@ const Wrapper = styled.div`
       fill-opacity: .125;
       shape-rendering: crispEdges;
     }
+    text {
+      user-select: none;
+    }
   }
 `;
 

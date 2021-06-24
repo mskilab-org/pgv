@@ -14,6 +14,7 @@ const Wrapper = styled.g`
   .axis--y g.tick line {
     stroke: #777;
     stroke-dasharray: 2,2;
+    opacity: 0.33;
   }
   
   .axis--y .domain {

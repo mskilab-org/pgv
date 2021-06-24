@@ -1,14 +1,19 @@
 class Plot {
-  constructor(regl) {
+  constructor(regl, rectangleHeight = 10.0) {
     this.regl = regl;
     this.positions = [[1.0, 0.0], [0.0, 0.5], [1.0,0.5], [1.0, -0.5], [0.0, -0.5],[0.0, 0.5]];
-    this.rectangleHeight = 10.0;
+    this.rectangleHeight = rectangleHeight;
     this.strokeWidth = 0.66;
     this.commonSpecIntervals = {
       frag: `
       precision highp float;
       varying vec4 vColor;
+      varying vec2 vPos;
+
       void main() {
+        if (abs(vPos.x) > 1.0 || abs(vPos.y) > 1.0) {
+          discard;
+        }
         gl_FragColor = vColor;
       }`,
 
@@ -18,6 +23,8 @@ class Plot {
       attribute float startPoint, endPoint, valY, color;
       uniform vec2 domainX, domainY;
       varying vec4 vColor;
+      varying vec2 vPos;
+
       uniform float stageWidth, stageHeight, rectangleHeight, offset;
 
       vec2 normalizeCoords(vec2 position) {
@@ -38,19 +45,14 @@ class Plot {
         float pos2X = kx * (endPoint - domainX.x);
         float posY = stageHeight + ky * (valY - domainY.x);
 
-        float padding = offset;
-        float diff = pos2X - pos1X - 2.0 * padding;
-        if (diff < 0.5) {
-          padding = 0.0;
-        }
+        float diff = pos2X - pos1X;
 
-        float vecX = max(pos2X - pos1X - 2.0 * padding, 0.5) * position.x + pos1X + padding;
-        float vecY = (rectangleHeight - 2.0 * padding) * position.y + posY;
+        float vecX = diff * position.x + pos1X;
+        float vecY = rectangleHeight * position.y + posY;
 
-        vec2 v = normalizeCoords(vec2(vecX,vecY));
+        vPos = normalizeCoords(vec2(vecX,vecY));
 
-        gl_Position = vec4(v, 0, 1);
-        // vColor = vec4(color.r / 255.0, color.g / 255.0, color.b / 255.0, color.a / 1.0);
+        gl_Position = vec4(vPos, 0, 1);
         float red = floor(color / 65536.0);
         float green = floor((color - red * 65536.0) / 256.0);
         float blue = color - red * 65536.0 - green * 256.0;
@@ -91,7 +93,6 @@ class Plot {
         stageWidth: regl.prop("stageWidth"),
         stageHeight: regl.prop("stageHeight"),
         rectangleHeight: this.rectangleHeight,
-        offset: regl.prop("offset"),
         domainX: regl.prop("domainX"),
         domainY: regl.prop("domainY"),
       },
@@ -107,35 +108,28 @@ class Plot {
     height,
     geneStruct
   ) {
-    const {genesStartPoint, genesEndPoint, genesY, genesFill, genesStroke, domainX, domainY} = geneStruct;
+    const {genesStartPoint, genesEndPoint, genesY, genesStroke, domainX, domainY} = geneStruct;
     const startPoint = this.regl.buffer(genesStartPoint);
     const endPoint = this.regl.buffer(genesEndPoint);
-    const fill = this.regl.buffer(genesFill);
     const stroke = this.regl.buffer(genesStroke);
     const valY = this.regl.buffer(genesY);
     const instances = genesStartPoint.length;
     const stageWidth = width;
     const stageHeight = height;
     let color = stroke;
-    let offset = 0;
-    this.dataBufferStroke = {stageWidth, stageHeight, startPoint, endPoint, color, offset, valY, domainX, domainY, instances};
-    color = fill;
-    offset = this.strokeWidth;
-    this.dataBufferFill = {stageWidth, stageHeight, startPoint, endPoint, color, offset, valY, domainX, domainY, instances};
+    this.dataBufferStroke = {stageWidth, stageHeight, startPoint, endPoint, color, valY, domainX, domainY, instances};
     color = this.regl.buffer(genesStroke.map((d,i) => i + 3000));
-    offset = 0;
     this.fboIntervals = this.regl.framebuffer({
       width: stageWidth,
       height: stageHeight,
       colorFormat: 'rgba',
     });
     this.drawFboIntervals = this.regl({...this.commonSpecIntervals, framebuffer: this.fboIntervals});
-    this.dataBufferFboIntervals = {stageWidth, stageHeight, startPoint, endPoint, color, offset, valY, domainX, domainY, instances};
+    this.dataBufferFboIntervals = {stageWidth, stageHeight, startPoint, endPoint, color, valY, domainX, domainY, instances};
   }
 
   rescaleX(domainX) {
     this.dataBufferStroke.domainX = domainX;
-    this.dataBufferFill.domainX = domainX;
     this.fboIntervals = this.regl.framebuffer({
       width: this.dataBufferFboIntervals.stageWidth,
       height: this.dataBufferFboIntervals.stageHeight,
@@ -148,7 +142,6 @@ class Plot {
 
   render() {
     this.draw(this.dataBufferStroke);
-    this.draw(this.dataBufferFill);
     this.drawFboIntervals(this.dataBufferFboIntervals);
   }
 }

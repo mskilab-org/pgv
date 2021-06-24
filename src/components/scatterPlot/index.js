@@ -3,6 +3,7 @@ import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
+import outliers from "outliers";
 import Grid from "../grid/index";
 import Points from "./points";
 import Wrapper from "./index.style";
@@ -15,6 +16,15 @@ const margins = {
 class ScatterPlot extends Component {
   regl = null;
   container = null;
+  dataPointsX = null;
+  dataPointsY = null;
+
+  constructor(props) {
+    super(props);
+    let { results } = this.props;
+    this.dataPointsY = results.getColumn("y").toArray();
+    this.dataPointsX = results.getColumn("x").toArray();
+  }
 
   componentDidMount() {
     const regl = require("regl")({
@@ -36,30 +46,15 @@ class ScatterPlot extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    this.regl.clear({
+      color: [0, 0, 0, 0.0],
+      depth: false,
+    });
 
-    if ((prevProps.results.getColumn("y").toArray().length !== this.props.results.getColumn("y").toArray().length)
-      || (prevProps.width !== this.props.width)
-      || (prevProps.height !== this.props.height)) {
-        this.regl.clear({
-          color: [0, 0, 0, 0.0],
-          depth: false,
-        });
-    
-        this.regl.poll();
-        this.updateStage();
-    }
-    if (prevProps.xDomain.toString() !== this.props.xDomain.toString()) {
-  
-      this.regl.clear({
-        color: [0, 0, 0, 0.0],
-        depth: false,
-      });
-  
-      this.regl.poll();
-  
-      let yExtent = d3.extent(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= this.props.xDomain[0]),this.dataPointsX.findIndex(d => d >= this.props.xDomain[1])));
-      this.points.rescaleXY(this.props.xDomain, yExtent);
-    }
+    this.regl.poll();
+
+    let yExtent = d3.extent(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= this.props.xDomain[0]),this.dataPointsX.findIndex(d => d >= this.props.xDomain[1])));
+    this.points.rescaleXY(this.props.xDomain, yExtent);
   }
 
   componentWillUnmount() {
@@ -75,15 +70,16 @@ class ScatterPlot extends Component {
     let stageHeight = height - 2 * margins.gap;
     this.regl.poll();
     let xExtent = xDomain;
-    this.dataPointsY = results.getColumn("y").toArray();
-    this.dataPointsX = results.getColumn("x").toArray();
-    let yExtent = d3.extent(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= xDomain[0]),this.dataPointsX.findIndex(d => d >= xDomain[1])));
+
+    let matched =  Array.prototype.slice.call(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= xDomain[0]), this.dataPointsX.findIndex(d => d >= xDomain[1])));
+    matched = [...new Set(matched.map(e => +e.toFixed(2)))].filter(outliers());
+    let yExtent = [0,d3.max(matched)];
     let dataPointsColor = results.getColumn("color").toArray();
     
     this.points.load(
       stageWidth,
       stageHeight,
-      2,
+      5,
       this.dataPointsX,
       this.dataPointsY,
       dataPointsColor,
@@ -97,9 +93,10 @@ class ScatterPlot extends Component {
     const { width, height, results, xDomain, chromoBins, title } = this.props;
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 2 * margins.gap;
-    let dataPointsY = results.getColumn("y").toArray();
-    let dataPointsX = results.getColumn("x").toArray();
-    let yExtent = d3.extent(dataPointsY.slice(dataPointsX.findIndex(d => d >= xDomain[0]), dataPointsX.findIndex(d => d >= xDomain[1])));
+    
+    let matched =  Array.prototype.slice.call(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= xDomain[0]), this.dataPointsX.findIndex(d => d >= xDomain[1])));
+    matched = [...new Set(matched.map(e => +e.toFixed(2)))].filter(outliers());
+    let yExtent = [0,d3.max(matched)];
     const yScale = d3
       .scaleLinear()
       .domain(yExtent)

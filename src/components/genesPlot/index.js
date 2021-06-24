@@ -3,7 +3,6 @@ import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
-import { Axis, axisPropsFromTickScale, BOTTOM } from "react-d3-axis";
 import Wrapper from "./index.style";
 import { humanize, measureText } from "../../helpers/utility";
 import Plot from "./plot";
@@ -14,6 +13,8 @@ const { updateDomain } = appActions;
 
 const margins = {
   gap: 24,
+  bGap: 60,
+  rectangleHeight: 10
 };
 
 class GenesPlot extends Component {
@@ -31,27 +32,13 @@ class GenesPlot extends Component {
       .scaleLinear()
       .domain(defaultDomain)
       .range([0, stageWidth]);
-    this.zoom = d3
-      .zoom()
-      .translateExtent([
-        [0, 0],
-        [stageWidth, stageHeight],
-      ])
-      .extent([
-        [0, 0],
-        [stageWidth, stageHeight],
-      ])
-      .scaleExtent([1, Infinity])
-      .on("zoom", (event) => this.zoomed(event, false))
-      .on("end", (event) => this.zoomed(event, true));
-
+    
     let geneStruct = {
       geneTypes: genes.getColumn("type").toArray(),
       geneTitles: genes.getColumn("title").toArray(),
       genesStartPoint: genes.getColumn("startPlace").toArray(),
       genesEndPoint: genes.getColumn("endPlace").toArray(),
       genesY: genes.getColumn("y").toArray(),
-      genesFill: genes.getColumn("color").toArray(),
       genesStroke: genes.getColumn("color").toArray(),
       domainX: xDomain,
       domainY: [-3, 3],
@@ -64,6 +51,7 @@ class GenesPlot extends Component {
       genomeScale,
       geneStruct,
       tooltip: {
+        shape: null,
         visible: false,
         shapeId: -1,
         x: -1000,
@@ -73,14 +61,8 @@ class GenesPlot extends Component {
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return nextProps.xDomain.toString() !== this.props.xDomain.toString() || (nextState.tooltip.shapeId !== this.state.tooltip.shapeId);
-  }
-
   componentDidMount() {
-    const { xDomain, genomeScale, stageWidth, stageHeight, geneStruct } =
-      this.state;
-    var s = [genomeScale(xDomain[0]), genomeScale(xDomain[1])];
+    const { stageWidth, stageHeight, geneStruct } = this.state;
     const regl = require("regl")({
       extensions: ["ANGLE_instanced_arrays"],
       container: this.container,
@@ -98,53 +80,28 @@ class GenesPlot extends Component {
 
     this.regl.clear({
       color: [0, 0, 0, 0.0],
-      stencil: true,
+      depth: false,
+      stencil: true
     });
-    this.plot = new Plot(this.regl);
+    this.plot = new Plot(this.regl, margins.rectangleHeight);
     this.plot.load(stageWidth, stageHeight, geneStruct);
     this.plot.render();
-    d3.select(this.container)
-      .attr("preserveAspectRatio", "xMinYMin meet")
-      .call(this.zoom);
-    d3.select(this.container).call(
-      this.zoom.transform,
-      d3.zoomIdentity.scale(stageWidth / (s[1] - s[0])).translate(-s[0], 0)
-    );
   }
 
   componentDidUpdate() {
     let { xDomain } = this.props;
-    const { genomeScale, stageWidth } = this.state;
-    var s = [genomeScale(xDomain[0]), genomeScale(xDomain[1])];
-    d3.select(this.container)
-      .attr("preserveAspectRatio", "xMinYMin meet")
-      .call(this.zoom);
-    d3.select(this.container).call(
-      this.zoom.transform,
-      d3.zoomIdentity.scale(stageWidth / (s[1] - s[0])).translate(-s[0], 0)
-    );
-  }
 
-  zoomed(event, shouldChangeHistory) {
-    let newDomain = event.transform
-      .rescaleX(this.state.genomeScale)
-      .domain()
-      .map(Math.floor);
-    if (newDomain.toString() !== this.props.xDomain.toString()) {
-      this.regl.cache = {};
-      this.regl.clear({
-        color: [0, 0, 0, 0.0],
-        depth: false,
-        stencil: true
-      });
-  
-      this.regl.poll();
+    this.regl.cache = {};
+    this.regl.clear({
+      color: [0, 0, 0, 0.0],
+      depth: false,
+      stencil: true
+    });
 
-      this.plot.rescaleX(newDomain);
-      this.setState({ xDomain: newDomain }, () => {
-         this.props.updateDomain(newDomain[0], newDomain[1], shouldChangeHistory, "zoom");
-      });
-    }
+    this.regl.poll();
+
+    this.plot.rescaleX(xDomain);
+    
   }
 
   componentWillUnmount() {
@@ -154,10 +111,12 @@ class GenesPlot extends Component {
   }
 
   handleMouseMove = (event) => {
-    const { stageHeight } = this.state;
+    const { stageHeight, stageWidth } = this.state;
     const { genes, width, height } = this.props;
     let position = [d3.pointer(event)[0] - margins.gap, d3.pointer(event)[1] - margins.gap];
-    try {
+
+    if ((position[0] < stageWidth) && ((position[0] >= 0)) && (position[1] <= stageHeight) && ((position[1] > 0))) {
+     
       const pixels = this.plot.regl.read({
         x: position[0],
         y: stageHeight - position[1],
@@ -167,25 +126,27 @@ class GenesPlot extends Component {
         framebuffer: this.plot.fboIntervals,
       });
       let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
+    
       if (genes.get(index)) {
         let selectedGene = genes.get(index).toJSON();
         let textData = this.tooltipContent(selectedGene);
         let diffY = d3.min([0, height - event.nativeEvent.offsetY - textData.length * 16 - 12]);
         let diffX = d3.min([0, width - event.nativeEvent.offsetX - d3.max(textData, (d) => measureText(`${d.label}: ${d.value}`, 12)) - 30]);
-        this.state.tooltip.shapeId !== selectedGene.iid && this.setState({tooltip: {shapeId: selectedGene.iid, visible: true, x: (event.nativeEvent.offsetX + diffX), y: (event.nativeEvent.offsetY + diffY), text: textData}})
+        this.state.tooltip.shapeId !== selectedGene.iid && this.setState({tooltip: {shape: selectedGene, shapeId: selectedGene.iid, visible: true, x: (event.nativeEvent.offsetX + diffX), y: (event.nativeEvent.offsetY + diffY), text: textData}})
       } else {
-        this.state.tooltip.visible && this.setState({tooltip: {shapeId: null, visible: false}})
+        this.state.tooltip.visible && this.setState({tooltip: {shape: null, shapeId: null, visible: false}})
       }
-    } catch (error) {
-      //console.error(error);
     }
+    
   }
 
   handleClick = (event) => {
-    const { stageHeight } = this.state;
+    const { stageWidth, stageHeight } = this.state;
     const { genes } = this.props;
     let position = [d3.pointer(event)[0] - margins.gap, d3.pointer(event)[1] - margins.gap];
-    try {
+
+    if ((position[0] < stageWidth) && ((position[0] >= 0)) && (position[1] <= stageHeight) && ((position[1] > 0))) {
+     
       const pixels = this.plot.regl.read({
         x: position[0],
         y: stageHeight - position[1],
@@ -206,8 +167,6 @@ class GenesPlot extends Component {
               )
               .focus();
       }
-    } catch (error) {
-      //console.error(error);
     }
   }
 
@@ -236,15 +195,15 @@ class GenesPlot extends Component {
   }
 
   render() {
-    const { width, height, chromoBins, genes, title } =
+    const { width, height, chromoBins, genes, title, xDomain } =
       this.props;
-    const { xDomain, stageWidth, stageHeight, geneStruct, tooltip } = this.state;
+    const { stageWidth, stageHeight, geneStruct, tooltip } = this.state;
     const { geneTypes, genesStartPoint, geneTitles, genesY } = geneStruct;
 
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     const yScale = d3.scaleLinear().domain([-3, 3]).range([stageHeight, 0]);
     let texts = [];
-    if (true) {
+
       let startPosNext = { 1: -1, "-1": -1 };
       for (let i = 0; i < genes.count(); i++) {
         if (
@@ -280,7 +239,7 @@ class GenesPlot extends Component {
           }
         }
       }
-    }
+
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div
@@ -293,7 +252,7 @@ class GenesPlot extends Component {
         {(
           <svg
             width={width}
-            height={height}
+            height={height + margins.bGap}
             className="plot-container"
             ref={(elem) => (this.plotContainer = elem)}
           >
@@ -346,6 +305,9 @@ class GenesPlot extends Component {
                 chromoBins={chromoBins}
               />}
             </g>
+            {tooltip.visible && <g transform={`translate(${[margins.gap,margins.gap]})`} >
+              <rect x={xScale(tooltip.shape.startPlace)} y={yScale(tooltip.shape.y) - margins.rectangleHeight / 2} width={xScale(tooltip.shape.endPlace) - xScale(tooltip.shape.startPlace)} height={margins.rectangleHeight} stroke={d3.rgb("#FF7F0E").darker()} fill="#FF7F0E"/>
+            </g>}
             {tooltip.visible && <g
             className="tooltip"
             transform={`translate(${[tooltip.x + 30, tooltip.y]})`}
@@ -388,13 +350,11 @@ GenesPlot.defaultProps = {
   xDomain: [],
 };
 const mapDispatchToProps = (dispatch) => ({
-  updateDomain: (from, to, shouldChangeHistory, eventSource) => dispatch(updateDomain(from,to,shouldChangeHistory, eventSource))
 });
 const mapStateToProps = (state) => ({
   xDomain: state.App.domain,
   chromoBins: state.App.chromoBins,
-  defaultDomain: state.App.defaultDomain,
-  shouldChangeHistory: state.App.shouldChangeHistory,
+  defaultDomain: state.App.defaultDomain
 });
 export default connect(
   mapStateToProps,

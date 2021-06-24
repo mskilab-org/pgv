@@ -20,6 +20,7 @@
     "immutable": "^4.0.0-rc.12",
     "mapbox-gl": "^2.1.1",
     "moment": "^2.29.1",
+    "outliers": "^0.0.3",
     "phylocanvas": "^2.8.1",
     "phylocanvas-plugin-context-menu": "^3.11.0",
     "phylocanvas-plugin-scalebar": "^1.1.1",

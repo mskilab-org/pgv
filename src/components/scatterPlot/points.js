@@ -1,13 +1,17 @@
 class Points {
-  constructor(regl) {
+  constructor(regl, pointSize) {
     this.regl = regl;
     this.positions = [[0.0, 0.0]];
-    this.pointSize = this.pixelRatio;
+    this.pointSize = pointSize || this.pixelRatio;
     let common = {
       frag: `
       precision highp float;
       varying vec4 vColor;
+      varying vec2 vPos;
       void main() {
+        if (abs(vPos.x) > 1.0 || abs(vPos.y) > 1.0) {
+          discard;
+        }
         gl_FragColor = vColor;
       }`,
 
@@ -15,6 +19,7 @@ class Points {
       precision highp float;
       attribute vec2 position;
       varying vec4 vColor;
+      varying vec2 vPos;
       attribute float dataX, dataY, color;
       uniform vec2 domainX, domainY;
       uniform float stageWidth, stageHeight, pointSize;
@@ -41,6 +46,7 @@ class Points {
           float vecY = position.y + posY;
 
           vec2 v = normalizeCoords(vec2(vecX,vecY));
+          vPos = v;
 
           gl_PointSize = pointSize;
           gl_Position = vec4(v, 0, 1);
