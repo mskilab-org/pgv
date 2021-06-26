@@ -42,7 +42,14 @@ class Home extends Component {
           title: d.title,
           chromoBins: chromoBins,
           visible: d.visible}}/>
-      } else if (d.type === "genes") {
+      } else if (d.type === "phylogeny") {
+        plotComponent = <PhylogenyPanel {...{
+          loading,
+          phylogeny: d.data,
+          title: d.title,
+          visible: d.visible}}/>
+      }
+       else if (d.type === "genes") {
         plotComponent = <GenesPanel {...{ genes: d.data, chromoBins, visible: false }} />;
       } else if (d.type === "barplot") {
         plotComponent = <BarPlotPanel {...{ data: d.data, title: d.title, chromoBins, visible: d.visible, loading }} />;

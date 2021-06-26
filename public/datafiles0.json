@@ -4,6 +4,7 @@
     "description": ["tumor_type=ESAD", "dataset=ESAD-UK", "organ=Esophagus", "lineage=Esophageal columnar epithelium", "gender=female", "cluster=INVDUP", "PLAG1 mut", "KRAS amp", "MUTYH germline pathogenic", "CDKN2A homdel"],
     "reference": "hg19",
     "plots": [
+      {"type": "phylogeny", "source": "phylogeny.newick", "title": "Phylogenetic Information for DO233445", "visible": true },
       {"type": "genome", "source": "genome.json", "title": "Tumor sample DO233445", "visible": true },
       {"type": "genome", "source": "genome2.json", "title": "Tumor sample 0124", "visible": false },
       {"type": "barplot", "source": "rpkm.arrow", "title": "RPKM Probability Distribution", "visible": false },

@@ -95,13 +95,15 @@ function* launchApplication() {
     window.history.replaceState(newURL, 'Pan Genome Viewer', newURL);
 
     let plots = [{type: "genes", source: `/genes/${selectedCoordinate}.arrow`}, ...datafile.plots.map(d => {return {...d, source: `data/${file}/${d.source}`}})];
-    yield axios.all(plots.filter((d,i) => ["genome"].includes(d.type)).map(d => axios.get(d.source))).then(axios.spread((...responses) => {
-      responses.forEach((d,i) => plots.filter((d,i) => ["genome"].includes(d.type))[i].data = d.data);
+    yield axios.all(plots.filter((d,i) => ["genome", "phylogeny"].includes(d.type)).map(d => axios.get(d.source))).then(axios.spread((...responses) => {
+      responses.forEach((d,i) => plots.filter((d,i) => ["genome", "phylogeny"].includes(d.type))[i].data = d.data);
     })).catch(errors => {
       console.log("got errors on loading dependencies", errors)
     });
 
     yield all([...plots.filter((d,i) => ["genes", "barplot", "scatterplot"].includes(d.type)).map(x => call(fetchArrowData, x))]);
+
+   // yield all([...plots.filter((d,i) => ["phylogeny"].includes(d.type)).map(x => call(fetchArrowData, x))]);
 
     let genomeRange = locateGenomeRange(chromoBins, +from, +to);
     let properties = {datafile, defaultDomain, genomeLength, datafiles: files, selectedCoordinate, genomeRange, tags, file, from, to, domain, chromoBins, plots};

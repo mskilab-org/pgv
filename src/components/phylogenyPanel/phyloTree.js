@@ -105,8 +105,6 @@ class PhyloTree extends Component {
   }
 
   render() {
-    const { t } = this.props;
-
     return (
       <div
         ref={(elem) => (this.container = elem)}
