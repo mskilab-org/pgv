@@ -7,9 +7,6 @@ import Wrapper from "./index.style";
 import { humanize, measureText } from "../../helpers/utility";
 import Plot from "./plot";
 import Grid from "../grid/index";
-import appActions from "../../redux/app/actions";
-
-const { updateDomain } = appActions;
 
 const margins = {
   gap: 24,

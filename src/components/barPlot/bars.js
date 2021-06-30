@@ -8,7 +8,11 @@ class Bars {
       frag: `
       precision highp float;
       varying vec4 vColor;
+      varying vec2 vPos;
       void main() {
+        if (abs(vPos.x) > 1.0 || abs(vPos.y) > 1.0) {
+          discard;
+        }
         gl_FragColor = vColor;
       }`,
 
@@ -18,7 +22,8 @@ class Bars {
       attribute float startPoint, endPoint, valY, color;
       uniform vec2 domainX, domainY;
       varying vec4 vColor;
-      uniform float stageWidth, stageHeight, rectangleHeight, offset;
+      varying vec2 vPos;
+      uniform float stageWidth, stageHeight, rectangleHeight;
 
       vec2 normalizeCoords(vec2 position) {
         // read in the positions into x and y vars
@@ -38,19 +43,13 @@ class Bars {
         float pos2X = kx * (endPoint - domainX.x);
         float posY = stageHeight + ky * (valY - domainY.x);
 
-        float padding = offset;
-        float diff = pos2X - pos1X - 2.0 * padding;
-        if (diff < 0.5) {
-          padding = 0.0;
-        }
+        float vecX = (pos2X - pos1X) * position.x + pos1X;
+        float vecY = (stageHeight - posY) * position.y + 1.0 * posY;
 
-        float vecX = max(pos2X - pos1X - 2.0 * padding, 0.5) * position.x + pos1X + padding;
-        float vecY = (stageHeight - posY + 2.0 * padding) * position.y + 1.0 * posY;
+        vPos = normalizeCoords(vec2(vecX,vecY));
 
-        vec2 v = normalizeCoords(vec2(vecX,vecY));
-
-        gl_Position = vec4(v, 0, 1);
-        // vColor = vec4(color.r / 255.0, color.g / 255.0, color.b / 255.0, color.a / 1.0);
+        gl_Position = vec4(vPos, 0, 1);
+      
         float red = floor(color / 65536.0);
         float green = floor((color - red * 65536.0) / 256.0);
         float blue = color - red * 65536.0 - green * 256.0;
@@ -91,7 +90,6 @@ class Bars {
         stageWidth: regl.prop("stageWidth"),
         stageHeight: regl.prop("stageHeight"),
         rectangleHeight: this.rectangleHeight,
-        offset: regl.prop("offset"),
         domainX: regl.prop("domainX"),
         domainY: regl.prop("domainY"),
       },
@@ -116,8 +114,7 @@ class Bars {
     const stageWidth = width;
     const stageHeight = height;
     let color = fill;
-    let offset = 0;
-    this.dataBufferFill = {stageWidth, stageHeight, startPoint, endPoint, color, offset, valY, domainX, domainY, instances};
+    this.dataBufferFill = {stageWidth, stageHeight, startPoint, endPoint, color, valY, domainX, domainY, instances};
   }
 
   rescaleXY(domainX, domainY) {

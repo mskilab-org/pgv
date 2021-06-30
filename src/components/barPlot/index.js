@@ -3,6 +3,7 @@ import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
+import outliers from "outliers";
 import Grid from "../grid/index";
 import Bars from "./bars";
 import Wrapper from "./index.style";
@@ -18,6 +19,36 @@ const { updateDomain } = appActions;
 class BarPlot extends Component {
   regl = null;
   container = null;
+
+  constructor(props) {
+    super(props);
+    this.zoom = null;
+    this.container = null;
+    this.plotContainer = null;
+    this.grid = null;
+    let { width, height, results, xDomain } = this.props;
+
+    let stageWidth = width - 2 * margins.gap;
+    let stageHeight = height - 2 * margins.gap;
+
+    let barsStruct = {
+      barsY: results.getColumn("y").toArray(),
+      barsStartPoint: results.getColumn("startPoint").toArray(),
+      barsEndPoint: results.getColumn("endPoint").toArray(),
+      barsFill: results.getColumn("color").toArray(),
+      domainX: xDomain,
+    };
+    
+    let matched =  Array.prototype.slice.call(barsStruct.barsY.slice(barsStruct.barsStartPoint.findIndex(d => d >= xDomain[0]), barsStruct.barsStartPoint.findIndex(d => d >= xDomain[1])));
+    matched = [...new Set(matched.map(e => +e.toFixed(2)))].filter(outliers());
+    barsStruct.domainY = [0,d3.max(matched)];
+
+    this.state = {
+      stageWidth,
+      stageHeight,
+      barsStruct
+    };
+  }
 
   componentDidMount() {
     const regl = require("regl")({
@@ -35,36 +66,30 @@ class BarPlot extends Component {
       stencil: true,
     });
     this.bars = new Bars(this.regl);
-    this.updateStage();
+    let {stageWidth, stageHeight, barsStruct} = this.state;
+    this.bars.load(
+      stageWidth,
+      stageHeight,
+      barsStruct
+    );
+    this.bars.render();
+
   }
 
   componentDidUpdate(prevProps, prevState) {
+    const { xDomain } = this.props;
+    let {barsStruct } = this.state;
+    this.regl.clear({
+      color: [0, 0, 0, 0.0],
+      depth: false,
+    });
 
-    if ((prevProps.results.getColumn("y").toArray().length !== this.props.results.getColumn("y").toArray().length)
-      || (prevProps.width !== this.props.width)
-      || (prevProps.height !== this.props.height)) {
-        this.regl.clear({
-          color: [0, 0, 0, 0.05],
-          depth: false,
-        });
+    this.regl.poll();
+    let matched =  Array.prototype.slice.call(barsStruct.barsY.slice(barsStruct.barsStartPoint.findIndex(d => d >= xDomain[0]), barsStruct.barsStartPoint.findIndex(d => d >= xDomain[1])));
+    matched = [...new Set(matched.map(e => +e.toFixed(2)))].filter(outliers());
+    barsStruct.domainY = [0,d3.max(matched)];
     
-        this.regl.poll();
-        this.updateStage();
-    }
-    if (prevProps.xDomain.toString() !== this.props.xDomain.toString()) {
-  
-      this.regl.clear({
-        color: [0, 0, 0, 0.0],
-        depth: false,
-      });
-  
-      this.regl.poll();
-      let barsY = this.props.results.getColumn("y").toArray();
-      let barsStartPoint = this.props.results.getColumn("startPoint").toArray();
-      let limits = d3.extent(barsY.slice(barsStartPoint.findIndex(d => d >= this.props.xDomain[0]),barsStartPoint.findIndex(d => d >= this.props.xDomain[1])));
-      let yExtent = limits[0] !== undefined ? limits : d3.extent(barsY);
-      this.bars.rescaleXY(this.props.xDomain, yExtent);
-    }
+    this.bars.rescaleXY(this.props.xDomain, barsStruct.domainY);
   }
 
   componentWillUnmount() {
@@ -73,64 +98,21 @@ class BarPlot extends Component {
     }
   }
 
-  updateStage() {
-    let { width, height, results, xDomain, defaultDomain, updateDomain } = this.props;
-
-    let stageWidth = width - 2 * margins.gap;
-    let stageHeight = height - 2 * margins.gap;
-    this.regl.poll();
-    let domainX = xDomain;
-    let barsY = results.getColumn("y").toArray();
-    let barsStartPoint = results.getColumn("startPoint").toArray();
-    let barsEndPoint = results.getColumn("endPoint").toArray();
-    let limits = d3.extent(barsY.slice(barsStartPoint.findIndex(d => d >= xDomain[0]),barsStartPoint.findIndex(d => d >= xDomain[1])));
-    let domainY = limits[0] !== undefined ? limits : d3.extent(barsY);
-    let barsFill = results.getColumn("color").toArray();
-    let barsStruct = {barsStartPoint, barsEndPoint, barsY, barsFill, domainX, domainY};
-   
-    this.bars.load(
-      stageWidth,
-      stageHeight,
-      barsStruct
-    );
-    this.bars.render();
-
-    this.genomeScale = d3.scaleLinear().domain(defaultDomain).range([0, stageWidth]);
-    var s = [this.genomeScale(xDomain[0]), this.genomeScale(xDomain[1])];
-
-    this.currentTransform = null;
-
-    this.zoom = d3.zoom()
-      .translateExtent([[0, 0], [stageWidth, stageHeight]])
-      .extent([[0, 0], [stageWidth, stageHeight]])
-      .scaleExtent([1, Infinity])
-      .on('zoom', (event) => {
-        var t = event.transform;
-        var newDomain = t.rescaleX(this.genomeScale).domain().map(Math.floor);
-        if (newDomain.toString !== xDomain) {
-          updateDomain(newDomain[0], newDomain[1], "zoom");
-        }
-    });
-
-    d3.select(this.container).attr('preserveAspectRatio', 'xMinYMin meet').call(this.zoom);
-    d3.select(this.container).call(this.zoom.transform, d3.zoomIdentity.scale(stageWidth / (s[1] - s[0])).translate(-s[0], 0));
-  }
 
   render() {
-    const { width, height, results, xDomain, chromoBins, title } = this.props;
-    let stageWidth = width - 2 * margins.gap;
-    let stageHeight = height - 2 * margins.gap;
-    let dataPointsY = results.getColumn("y").toArray();
-    let barsStartPoint = results.getColumn("startPoint").toArray();
-    let limits = d3.extent(dataPointsY.slice(barsStartPoint.findIndex(d => d >= xDomain[0]),barsStartPoint.findIndex(d => d >= xDomain[1])));
-    let yExtent = limits[0] !== undefined ? limits : d3.extent(dataPointsY);
+    const { width, height, xDomain, chromoBins, title } = this.props;
+    let { stageWidth, stageHeight, barsStruct } = this.state;
+    
+    let matched =  Array.prototype.slice.call(barsStruct.barsY.slice(barsStruct.barsStartPoint.findIndex(d => d >= xDomain[0]), barsStruct.barsStartPoint.findIndex(d => d >= xDomain[1])));
+    matched = [...new Set(matched.map(e => +e.toFixed(2)))].filter(outliers());
+    let yExtent = [0,d3.max(matched)];
+   
     const yScale = d3
       .scaleLinear()
       .domain(yExtent)
       .range([stageHeight, 0]);
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
-    let yTicks = yScale.ticks(margins.yTicksCount);
-    yTicks[yTicks.length - 1] = yScale.domain()[1];
+
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div
@@ -151,21 +133,13 @@ class BarPlot extends Component {
             {title}
           </text>
           <g transform={`translate(${[margins.gap,margins.gap]})`} >
-          {<Grid
-            scaleX={xScale}
-            scaleY={yScale}
-            axisWidth={stageWidth}
-            axisHeight={stageHeight}
-            chromoBins={chromoBins}
-          />}
-        </g>
-          <g
-            transform={`translate(${[margins.gap, stageHeight + margins.gap]})`}
-          >
-            {Object.keys(chromoBins).map((d,i) => 
-            <g  key={d} transform={`translate(${[xScale(chromoBins[d].startPlace), 0]})`}>
-             <line x1="0" y1="0" x2="0" y2={-stageHeight} stroke="rgb(128, 128, 128)" strokeDasharray="4" />
-            </g>)}
+            {<Grid
+              scaleX={xScale}
+              scaleY={yScale}
+              axisWidth={stageWidth}
+              axisHeight={stageHeight}
+              chromoBins={chromoBins}
+            />}
           </g>
         </svg>
       </Wrapper>
