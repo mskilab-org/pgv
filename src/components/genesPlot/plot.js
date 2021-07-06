@@ -9,9 +9,10 @@ class Plot {
       precision highp float;
       varying vec4 vColor;
       varying vec2 vPos;
+      varying float diff;
 
       void main() {
-        if (abs(vPos.x) > 1.0 || abs(vPos.y) > 1.0) {
+        if (abs(vPos.x) > 1.0 || abs(vPos.y) > 1.0 || abs(diff) < 0.5) {
           discard;
         }
         gl_FragColor = vColor;
@@ -24,6 +25,7 @@ class Plot {
       uniform vec2 domainX, domainY;
       varying vec4 vColor;
       varying vec2 vPos;
+      varying float diff;
 
       uniform float stageWidth, stageHeight, rectangleHeight, offset;
 
@@ -45,7 +47,7 @@ class Plot {
         float pos2X = kx * (endPoint - domainX.x);
         float posY = stageHeight + ky * (valY - domainY.x);
 
-        float diff = pos2X - pos1X;
+        diff = max(pos2X - pos1X, 0.5);
 
         float vecX = diff * position.x + pos1X;
         float vecY = rectangleHeight * position.y + posY;

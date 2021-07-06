@@ -53,8 +53,18 @@ class Points {
           float red = floor(color / 65536.0);
           float green = floor((color - red * 65536.0) / 256.0);
           float blue = color - red * 65536.0 - green * 256.0;
-          vColor = vec4(red / 255.0, green / 255.0, blue / 255.0, 1.0);
+          vColor = vec4(red / 255.0, green / 255.0, blue / 255.0, 0.88);
         }`,
+
+      blend: {
+        enable: true,
+        func: {
+          srcRGB:   'src alpha',
+          srcAlpha: 'src alpha',
+          dstRGB:   'one minus src alpha',
+          dstAlpha: 'one minus src alpha'
+        }
+      },
 
       attributes: {
         position: this.positions,

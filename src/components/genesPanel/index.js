@@ -3,10 +3,11 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
+import handleViewport from "react-in-viewport";
 import { Card, Space, Tooltip, Switch, Button, message } from "antd";
 import * as d3 from "d3";
 import { AiOutlineDownload } from "react-icons/ai";
-import { downloadCanvasAsPng } from "../../helpers/utility";
+import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import { CgArrowsBreakeH } from "react-icons/cg";
 import Wrapper from "./index.style";
@@ -42,12 +43,13 @@ class GenesPanel extends Component {
   };
 
   render() {
-    const { t, genes } = this.props;
+    const { t, genes, inViewport } = this.props;
     const { checked } = this.state;
     if (!genes) return null;
     return (
       <Wrapper>
-        <Card
+        {<Card
+          style={transitionStyle(inViewport)}
           size="small"
           title={
             <Space>
@@ -84,7 +86,7 @@ class GenesPanel extends Component {
             <ContainerDimensions>
               {({ width, height }) => {
                 return (
-                  <GenesPlot
+                   <GenesPlot
                     {...{
                       width: width - 2 * margins.padding,
                       height: height,
@@ -95,7 +97,7 @@ class GenesPanel extends Component {
               }}
             </ContainerDimensions>
           </div>)}
-        </Card>
+        </Card>}
       </Wrapper>
     );
   }
@@ -109,4 +111,4 @@ const mapStateToProps = (state) => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withTranslation("common")(GenesPanel));
+)(withTranslation("common")(handleViewport(GenesPanel, { rootMargin: '-1.0px' })));

@@ -51,6 +51,14 @@ export function humanize(str) {
     });
 }
 
+export function transitionStyle(inViewport) {
+  if (inViewport) {
+    return { WebkitTransition: 'opacity 0.75s ease-in-out' };
+  } else if (!inViewport) {
+    return { WebkitTransition: 'none', opacity: '0' };
+  }
+}
+
 export function magnitude(n) {
   let order = Math.floor(Math.log(n) / Math.LN10 + 0.000000001); // because float math sucks like that
   return Math.pow(10, order);

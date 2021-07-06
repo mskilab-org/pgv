@@ -1,6 +1,6 @@
 [
   {
-    "filename": "DO234435.json",
+    "filename": "DO234435",
     "description": ["tumor_type=ESAD", "dataset=ESAD-UK", "organ=Esophagus", "lineage=Esophageal columnar epithelium", "gender=female", "cluster=INVDUP", "PLAG1 mut", "KRAS amp", "MUTYH germline pathogenic", "CDKN2A homdel"],
     "reference": "hg19",
     "plots": [
@@ -13,7 +13,7 @@
     ]
   },
   {
-    "filename": "0124.json",
+    "filename": "0124",
     "description": ["tumor_type=GBM", "dataset=TCGA", "organ=Brain", "lineage=Glial", "cluster=DM", "PTPRK mut", "EGFR amp", "NF1 trunc", "AMER1 homdel", "ATRX homdel", "BCOR homdel", "CDKN2A homdel", "KDM5C homdel", "KDM6A homdel", "PHF6 homdel", "STAG2 homdel", "WAS homdel", "ZRSR2 homdel"],
     "reference": "hg38",
     "plots": [

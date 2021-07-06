@@ -1,10 +1,11 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
+import handleViewport from "react-in-viewport";
 import { Card, Space, Empty, Tooltip, Switch, Button, message } from "antd";
 import { AiOutlineDownload } from "react-icons/ai";
 import * as htmlToImage from "html-to-image";
-import { downloadCanvasAsPng } from "../../helpers/utility";
+import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import { withTranslation } from "react-i18next";
 import { GrTree } from "react-icons/gr";
 import ContainerDimensions from "react-container-dimensions";
@@ -42,12 +43,13 @@ class PhylogenyPanel extends Component {
   };
 
   render() {
-    const { t, phylogeny, strainsList, geography, loading, title } = this.props;
+    const { t, phylogeny, strainsList, geography, loading, title, inViewport } = this.props;
     const { checked } = this.state;
     if (!phylogeny) return null;
     return (
       <Wrapper>
         <Card
+          style={transitionStyle(inViewport)}
           loading={loading}
           size="small"
           title={
@@ -105,5 +107,5 @@ const mapStateToProps = (state) => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withTranslation("common")(PhylogenyPanel));
+)(withTranslation("common")(handleViewport(PhylogenyPanel, { rootMargin: '-1.0px' })));
 

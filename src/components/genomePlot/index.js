@@ -148,8 +148,8 @@ class GenomePlot extends Component {
   }
 
   render() {
-    const { width, height, chromoBins, shouldChangeHistory } = this.props; 
-    const { xDomain, intervals, connections, intervalBins, stageWidth, stageHeight, tooltip, showGrid } = this.state;
+    const { width, height, chromoBins } = this.props; 
+    const { xDomain, intervals, connections, intervalBins, stageWidth, stageHeight, tooltip } = this.state;
     
     let yDomain = [
       0,
@@ -272,8 +272,7 @@ const mapDispatchToProps = (dispatch) => ({
 const mapStateToProps = (state) => ({
   xDomain: state.App.domain,
   chromoBins: state.App.chromoBins,
-  defaultDomain: state.App.defaultDomain,
-  shouldChangeHistory: state.App.shouldChangeHistory
+  defaultDomain: state.App.defaultDomain
 });
 export default connect(
   mapStateToProps,

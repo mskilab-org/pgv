@@ -3,11 +3,12 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
+import handleViewport from "react-in-viewport";
 import { Card, Space, Switch, Button, Tooltip, message } from "antd";
 import * as d3 from "d3";
 import { GiDna2 } from "react-icons/gi";
 import { AiOutlineDownload } from "react-icons/ai";
-import { downloadCanvasAsPng } from "../../helpers/utility";
+import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
 import GenomePlot from "../genomePlot";
@@ -46,12 +47,14 @@ class GenomePanel extends Component {
       t,
       genome,
       title,
+      inViewport
     } = this.props;
     const { checked } = this.state;
     if (Object.keys(genome).length < 1) return null;
     return (
       <Wrapper>
         <Card
+          style={transitionStyle(inViewport)}
           size="small"
           title={
             <Space>
@@ -93,7 +96,7 @@ class GenomePanel extends Component {
               <ContainerDimensions>
                 {({ width, height }) => {
                   return (
-                    <GenomePlot
+                    inViewport && <GenomePlot
                       {...{
                         width: width - 2 * margins.padding,
                         height,
@@ -118,4 +121,5 @@ const mapStateToProps = (state) => ({});
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withTranslation("common")(GenomePanel));
+)(withTranslation("common")(handleViewport(GenomePanel, { rootMargin: '-1.0px' })));
+

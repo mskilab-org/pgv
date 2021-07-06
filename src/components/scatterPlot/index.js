@@ -21,9 +21,15 @@ class ScatterPlot extends Component {
 
   constructor(props) {
     super(props);
-    let { results } = this.props;
+    let { results, width, height } = this.props;
     this.dataPointsY = results.getColumn("y").toArray();
     this.dataPointsX = results.getColumn("x").toArray();
+    let stageWidth = width - 2 * margins.gap;
+    let stageHeight = height - 3 * margins.gap;
+    this.state = {
+      stageWidth,
+      stageHeight
+    }
   }
 
   componentDidMount() {
@@ -53,7 +59,9 @@ class ScatterPlot extends Component {
 
     this.regl.poll();
 
-    let yExtent = d3.extent(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= this.props.xDomain[0]),this.dataPointsX.findIndex(d => d >= this.props.xDomain[1])));
+    let matched =  Array.prototype.slice.call(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= this.props.xDomain[0]), this.dataPointsX.findIndex(d => d >= this.props.xDomain[1])));
+    matched = [...new Set(matched.map(e => +e.toFixed(1)))].filter(outliers());
+    let yExtent = [0, d3.max(matched)];
     this.points.rescaleXY(this.props.xDomain, yExtent);
   }
 
@@ -64,15 +72,14 @@ class ScatterPlot extends Component {
   }
 
   updateStage() {
-    let { width, height, results, xDomain } = this.props;
+    let { results, xDomain } = this.props;
+    let { stageWidth, stageHeight } = this.state;
 
-    let stageWidth = width - 2 * margins.gap;
-    let stageHeight = height - 2 * margins.gap;
     this.regl.poll();
     let xExtent = xDomain;
 
     let matched =  Array.prototype.slice.call(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= xDomain[0]), this.dataPointsX.findIndex(d => d >= xDomain[1])));
-    matched = [...new Set(matched.map(e => +e.toFixed(2)))].filter(outliers());
+    matched = [...new Set(matched.map(e => +e.toFixed(1)))].filter(outliers());
     let yExtent = [0,d3.max(matched)];
     let dataPointsColor = results.getColumn("color").toArray();
     
@@ -91,11 +98,10 @@ class ScatterPlot extends Component {
 
   render() {
     const { width, height, results, xDomain, chromoBins, title } = this.props;
-    let stageWidth = width - 2 * margins.gap;
-    let stageHeight = height - 2 * margins.gap;
-    
+    let { stageWidth, stageHeight } = this.state;
+
     let matched =  Array.prototype.slice.call(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= xDomain[0]), this.dataPointsX.findIndex(d => d >= xDomain[1])));
-    matched = [...new Set(matched.map(e => +e.toFixed(2)))].filter(outliers());
+    matched = [...new Set(matched.map(e => +e.toFixed(1)))].filter(outliers());
     let yExtent = [0,d3.max(matched)];
     const yScale = d3
       .scaleLinear()

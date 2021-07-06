@@ -2,12 +2,13 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import ContainerDimensions from "react-container-dimensions";
+import handleViewport from "react-in-viewport";
 import { Card, Space, Tooltip, Switch, Button, message } from "antd";
 import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import { AiOutlineBarChart } from "react-icons/ai";
 import { AiOutlineDownload } from "react-icons/ai";
-import { downloadCanvasAsPng } from "../../helpers/utility";
+import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
 import BarPlot from "../barPlot";
@@ -42,7 +43,7 @@ class BarPlotPanel extends Component {
   };
 
   render() {
-    const { t, loading, data, title } = this.props;
+    const { t, loading, data, title, inViewport } = this.props;
     const { checked } = this.state;
     if (!data) {
       return null;
@@ -50,6 +51,7 @@ class BarPlotPanel extends Component {
     return (
       <Wrapper>
         <Card
+          style={transitionStyle(inViewport)}
           loading={loading}
           size="small"
           title={
@@ -88,7 +90,7 @@ class BarPlotPanel extends Component {
             <ContainerDimensions>
               {({ width, height }) => {
                 return (
-                  <BarPlot
+                  inViewport && <BarPlot
                     {...{ width: width - 2 * margins.padding, height: height, results: data}}
                   />
                 );
@@ -109,4 +111,4 @@ const mapStateToProps = (state) => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withTranslation("common")(BarPlotPanel));
+)(withTranslation("common")(handleViewport(BarPlotPanel, { rootMargin: '-1.0px' })));
