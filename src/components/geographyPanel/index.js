@@ -54,7 +54,7 @@ GeographyPanel.defaultProps = {
 };
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
-  strainsList: state.Strains.strainsList,
+  strainsList: state.App.strainsList,
 });
 export default connect(
   mapStateToProps,

@@ -7,7 +7,7 @@ import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import { AiOutlineDotChart } from "react-icons/ai";
 import Wrapper from "./index.style";
-import appActions from "../../redux/strains/actions";
+import appActions from "../../redux/app/actions";
 import Plot from "./plot";
 
 const margins = {
@@ -73,10 +73,10 @@ const mapDispatchToProps = (dispatch) => ({
   getPcaData: (file) => dispatch(getPcaData(file)),
 });
 const mapStateToProps = (state) => ({
-  loading: state.Strains.loading,
-  pcaData: state.Strains.pcaData,
+  loading: state.App.loading,
+  pcaData: state.App.pcaData,
   geographyHash: state.App.geographyHash,
-  strainsList: state.Strains.strainsList
+  strainsList: state.App.strainsList
 });
 export default connect(
   mapStateToProps,

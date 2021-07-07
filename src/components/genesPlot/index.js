@@ -37,6 +37,7 @@ class GenesPlot extends Component {
       genesEndPoint: genes.getColumn("endPlace").toArray(),
       genesY: genes.getColumn("y").toArray(),
       genesStroke: genes.getColumn("color").toArray(),
+      genesStrand: genes.getColumn("strand").toArray(),
       domainX: xDomain,
       domainY: [-3, 3],
     };
@@ -195,13 +196,13 @@ class GenesPlot extends Component {
     const { width, height, chromoBins, genes, title, xDomain } =
       this.props;
     const { stageWidth, stageHeight, geneStruct, tooltip } = this.state;
-    const { geneTypes, genesStartPoint, geneTitles, genesY } = geneStruct;
-
+    const { geneTypes, genesStartPoint, geneTitles, genesY, genesStrand } = geneStruct;
+window.pc = genes
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     const yScale = d3.scaleLinear().domain([-3, 3]).range([stageHeight, 0]);
     let texts = [];
 
-      let startPosNext = { 1: -1, "-1": -1 };
+      let startPosNext = { "+": -1, "-": -1 };
       for (let i = 0; i < genes.count(); i++) {
         if (
           genesStartPoint[i] <= xDomain[1] &&
@@ -216,7 +217,7 @@ class GenesPlot extends Component {
             isGene &&
             xPos > 0 &&
             xPos < stageWidth &&
-            xPos > startPosNext[genesY[i].toString()]
+            xPos > startPosNext[genesStrand[i].toString()]
           ) {
             let d = genes.get(i).toJSON();
             texts.push(
@@ -232,10 +233,11 @@ class GenesPlot extends Component {
                 {d.title}
               </text>
             );
-            startPosNext[d.y] = xPos + textLength;
+            startPosNext[d.strand] = xPos + textLength;
           }
         }
       }
+      //console.log(texts)
 
     return (
       <Wrapper className="ant-wrapper" margins={margins}>

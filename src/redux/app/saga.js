@@ -32,8 +32,9 @@ function* launchApplication() {
   if (responseSettings && responseDatafiles) {
     let settings = responseSettings.data;
     let datafiles = responseDatafiles.data;
-    let files = datafiles.map((d, i) => {
-      return { filename: d.filename, file: d.filename.replace(".json", ""), tags: d.description, plots: d.plots, reference: d.reference };
+    let files = Object.keys(datafiles).map((key, i) => {
+      let d = datafiles[key];
+      return { filename: key, file: key.replace(".json", ""), tags: d.description, plots: d.plots, reference: d.reference };
     });
     let tagsAll = files.map((d) => d.tags).flat();
     let tags = [
@@ -72,8 +73,6 @@ function* launchApplication() {
     });
 
     yield all([...plots.filter((d,i) => ["genes", "barplot", "scatterplot"].includes(d.type)).map(x => call(fetchArrowData, x))]);
-
-   // yield all([...plots.filter((d,i) => ["phylogeny"].includes(d.type)).map(x => call(fetchArrowData, x))]);
 
     let genomeRange = locateGenomeRange(chromoBins, +from, +to);
     let properties = {datafile, defaultDomain, genomeLength, datafiles: files, selectedCoordinate, genomeRange, tags, file, from, to, domain, chromoBins, plots};

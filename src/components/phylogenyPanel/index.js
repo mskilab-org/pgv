@@ -43,7 +43,7 @@ class PhylogenyPanel extends Component {
   };
 
   render() {
-    const { t, phylogeny, strainsList, geography, loading, title, inViewport } = this.props;
+    const { t, phylogeny, strainsList, geography, loading, title, inViewport, onNodeClick } = this.props;
     const { checked } = this.state;
     if (!phylogeny) return null;
     return (
@@ -85,7 +85,7 @@ class PhylogenyPanel extends Component {
           {checked && !phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
           {checked && phylogeny && (<div ref={(elem) => (this.container = elem)}><ContainerDimensions>
             {({ width, height }) => {
-              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography }} />;
+              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick }} />;
             }}
           </ContainerDimensions></div>)}
         </Card>

@@ -3,6 +3,7 @@ import { PropTypes } from "prop-types";
 import { withTranslation } from "react-i18next";
 import { connect } from "react-redux";
 import { withRouter, Redirect } from "react-router-dom";
+import { ScrollToHOC } from "react-scroll-to";
 import { Row, Col, Skeleton } from "antd";
 import HomeWrapper from "./home.style";
 import HeaderPanel from "../../components/headerPanel";
@@ -20,13 +21,21 @@ import appActions from "../../redux/app/actions";
 const { getDependencies, updateDomain } = appActions;
 
 class Home extends Component {
+
+  scrollToPlot = (id) => {
+    var element = document.getElementById(`${id}-genome`);
+    if (element) {
+      var screenPosition = element.getBoundingClientRect();
+      this.props.scroll({x: screenPosition.x, y: screenPosition.top, smooth: true});
+    }
+  }
+
   render() {
     const {
       t,
       datafile,
       strainsList,
       loading,
-      panels,
       selectedCoordinate,
       chromoBins,
       plots
@@ -47,7 +56,8 @@ class Home extends Component {
           loading,
           phylogeny: d.data,
           title: d.title,
-          visible: d.visible}}/>
+          visible: d.visible,
+          onNodeClick: this.scrollToPlot}}/>
       }
        else if (d.type === "genes") {
         plotComponent = <GenesPanel {...{ genes: d.data, chromoBins, visible: false }} />;
@@ -56,12 +66,13 @@ class Home extends Component {
       } else if (d.type === "scatterplot") {
         plotComponent = <ScatterPlotPanel {...{data: d.data, title: d.title, chromoBins, visible: d.visible, loading}} />
       }
-      plotComponents.push(
-        <Row key={i} className="ant-panel-container ant-home-map-panel-container">
+      plotComponents.push(  
+        <Row key={i} id={`${d.sample}-${d.type}`} className="ant-panel-container ant-home-map-panel-container">
           <Col className="gutter-row" span={24}>
             {plotComponent}
           </Col>
-        </Row>)
+        </Row>
+       )
     });
 
     return (
@@ -89,47 +100,6 @@ class Home extends Component {
             </Row>
             {plotComponents.map((d,i) => d)}
           </div>
-          {false && (
-            <div className="ant-home-content-container">
-              {panels.phylogeny.visible && (
-                <Row className="ant-panel-container ant-home-map-panel-container">
-                  <Col className="gutter-row" span={24}>
-                    <PhylogenyPanel />
-                  </Col>
-                </Row>
-              )}
-              {panels.pca.visible && (
-                <Row className="ant-panel-container ant-home-map-panel-container">
-                  <Col className="gutter-row" span={24}>
-                    <PcaPanel />
-                  </Col>
-                </Row>
-              )}
-              {(panels.geography.visible || panels.anatomy.visible) && (
-                <Row
-                  gutter={24}
-                  className="ant-panel-container ant-home-map-panel-container"
-                >
-                  {panels.geography.visible && (
-                    <Col
-                      className="gutter-row"
-                      span={panels.anatomy.visible ? 18 : 24}
-                    >
-                      <GeographyPanel />
-                    </Col>
-                  )}
-                  {panels.anatomy.visible && (
-                    <Col
-                      className="gutter-row"
-                      span={panels.geography.visible ? 6 : 24}
-                    >
-                      <AnatomyPanel />
-                    </Col>
-                  )}
-                </Row>
-              )}
-            </div>
-          )}
         </Skeleton>
       </HomeWrapper>
     );
@@ -142,13 +112,10 @@ const mapDispatchToProps = (dispatch) => ({
   updateDomain: (from, to) => dispatch(updateDomain(from, to)),
 });
 const mapStateToProps = (state) => ({
-  panels: state.App.panels,
   file: state.App.file,
   tags: state.App.tags,
   datafile: state.App.datafile,
   datafiles: state.App.datafiles,
-  strainsList: state.Strains.strainsList,
-  selectedCoordinate: state.App.selectedCoordinate,
   chromoBins: state.App.chromoBins,
   plots: state.App.plots,
   loading: state.App.loading,
@@ -156,4 +123,4 @@ const mapStateToProps = (state) => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withRouter(withTranslation("common")(Home)));
+)(withRouter(withTranslation("common")(ScrollToHOC(Home))));

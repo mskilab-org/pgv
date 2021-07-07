@@ -58,7 +58,7 @@ AnatomyPanel.defaultProps = {
 };
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
-  anatomy: state.Strains.anatomy,
+  anatomy: state.App.anatomy,
 });
 export default connect(
   mapStateToProps,

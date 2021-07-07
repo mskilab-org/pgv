@@ -117,7 +117,7 @@ const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   geography: state.App.geography,
   geographyHash: state.App.geographyHash,
-  strainsList: state.Strains.strainsList,
+  strainsList: state.App.strainsList,
 });
 export default connect(
   mapStateToProps,

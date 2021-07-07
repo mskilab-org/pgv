@@ -102,6 +102,15 @@ class PhyloTree extends Component {
         this.tree.tooltip.open(e.clientX, e.clientY, node);
       }
     });
+    this.tree.on("click", (e) => {
+      var node = this.tree.getNodeAtMousePosition(e);
+      if (node) {
+        this.props.onNodeClick(node.id);
+        this.tree.tooltip.close();
+      }
+    });
+    // to trigger the redrawing
+    d3.select(".phylocanvas").node().click();
   }
 
   render() {
