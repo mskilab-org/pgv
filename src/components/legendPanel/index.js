@@ -8,6 +8,7 @@ import { connect } from "react-redux";
 import Legend from "./legend";
 import Wrapper from "./index.style";
 import GenomeRangePanel from "./genomeRangePanel";
+import LegendMultiBrush from "./legend-multi-brush";
 const { Meta } = Card;
 const margins = {
   padding: 12
@@ -32,9 +33,14 @@ class LegendPanel extends Component {
           }
           extra={<p>{selectedCoordinate}</p>}
         >          
-          <ContainerDimensions>
+          {/* <ContainerDimensions>
             {({ width }) => {
               return <Legend className="ant-wrapper" {...{ width: (width - 2 * margins.padding) }} />;
+            }}
+          </ContainerDimensions> */}
+          <ContainerDimensions>
+            {({ width }) => {
+              return <LegendMultiBrush className="ant-wrapper" {...{ width: (width - 2 * margins.padding) }} />;
             }}
           </ContainerDimensions>
           <Meta description={<GenomeRangePanel/>} />

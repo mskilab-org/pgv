@@ -1,4 +1,5 @@
 import actions from "./actions";
+import { domainsToLocation } from "../../helpers/utility";
 
 const initState = {
   loading: false,
@@ -6,7 +7,7 @@ const initState = {
   defaultGeography: [],
   genomeLength: 0,
   defaultDomain: [],
-  domain: null,
+  domains: [],
   datafile: {filename: "", file:"", tags: [], plots: [], reference: ""},
   strainsList: [],
   chromoBins: {},
@@ -14,9 +15,7 @@ const initState = {
   geography: [],
   tags: [],
   plots: [],
-  geographyHash: {},
-  eventSource: null,
-  panels: {phylogeny: {}, pca: {}, genes: {}, geography: {}, anatomy: {}, coverage: {}, rpkm: {}}
+  geographyHash: {}
 };
 
 export default function appReducer(state = initState, action) {
@@ -35,16 +34,12 @@ export default function appReducer(state = initState, action) {
       geographyHash = {};
       geography.forEach((d, i) => (geographyHash[d.id] = d));
       return { ...state, geography, file: action.file, geographyHash, loading: false };
-    case actions.DOMAIN_UPDATED:
-      if (false || action.shouldChangeHistory) {
-        let url = new URL(decodeURI(document.location));
-        let params = new URLSearchParams(url.search);
-        params.set("from", +action.from);
-        params.set("to", +action.to);
-        let newURL = `${url.origin}/?${params.toString()}`; 
-        window.history.replaceState(newURL, 'Pan Genome Viewer', newURL);
-      }
-      return { ...state, shouldChangeHistory: action.shouldChangeHistory, eventSource: action.eventSource, domain: [+action.from, +action.to] };
+    case actions.DOMAINS_UPDATED:      
+      let url = new URL(decodeURI(document.location));
+      let params = new URLSearchParams(url.search);
+      let newURL = `${url.origin}/?file=${params.get("file")}&location=${domainsToLocation(state.chromoBins, action.domains)}`; 
+      window.history.replaceState(newURL, 'Pan Genome Viewer', newURL);
+      return { ...state, domains: action.domains };
     default:
       return state;
   }

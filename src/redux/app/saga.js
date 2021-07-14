@@ -2,7 +2,7 @@ import { all, takeEvery, put, call} from "redux-saga/effects";
 import axios from "axios";
 import actions from "./actions";
 import * as d3 from "d3";
-import { loadArrowTable, updateChromoBins, locateGenomeRange} from "../../helpers/utility";
+import { loadArrowTable, updateChromoBins, domainsToLocation, locationToDomains } from "../../helpers/utility";
 
 
 function* updateVisibility({panel, visible}) {
@@ -54,15 +54,17 @@ function* launchApplication() {
     let geographyHash = {};
     settings.geography.forEach((d, i) => (geographyHash[d.id] = d));
     let defaultDomain = [1, genomeLength];
-    let from = searchParams.get("from") || defaultDomain[0];
-    let to = searchParams.get("to") || defaultDomain[1];
-    let domain = [ +from, +to];
+    let defaultChromosome = chromoBins[Object.keys(chromoBins)[0]];
+    let domains = [];
+    try {
+      domains = locationToDomains(chromoBins, searchParams.get("location"));
+    } catch (error) {
+      domains = [[+defaultChromosome.startPlace, +defaultChromosome.endPlace]];
+    }
     let url = new URL(decodeURI(document.location));
     let params = new URLSearchParams(url.search);
     params.set("file", file);
-    params.set("from", +from);
-    params.set("to", +to);
-    let newURL = `${url.origin}/?${params.toString()}`; 
+    let newURL = `${url.origin}/?file=${params.get("file")}&location=${domainsToLocation(chromoBins, domains)}`; 
     window.history.replaceState(newURL, 'Pan Genome Viewer', newURL);
 
     let plots = [{type: "genes", source: `/genes/${selectedCoordinate}.arrow`}, ...datafile.plots.map(d => {return {...d, source: `data/${file}/${d.source}`}})];
@@ -74,8 +76,7 @@ function* launchApplication() {
 
     yield all([...plots.filter((d,i) => ["genes", "barplot", "scatterplot"].includes(d.type)).map(x => call(fetchArrowData, x))]);
 
-    let genomeRange = locateGenomeRange(chromoBins, +from, +to);
-    let properties = {datafile, defaultDomain, genomeLength, datafiles: files, selectedCoordinate, genomeRange, tags, file, from, to, domain, chromoBins, plots};
+    let properties = {datafile, defaultDomain, genomeLength, datafiles: files, selectedCoordinate, tags, file, domains, chromoBins, plots};
     yield put({ type: actions.LAUNCH_APP_SUCCESS, properties });
   } else {
     yield put({ type: actions.LAUNCH_APP_FAILED });

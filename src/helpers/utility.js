@@ -83,50 +83,50 @@ export function updateChromoBins(coordinateSet) {
   return { genomeLength, chromoBins };
 }
 
-export function locateGenomeRange(chromoBins, from, to) {
+export function locateGenomeRange(chromoBins, domain) {
+  let from = domain[0];
+  let to = domain[1];
   let genomeRange = [];
   Object.keys(chromoBins).forEach((key, i) => {
     if (
       from <= chromoBins[key].endPlace &&
-      from >= chromoBins[key].startPlace &&
-      to <= chromoBins[key].endPlace &&
       from >= chromoBins[key].startPlace
     ) {
       genomeRange.push(
         `${key}:${
           from - chromoBins[key].startPlace + chromoBins[key].startPoint
-        }-${to - chromoBins[key].startPlace + chromoBins[key].startPoint}`
+        }`
       );
-    } else if (
-      from <= chromoBins[key].endPlace &&
-      from >= chromoBins[key].startPlace &&
-      to > chromoBins[key].endPlace
+    } 
+    if (
+      to <= chromoBins[key].endPlace &&
+      to >= chromoBins[key].startPlace
     ) {
       genomeRange.push(
         `${key}:${
-          from - chromoBins[key].startPlace + chromoBins[key].startPoint
-        }-${chromoBins[key].endPoint}`
-      );
-    } else if (
-      to <= chromoBins[key].endPlace &&
-      to >= chromoBins[key].startPlace &&
-      from < chromoBins[key].startPlace
-    ) {
-      genomeRange.push(
-        `${key}:${chromoBins[key].startPoint}-${
           to - chromoBins[key].startPlace + chromoBins[key].startPoint
         }`
       );
-    } else if (
-      from <= chromoBins[key].startPlace &&
-      to >= chromoBins[key].endPlace
-    ) {
-      genomeRange.push(
-        `${key}:${chromoBins[key].startPoint}-${chromoBins[key].endPoint}`
-      );
-    }
+    } 
   });
-  return genomeRange.join(" ");
+  return genomeRange.join("-");
+}
+
+export function domainsToLocation(chromoBins, domains) {
+  return domains.map(d => locateGenomeRange(chromoBins, d)).join("|");
+}
+
+export function locationToDomains(chromoBins, loc) {
+  let domains = [];
+  loc.split("|").forEach((d,i) => {
+    let domainString = d.split("-").map(e => e.split(":"));
+    let domain = [];
+    domain.push(chromoBins[domainString[0][0]].startPlace + (+domainString[0][1]) - chromoBins[domainString[0][0]].startPoint);
+    domain.push(chromoBins[domainString[1][0]].startPlace + (+domainString[1][1]) - chromoBins[domainString[1][0]].startPoint);
+    domains.push(domain);
+  });
+  console.log(domains)
+  return domains;
 }
 
 export function downloadCanvasAsPng(canvas, filename) {

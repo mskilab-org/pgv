@@ -6,10 +6,10 @@ import { locateGenomeRange } from "../../helpers/utility";
 
 class GenomeRangePanel extends PureComponent {
   render() {
-    const { domain, chromoBins } = this.props;
+    const { domains, chromoBins } = this.props;
     return (
         <>
-          {locateGenomeRange(chromoBins, domain[0], domain[1])}
+          {domains.map(domain => locateGenomeRange(chromoBins, domain)).join(" | ")}
         </>
     );
   }
@@ -21,6 +21,7 @@ GenomeRangePanel.defaultProps = {
 const mapDispatchToProps = {};
 const mapStateToProps = (state) => ({
   domain: state.App.domain,
+  domains: state.App.domains,
   chromoBins: state.App.chromoBins
 });
 export default connect(mapStateToProps, mapDispatchToProps)(withTranslation("common")(GenomeRangePanel));

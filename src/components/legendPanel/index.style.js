@@ -13,6 +13,15 @@ const Wrapper = styled.div`
     text {
       user-select: none;
     }
+    .brush .selection {
+      stroke: steelblue;
+      fill-opacity: .125;
+      shape-rendering: crispEdges;
+    }
+    .highlighted .selection {
+      stroke: orange;
+      stroke-width: 2;
+    }
   }
 `;
 

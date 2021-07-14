@@ -12,6 +12,7 @@ const actions = {
   GET_GENES: "GET_GENES",
   GENES_RECEIVED: "GENES_RECEIVED",
   DOMAIN_UPDATED: "DOMAIN_UPDATED",
+  DOMAINS_UPDATED: "DOMAINS_UPDATED",
   WINDOW_HISTORY_UPDATED: "WINDOW_HISTORY_UPDATED",
   LAUNCH_APP: "LAUNCH_APP",
   LAUNCH_APP_SUCCESS: "LAUNCH_APP_SUCCESS",
@@ -49,6 +50,10 @@ const actions = {
     to: to,
     shouldChangeHistory: shouldChangeHistory,
     eventSource: eventSource
+  }),
+  updateDomains: (domains) => ({
+    type: actions.DOMAINS_UPDATED,
+    domains
   }),
 };
 
