@@ -3,7 +3,7 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Switch, Button, Tooltip, message } from "antd";
+import { Card, Space, Switch, Button, Tooltip, message, Row, Col } from "antd";
 import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import { AiOutlineDotChart } from "react-icons/ai";
@@ -15,6 +15,7 @@ import ScatterPlot from "../scatterPlot";
 
 const margins = {
   padding: 0,
+  gap: 26,
 };
 
 class ScatterPlotPanel extends Component {
@@ -43,7 +44,7 @@ class ScatterPlotPanel extends Component {
   };
 
   render() {
-    const { t, loading, data, title, inViewport } = this.props;
+    const { t, loading, data, title, domains, inViewport } = this.props;
     const { checked } = this.state;
     if (!data) {
       return null;
@@ -60,42 +61,70 @@ class ScatterPlotPanel extends Component {
                 <AiOutlineDotChart />
               </span>
               <span className="ant-pro-menu-item-title">
-                <Space>{title}<span><b>{d3.format(",")(data.length)}</b> {t("components.coverage-panel.datapoint", {count: data.length})}</span></Space>
+                <Space>
+                  {title}
+                  <span>
+                    <b>{d3.format(",")(data.length)}</b>{" "}
+                    {t("components.coverage-panel.datapoint", {
+                      count: data.length,
+                    })}
+                  </span>
+                </Space>
               </span>
             </Space>
           }
           extra={
             <Space>
-            <Tooltip title={t("components.visibility-switch-tooltip")}>
-              <Switch
-                size="small"
-                checked={checked}
-                onClick={(e) => this.onSwitchChange(e)}
-              />
-            </Tooltip>
-            <Tooltip title={t("components.download-as-png-tooltip")}>
-              <Button
-                type="default"
-                shape="circle"
-                icon={<AiOutlineDownload />}
-                size="small"
-                onClick={() => this.onDownloadButtonClicked()}
-              />
-            </Tooltip>
-          </Space>
+              <Tooltip title={t("components.visibility-switch-tooltip")}>
+                <Switch
+                  size="small"
+                  checked={checked}
+                  onClick={(e) => this.onSwitchChange(e)}
+                />
+              </Tooltip>
+              <Tooltip title={t("components.download-as-png-tooltip")}>
+                <Button
+                  type="default"
+                  shape="circle"
+                  icon={<AiOutlineDownload />}
+                  size="small"
+                  onClick={() => this.onDownloadButtonClicked()}
+                />
+              </Tooltip>
+            </Space>
           }
         >
-          {checked && (<div className="ant-wrapper" ref={(elem) => (this.container = elem)}>
-            <ContainerDimensions>
-              {({ width, height }) => {
-                return (
-                  inViewport && <ScatterPlot
-                    {...{ width: width - 2 * margins.padding, height: height, results: data}}
-                  />
-                );
-              }}
-            </ContainerDimensions>
-          </div>)}
+          {checked && (
+            <div
+              className="ant-wrapper"
+              ref={(elem) => (this.container = elem)}
+            >
+              <ContainerDimensions>
+                {({ width, height }) => {
+                  return (
+                    inViewport && (
+                      <Row style={{ width }} gutter={[margins.gap, 0]}>
+                        {domains.map((domain, i) => (
+                          <Col flex={1}>
+                            <ScatterPlot
+                              {...{
+                                width:
+                                  (width - (domains.length - 1) * margins.gap) /
+                                  domains.length,
+                                xDomain: domain,
+                                height: height,
+                                results: data,
+                              }}
+                            />
+                          </Col>
+                        ))}
+                      </Row>
+                    )
+                  );
+                }}
+              </ContainerDimensions>
+            </div>
+          )}
         </Card>
       </Wrapper>
     );
@@ -103,11 +132,15 @@ class ScatterPlotPanel extends Component {
 }
 ScatterPlotPanel.propTypes = {};
 ScatterPlotPanel.defaultProps = {};
-const mapDispatchToProps = (dispatch) => ({
-});
+const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
+  domains: state.App.domains,
 });
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withTranslation("common")(handleViewport(ScatterPlotPanel, { rootMargin: '-1.0px' })));
+)(
+  withTranslation("common")(
+    handleViewport(ScatterPlotPanel, { rootMargin: "-1.0px" })
+  )
+);

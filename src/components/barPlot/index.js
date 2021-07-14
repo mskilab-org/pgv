@@ -11,7 +11,7 @@ import appActions from "../../redux/app/actions";
 
 const margins = {
   gap: 24,
-  yTicksCount: 10
+  yTicksCount: 10,
 };
 
 const { updateDomain } = appActions;
@@ -36,18 +36,25 @@ class BarPlot extends Component {
       barsStartPoint: results.getColumn("startPoint").toArray(),
       barsEndPoint: results.getColumn("endPoint").toArray(),
       barsFill: results.getColumn("color").toArray(),
-      domainX: xDomain
+      domainX: xDomain,
     };
     let globalMaxY = d3.max(barsStruct.barsY);
-    let matched =  Array.prototype.slice.call(barsStruct.barsY.slice(barsStruct.barsStartPoint.findIndex(d => d >= xDomain[0]), barsStruct.barsStartPoint.findIndex(d => d >= xDomain[1])));
-    let filtered = [...new Set(matched.map(e => +e.toFixed(1)))].filter(outliers());
+    let matched = Array.prototype.slice.call(
+      barsStruct.barsY.slice(
+        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[0]),
+        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[1])
+      )
+    );
+    let filtered = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
+      outliers()
+    );
     barsStruct.domainY = [0, d3.max(filtered) || globalMaxY];
 
     this.state = {
       stageWidth,
       stageHeight,
       barsStruct,
-      globalMaxY
+      globalMaxY,
     };
   }
 
@@ -56,7 +63,12 @@ class BarPlot extends Component {
       extensions: ["ANGLE_instanced_arrays"],
       container: this.container,
       pixelRatio: window.devicePixelRatio || 1.5,
-      attributes: { antialias: true, depth: false, stencil: false, preserveDrawingBuffer: true },
+      attributes: {
+        antialias: true,
+        depth: false,
+        stencil: false,
+        preserveDrawingBuffer: true,
+      },
     });
 
     regl.cache = {};
@@ -67,29 +79,31 @@ class BarPlot extends Component {
       stencil: true,
     });
     this.bars = new Bars(this.regl);
-    let {stageWidth, stageHeight, barsStruct} = this.state;
-    this.bars.load(
-      stageWidth,
-      stageHeight,
-      barsStruct
-    );
+    let { stageWidth, stageHeight, barsStruct } = this.state;
+    this.bars.load(stageWidth, stageHeight, barsStruct);
     this.bars.render();
-
   }
 
   componentDidUpdate(prevProps, prevState) {
     const { xDomain } = this.props;
-    let {barsStruct, globalMaxY } = this.state;
+    let { barsStruct, globalMaxY } = this.state;
     this.regl.clear({
       color: [0, 0, 0, 0.0],
       depth: false,
     });
 
     this.regl.poll();
-    let matched =  Array.prototype.slice.call(barsStruct.barsY.slice(barsStruct.barsStartPoint.findIndex(d => d >= xDomain[0]), barsStruct.barsStartPoint.findIndex(d => d >= xDomain[1])));
-    let filtered = [...new Set(matched.map(e => +e.toFixed(1)))].filter(outliers());
+    let matched = Array.prototype.slice.call(
+      barsStruct.barsY.slice(
+        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[0]),
+        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[1])
+      )
+    );
+    let filtered = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
+      outliers()
+    );
     barsStruct.domainY = [0, d3.max(filtered) || globalMaxY];
-    console.log(barsStruct.domainY)
+    console.log(barsStruct.domainY);
     this.bars.rescaleXY(this.props.xDomain, barsStruct.domainY);
   }
 
@@ -99,19 +113,22 @@ class BarPlot extends Component {
     }
   }
 
-
   render() {
     const { width, height, xDomain, chromoBins, title } = this.props;
     let { stageWidth, stageHeight, barsStruct, globalMaxY } = this.state;
-    
-    let matched =  Array.prototype.slice.call(barsStruct.barsY.slice(barsStruct.barsStartPoint.findIndex(d => d >= xDomain[0]), barsStruct.barsStartPoint.findIndex(d => d >= xDomain[1])));
-    let filtered = [...new Set(matched.map(e => +e.toFixed(1)))].filter(outliers());
+
+    let matched = Array.prototype.slice.call(
+      barsStruct.barsY.slice(
+        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[0]),
+        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[1])
+      )
+    );
+    let filtered = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
+      outliers()
+    );
     let yExtent = [0, d3.max(filtered) || globalMaxY];
-   
-    const yScale = d3
-      .scaleLinear()
-      .domain(yExtent)
-      .range([stageHeight, 0]);
+
+    const yScale = d3.scaleLinear().domain(yExtent).range([stageHeight, 0]);
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
 
     return (
@@ -133,14 +150,16 @@ class BarPlot extends Component {
           >
             {title}
           </text>
-          <g transform={`translate(${[margins.gap,margins.gap]})`} >
-            {<Grid
-              scaleX={xScale}
-              scaleY={yScale}
-              axisWidth={stageWidth}
-              axisHeight={stageHeight}
-              chromoBins={chromoBins}
-            />}
+          <g transform={`translate(${[margins.gap, margins.gap]})`}>
+            {
+              <Grid
+                scaleX={xScale}
+                scaleY={yScale}
+                axisWidth={stageWidth}
+                axisHeight={stageHeight}
+                chromoBins={chromoBins}
+              />
+            }
           </g>
         </svg>
       </Wrapper>
@@ -154,19 +173,19 @@ BarPlot.propTypes = {
   results: PropTypes.object,
   title: PropTypes.string,
   chromoBins: PropTypes.object,
-  updateDomain: PropTypes.func
+  updateDomain: PropTypes.func,
 };
 BarPlot.defaultProps = {
   xDomain: [],
-  defaultDomain: []
+  defaultDomain: [],
 };
 const mapDispatchToProps = (dispatch) => ({
-  updateDomain: (from, to, eventSource) => dispatch(updateDomain(from,to, eventSource))
+  updateDomain: (from, to, eventSource) =>
+    dispatch(updateDomain(from, to, eventSource)),
 });
 const mapStateToProps = (state) => ({
-  xDomain: state.App.domain,
   defaultDomain: state.App.defaultDomain,
-  chromoBins: state.App.chromoBins
+  chromoBins: state.App.chromoBins,
 });
 export default connect(
   mapStateToProps,
