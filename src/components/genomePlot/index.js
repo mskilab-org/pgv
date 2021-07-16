@@ -6,7 +6,7 @@ import * as d3 from "d3";
 import Wrapper from "./index.style";
 import Connection from "./connection";
 import Interval from "./interval";
-import { measureText } from "../../helpers/utility";
+import { measureText, guid } from "../../helpers/utility";
 import Grid from "../grid/index";
 import appActions from "../../redux/app/actions";
 
@@ -24,7 +24,7 @@ class GenomePlot extends Component {
     this.zoom = null;
     this.container = null;
     this.grid = null;
-    const { xDomain, width, height, defaultDomain, chromoBins, genome } = this.props;
+    const { domains, xDomain, width, height, defaultDomain, chromoBins, genome } = this.props;
 
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 3 * margins.gap;
@@ -70,13 +70,6 @@ class GenomePlot extends Component {
       let connection = new Connection(d);
       connection.yScale = yScale;
       connection.pinpoint(intervalBins);
-      if (connection.source) {
-        connection.source.scale = xScale;
-      }
-      if (connection.sink) {
-        connection.sink.scale = xScale;
-      }
-      connection.touchScale = xScale;
       connections.push(connection);
     });
     this.state = {
@@ -98,31 +91,69 @@ class GenomePlot extends Component {
       }
     };
   }
-  
+
+  updatePanels() {
+    const { domains } = this.props;
+    const { stageWidth, stageHeight, intervals, connections } = this.state;
+    let panelWidth = (stageWidth - (domains.length - 1) * margins.gap) / domains.length;
+    let panelHeight = stageHeight;
+    this.connections = [];
+    this.panels = domains.map((domain, index) => {
+      let filteredIntervals =  intervals.filter(
+        (d) => d.startPlace <= domain[1] && d.endPlace >= domain[0]
+      );
+      let yDomain = [
+        0,
+        d3.max(
+         filteredIntervals,
+          (d) => d.y
+        ) + 1,
+      ];
+      const xScale = d3.scaleLinear().domain(domain).range([0, panelWidth]);
+      const yScale = d3
+        .scaleLinear()
+        .domain(yDomain)
+        .range([panelHeight, 0])
+        .nice();
+      let offset = index * (panelWidth + margins.gap);
+
+      let domainWidth = domain[1] - domain[0];
+      let range = [index * (panelWidth + margins.gap), (index + 1) * panelWidth + index * margins.gap];
+      let scale = d3.scaleLinear().domain(domain).range(range);
+      let innerScale = d3.scaleLinear().domain(domain).range([0, panelWidth]);
+      //zoom = d3.zoom().scaleExtent([1, Infinity]).translateExtent([[0, 0], [panelWidth, panelHeight]]).extent([[0, 0], [panelWidth, panelHeight]]).on('zoom', () => this.zoomed(d)).on('end', () => this.zoomEnded(d));
+      let panel = {index, domain, panelWidth, panelHeight, xScale, yScale, yDomain, offset, intervals: filteredIntervals, domainWidth, range, scale, innerScale};
+ 
+
+      
+      return panel;
+    });
+  }
+
   shouldComponentUpdate(nextProps, nextState) {
-    return (nextProps.xDomain.toString() !== this.props.xDomain.toString()) || (nextState.tooltip.shapeId !== this.state.tooltip.shapeId);
+    return (nextProps.domains.toString() !== this.props.domains.toString()) || (nextState.tooltip.shapeId !== this.state.tooltip.shapeId);
   }
 
   componentDidMount() {
     const { xDomain, genomeScale, stageWidth } = this.state;
-    var s = [genomeScale(xDomain[0]), genomeScale(xDomain[1])];
-    d3.select(this.container).attr('preserveAspectRatio', 'xMinYMin meet').call(this.zoom);
-    d3.select(this.container).call(this.zoom.transform, d3.zoomIdentity.scale(stageWidth / (s[1] - s[0])).translate(-s[0], 0));
+    //var s = [genomeScale(xDomain[0]), genomeScale(xDomain[1])];
+    //d3.select(this.container).attr('preserveAspectRatio', 'xMinYMin meet').call(this.zoom);
+    //d3.select(this.container).call(this.zoom.transform, d3.zoomIdentity.scale(stageWidth / (s[1] - s[0])).translate(-s[0], 0));
   }
 
   componentDidUpdate() {
     let { xDomain } = this.props;
     const { genomeScale, stageWidth } = this.state;
-    var s = [genomeScale(xDomain[0]), genomeScale(xDomain[1])];
-    d3.select(this.container).attr('preserveAspectRatio', 'xMinYMin meet').call(this.zoom);
-    d3.select(this.container).call(this.zoom.transform, d3.zoomIdentity.scale(stageWidth / (s[1] - s[0])).translate(-s[0], 0));
-  }  
+    //var s = [genomeScale(xDomain[0]), genomeScale(xDomain[1])];
+    //d3.select(this.container).attr('preserveAspectRatio', 'xMinYMin meet').call(this.zoom);
+    //d3.select(this.container).call(this.zoom.transform, d3.zoomIdentity.scale(stageWidth / (s[1] - s[0])).translate(-s[0], 0));
+  }
 
   zoomed(event, shouldChangeHistory) {
     let newDomain = event.transform.rescaleX(this.state.genomeScale).domain().map(Math.floor);
-      if (newDomain.toString() !== this.props.xDomain.toString()) {
-      this.setState({xDomain: newDomain}, () => {
-        this.props.updateDomain(newDomain[0], newDomain[1], shouldChangeHistory, "zoom");
+    if (newDomain.toString() !== this.props.xDomain.toString()) {
+      this.setState({ xDomain: newDomain }, () => {
+        // this.props.updateDomain(newDomain[0], newDomain[1], shouldChangeHistory, "zoom");
       })
     }
   }
@@ -136,73 +167,80 @@ class GenomePlot extends Component {
     if (primaryKey) {
       if (shapeType === "interval") {
         shape = intervals.find(e => e.primaryKey === primaryKey);
-     } else if (shapeType === "connection") {
-       shape = connections.find(e => e.primaryKey === primaryKey);
+      } else if (shapeType === "connection") {
+        shape = connections.find(e => e.primaryKey === primaryKey);
       }
       let diffY = d3.min([0, height - e.nativeEvent.offsetY - shape.tooltipContent.length * 16 - 12]);
       let diffX = d3.min([0, width - e.nativeEvent.offsetX - d3.max(shape.tooltipContent, (d) => measureText(`${d.label}: ${d.value}`, 12)) - 30]);
-      this.state.tooltip.shapeId !== shape.primaryKey && this.setState({tooltip: {shapeId: shape.primaryKey, visible: true, x: (e.nativeEvent.offsetX + diffX), y: (e.nativeEvent.offsetY + diffY), text: shape.tooltipContent}})
+      this.state.tooltip.shapeId !== shape.primaryKey && this.setState({ tooltip: { shapeId: shape.primaryKey, visible: true, x: (e.nativeEvent.offsetX + diffX), y: (e.nativeEvent.offsetY + diffY), text: shape.tooltipContent } })
     } else {
-      this.state.tooltip.visible && this.setState({tooltip: {shapeId: null, visible: false}})
+      this.state.tooltip.visible && this.setState({ tooltip: { shapeId: null, visible: false } })
     }
   }
 
   render() {
-    const { width, height, chromoBins } = this.props; 
+    const { width, height, chromoBins } = this.props;
     const { xDomain, intervals, connections, intervalBins, stageWidth, stageHeight, tooltip } = this.state;
-    
-    let yDomain = [
-      0,
-      d3.max(
-        intervals.filter(
-          (d) => d.startPlace <= xDomain[1] && d.endPlace >= xDomain[0]
-        ),
-        (d) => d.y
-      ) + 3,
-    ];
-    const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
-    const yScale = d3
-      .scaleLinear()
-      .domain(yDomain)
-      .range([stageHeight, 0])
-      .nice();
+
+
+    this.updatePanels();
 
     return (
       <Wrapper className="ant-wrapper">
         <svg width={width} height={height} onMouseMove={(e) => this.handleMouseMove(e)} ref={(elem) => (this.container = elem)} >
-        <defs>
-          <clipPath id="cuttOffViewPane">
-            <rect x={0} y={0} width={stageWidth} height={2 * stageHeight} />
-          </clipPath>
+          <defs>
+              <clipPath id={`cuttOffViewPane`}>
+                <rect x={0} y={0} width={stageWidth} height={stageHeight} />
+              </clipPath>
+            {this.panels.map((panel, i) => 
+              <clipPath id={`cuttOffViewPane-${panel.index}`}>
+                <rect x={0} y={0} width={panel.panelWidth} height={2 * panel.panelHeight} />
+              </clipPath>
+            )}
           </defs>
-          <g transform={`translate(${[margins.gap,margins.gap]})`} >
-            <g ref={(elem) => (this.grid = elem)} clipPath="url(#cuttOffViewPane0)">
-              {<Grid
-                scaleX={xScale}
-                scaleY={yScale}
-                axisWidth={stageWidth}
-                axisHeight={stageHeight}
-                chromoBins={chromoBins}
-              />}
-            </g>
+          <g transform={`translate(${[margins.gap, margins.gap]})`} >
+            {this.panels.map((panel, i) => 
+              <g id={`panel-${panel.index}`} transform={`translate(${[panel.offset, 0]})`} >
+                  <g ref={(elem) => (this.grid = elem)}>
+                    {<Grid
+                      scaleX={panel.xScale}
+                      scaleY={panel.yScale}
+                      axisWidth={panel.panelWidth}
+                      axisHeight={panel.panelHeight}
+                    />}
+                  </g>
+                  <g clipPath={`url(#cuttOffViewPane-${panel.index})`}>
+                    {panel.intervals.map((d, i) => {
+                      return <rect
+                        id={d.primaryKey}
+                        type="interval"
+                        key={i}
+                        className={`shape ${d.primaryKey === tooltip.shapeId ? "highlighted" : ""}`}
+                        transform={`translate(${[panel.xScale(d.startPlace), panel.yScale(d.y) - 0.5 * margins.bar]})`}
+                        width={panel.xScale(d.endPlace) - panel.xScale(d.startPlace)}
+                        height={margins.bar}
+                        style={{ fill: d.fill, stroke: d.stroke, strokeWidth: 1 }}
+                      />
+                    })}
+                  </g>
+              </g>
+            )}
             <g clipPath="url(#cuttOffViewPane)">
-              {intervals.filter((d,i) => (d.startPlace <= xDomain[1]) && (d.endPlace >= xDomain[0])).map((d, i) => {
-                return <rect
-                  id={d.primaryKey}
-                  type="interval"
-                  key={i}
-                  className={`shape ${d.primaryKey === tooltip.shapeId ? "highlighted" : ""}`}
-                  transform={`translate(${[xScale(d.startPlace),yScale(d.y) - 0.5 * margins.bar]})`}
-                  width={xScale(d.endPlace) - xScale(d.startPlace)}
-                  height={margins.bar}
-                  style={{fill: d.fill, stroke: d.stroke, strokeWidth: 1}}
+              {this.connections.map((d, i) => 
+                <path
+                  id={d.identifier}
+                  type="connection"
+                  key={d.identifier}
+                  className={`connection ${d.primaryKey === tooltip.shapeId ? "highlighted" : ""}`}
+                  d={d.render}
+                  style={{ fill: d.fill, stroke: d.color, strokeWidth: d.strokeWidth, strokeDasharray: d.dash, opacity: d.opacity, pointerEvents: 'visibleStroke' }}
                 />
-                })}
+              )}
             </g>
-            <g clipPath="url(#cuttOffViewPane)">
-              {connections.filter((d,i) => (d.source && (d.source.place <= xDomain[1] && d.source.place >= xDomain[0]))
-        || (d.sink && (d.sink.place <= xDomain[1] && d.sink.place >= xDomain[0]))
-      ).map((d, i) => {
+            {/* <g clipPath="url(#cuttOffViewPane)">
+              {connections.filter((d, i) => (d.source && (d.source.place <= xDomain[1] && d.source.place >= xDomain[0]))
+                || (d.sink && (d.sink.place <= xDomain[1] && d.sink.place >= xDomain[0]))
+              ).map((d, i) => {
                 d.yScale = yScale;
                 d.pinpoint(intervalBins);
                 if (d.source) {
@@ -218,10 +256,10 @@ class GenomePlot extends Component {
                   key={d.identifier}
                   className={`connection ${d.primaryKey === tooltip.shapeId ? "highlighted" : ""}`}
                   d={d.render}
-                  style={{fill: d.fill, stroke: d.color, strokeWidth: d.strokeWidth, strokeDasharray: d.dash, opacity: d.opacity, pointerEvents: 'visibleStroke' }}
+                  style={{ fill: d.fill, stroke: d.color, strokeWidth: d.strokeWidth, strokeDasharray: d.dash, opacity: d.opacity, pointerEvents: 'visibleStroke' }}
                 />
               })}
-            </g>
+            </g> */}
           </g>
           {tooltip.visible && <g
             className="tooltip"
@@ -241,7 +279,7 @@ class GenomePlot extends Component {
               fillOpacity="0.97"
             />
             <text x="10" y="28" fontSize="12" fill="#FFF">
-              {tooltip.text.map((d,i) => 
+              {tooltip.text.map((d, i) =>
                 <tspan key={i} x={10} y={18 + i * 16}>
                   <tspan fontWeight="bold">{d.label}</tspan>: {d.value}
                 </tspan>)}
@@ -267,12 +305,12 @@ GenomePlot.defaultProps = {
   defaultDomain: [],
 };
 const mapDispatchToProps = (dispatch) => ({
-  updateDomain: (from, to, shouldChangeHistory, eventSource) => dispatch(updateDomain(from,to,shouldChangeHistory, eventSource))
+  ///updateDomain: (from, to, shouldChangeHistory, eventSource) => dispatch(updateDomain(from,to,shouldChangeHistory, eventSource))
 });
 const mapStateToProps = (state) => ({
-  xDomain: state.App.domain,
   chromoBins: state.App.chromoBins,
-  defaultDomain: state.App.defaultDomain
+  defaultDomain: state.App.defaultDomain,
+  domains: state.App.domains
 });
 export default connect(
   mapStateToProps,

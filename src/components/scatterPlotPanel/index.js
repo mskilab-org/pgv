@@ -15,7 +15,7 @@ import ScatterPlot from "../scatterPlot";
 
 const margins = {
   padding: 0,
-  gap: 26,
+  gap: 0,
 };
 
 class ScatterPlotPanel extends Component {

@@ -9,7 +9,8 @@ import Points from "./points";
 import Wrapper from "./index.style";
 
 const margins = {
-  gap: 24,
+  gapX: 12,
+  gapY: 24,
   yTicksCount: 10,
 };
 
@@ -24,8 +25,8 @@ class ScatterPlot extends Component {
     let { results, width, height } = this.props;
     this.dataPointsY = results.getColumn("y").toArray();
     this.dataPointsX = results.getColumn("x").toArray();
-    let stageWidth = width - 2 * margins.gap;
-    let stageHeight = height - 3 * margins.gap;
+    let stageWidth = width - 2 * margins.gapX;
+    let stageHeight = height - 3 * margins.gapY;
     this.state = {
       stageWidth,
       stageHeight,
@@ -145,14 +146,14 @@ class ScatterPlot extends Component {
             <rect x={0} y={0} width={stageWidth} height={stageHeight} />
           </clipPath>
           <text
-            transform={`translate(${[width / 2, margins.gap]})`}
+            transform={`translate(${[width / 2, margins.gapY]})`}
             textAnchor="middle"
             fontSize={14}
             dy="-4"
           >
             {title}
           </text>
-          <g transform={`translate(${[margins.gap, margins.gap]})`}>
+          <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
             {
               <Grid
                 scaleX={xScale}
@@ -164,7 +165,7 @@ class ScatterPlot extends Component {
             }
           </g>
           <g
-            transform={`translate(${[margins.gap, stageHeight + margins.gap]})`}
+            transform={`translate(${[margins.gapX, stageHeight + margins.gapY]})`}
           >
             {Object.keys(chromoBins).map((d, i) => (
               <g

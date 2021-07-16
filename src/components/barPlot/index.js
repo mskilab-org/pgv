@@ -10,7 +10,8 @@ import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 
 const margins = {
-  gap: 24,
+  gapX: 12,
+  gapY: 24,
   yTicksCount: 10,
 };
 
@@ -28,8 +29,8 @@ class BarPlot extends Component {
     this.grid = null;
     let { width, height, results, xDomain } = this.props;
 
-    let stageWidth = width - 2 * margins.gap;
-    let stageHeight = height - 3 * margins.gap;
+    let stageWidth = width - 2 * margins.gapX;
+    let stageHeight = height - 3 * margins.gapY;
 
     let barsStruct = {
       barsY: results.getColumn("y").toArray(),
@@ -143,14 +144,14 @@ class BarPlot extends Component {
             <rect x={0} y={0} width={stageWidth} height={stageHeight} />
           </clipPath>
           <text
-            transform={`translate(${[width / 2, margins.gap]})`}
+            transform={`translate(${[width / 2, margins.gapY]})`}
             textAnchor="middle"
             fontSize={14}
             dy="-4"
           >
             {title}
           </text>
-          <g transform={`translate(${[margins.gap, margins.gap]})`}>
+          <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
             {
               <Grid
                 scaleX={xScale}

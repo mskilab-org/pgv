@@ -4,11 +4,6 @@ import actions from "./actions";
 import * as d3 from "d3";
 import { loadArrowTable, updateChromoBins, domainsToLocation, locationToDomains } from "../../helpers/utility";
 
-
-function* updateVisibility({panel, visible}) {
-  yield put({ type: actions.VISIBILITY_UPDATED, panel: panel, visible: visible });
-}
-
 function* fetchGeography({file}) {
   const { response } = yield axios.get(`/data/${file}/geography.json`)
     .then((response) => ({ response }))
@@ -86,7 +81,6 @@ function* launchApplication() {
 
 function* actionWatcher() {
   yield takeEvery(actions.LAUNCH_APP, launchApplication);
-  yield takeEvery(actions.UPDATE_VISIBILITY, updateVisibility);
   yield takeEvery(actions.GET_GEOGRAPHY, fetchGeography);
 }
 export default function* rootSaga() {

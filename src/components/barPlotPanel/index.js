@@ -15,7 +15,7 @@ import BarPlot from "../barPlot";
 
 const margins = {
   padding: 0,
-  gap: 26,
+  gap: 0
 };
 
 class BarPlotPanel extends Component {

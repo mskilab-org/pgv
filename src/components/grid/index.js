@@ -55,7 +55,7 @@ class Grid extends Component {
         ticks[ticks.length - 1] = xxScale.domain()[1];
         let magnitudeText = magnitude(domainEnd - domainStart);
         let magnitudeDistance = magnitude(domainEnd - domainStart) * rangeWidth / (domainEnd - domainStart);
-        let magnitudeLegendPoints = [0, -5, 0, 0, magnitudeDistance, 0, magnitudeDistance, -5];
+        let magnitudeLegendPoints = [0, -3, 0, 0, magnitudeDistance, 0, magnitudeDistance, -3];
         const axisX = d3.axisBottom(xxScale).tickSize(6).tickValues(ticks).tickFormat(d3.format("~s"));
 
         d3.select(this).call(axisX);
@@ -97,7 +97,7 @@ class Grid extends Component {
       ticks[ticks.length - 1] = xxScale.domain()[1];
       let magnitudeText = magnitude(domainEnd - domainStart);
       let magnitudeDistance = magnitude(domainEnd - domainStart) * rangeWidth / (domainEnd - domainStart);
-      let magnitudeLegendPoints = [0, -5, 0, 0, magnitudeDistance, 0, magnitudeDistance, -5];
+      let magnitudeLegendPoints = [0, -3, 0, 0, magnitudeDistance, 0, magnitudeDistance, -3];
       const axisX = d3.axisBottom(xxScale).tickSize(6).tickValues(ticks).tickFormat(d3.format("~s"));
 
       d3.select(this).call(axisX);
@@ -162,6 +162,7 @@ Grid.propTypes = {
   scaleY: PropTypes.func.isRequired,
   axisHeight: PropTypes.number.isRequired,
   axisWidth: PropTypes.number.isRequired,
+  chromoBins: PropTypes.object.isRequired
 };
 Grid.defaultProps = {
   gap: 0,
@@ -170,7 +171,6 @@ Grid.defaultProps = {
 };
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
-  xDomain: state.App.domain,
   chromoBins: state.App.chromoBins,
 });
 export default connect(
