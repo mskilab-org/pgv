@@ -276,7 +276,7 @@ class GenomePlot extends Component {
             <g clipPath="url(#cuttOffViewPaneii)">
               {this.connections.map((d, i) => 
                 <path
-                  id={d.identifier}
+                  id={d.primaryKey}
                   type="connection"
                   key={d.identifier}
                   transform={d.transform}

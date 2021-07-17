@@ -125,7 +125,6 @@ export function locationToDomains(chromoBins, loc) {
     domain.push(chromoBins[domainString[1][0]].startPlace + (+domainString[1][1]) - chromoBins[domainString[1][0]].startPoint);
     domains.push(domain);
   });
-  console.log(domains)
   return domains;
 }
 
