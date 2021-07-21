@@ -9,7 +9,7 @@ import Points from "./points";
 import Wrapper from "./index.style";
 
 const margins = {
-  gapX: 12,
+  gapX: 24,
   gapY: 24,
   yTicksCount: 10,
 };

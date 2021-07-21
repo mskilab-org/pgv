@@ -10,7 +10,7 @@ import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 
 const margins = {
-  gapX: 12,
+  gapX: 24,
   gapY: 24,
   yTicksCount: 10,
 };

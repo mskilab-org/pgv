@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Tooltip, Switch, Button, message } from "antd";
+import { Card, Space, Tooltip, Switch, Button, message, Row, Col } from "antd";
 import * as d3 from "d3";
 import { AiOutlineDownload } from "react-icons/ai";
 import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
@@ -15,6 +15,7 @@ import GenesPlot from "../genesPlot";
 
 const margins = {
   padding: 0,
+  gap: 0,
 };
 
 class GenesPanel extends Component {
@@ -43,7 +44,7 @@ class GenesPanel extends Component {
   };
 
   render() {
-    const { t, genes, inViewport } = this.props;
+    const { t, genes, inViewport, domains } = this.props;
     const { checked } = this.state;
     if (!genes) return null;
     return (
@@ -84,18 +85,27 @@ class GenesPanel extends Component {
         >
           {checked && (<div className="ant-wrapper" ref={(elem) => (this.container = elem)}>
             <ContainerDimensions>
-              {({ width, height }) => {
-                return (
-                   <GenesPlot
-                    {...{
-                      width: width - 2 * margins.padding,
-                      height: height,
-                      genes: genes
-                    }}
-                  />
-                );
-              }}
-            </ContainerDimensions>
+                {({ width, height }) => {
+                  return (
+                     (<Row style={{ width }} gutter={[margins.gap, 0]}>
+                        {domains.map((domain, i) => (
+                          <Col flex={1}>
+                            <GenesPlot
+                            {...{
+                              width:
+                              (width - (domains.length - 1) * margins.gap) /
+                              domains.length,
+                              height: height,
+                              xDomain: domain,
+                              genes: genes
+                            }}/>
+                          </Col>
+                        ))}
+                      </Row>
+                    )
+                  );
+                }}
+              </ContainerDimensions>
           </div>)}
         </Card>}
       </Wrapper>
@@ -107,6 +117,7 @@ GenesPanel.propTypes = {
 GenesPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
+  domains: state.App.domains
 });
 export default connect(
   mapStateToProps,

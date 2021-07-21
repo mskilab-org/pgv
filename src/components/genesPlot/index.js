@@ -9,7 +9,8 @@ import Plot from "./plot";
 import Grid from "../grid/index";
 
 const margins = {
-  gap: 24,
+  gapX: 12,
+  gapY: 24,
   bGap: 60,
   rectangleHeight: 10
 };
@@ -23,8 +24,8 @@ class GenesPlot extends Component {
     this.grid = null;
     let { width, height, genes, defaultDomain, xDomain } = this.props;
 
-    let stageWidth = width - 2 * margins.gap;
-    let stageHeight = height - 2 * margins.gap;
+    let stageWidth = width - 2 * margins.gapX;
+    let stageHeight = height - 3 * margins.gapY;
     let genomeScale = d3
       .scaleLinear()
       .domain(defaultDomain)
@@ -111,7 +112,7 @@ class GenesPlot extends Component {
   handleMouseMove = (event) => {
     const { stageHeight, stageWidth } = this.state;
     const { genes, width, height } = this.props;
-    let position = [d3.pointer(event)[0] - margins.gap, d3.pointer(event)[1] - margins.gap];
+    let position = [d3.pointer(event)[0] - margins.gapX, d3.pointer(event)[1] - margins.gapY];
 
     if ((position[0] < stageWidth) && ((position[0] >= 0)) && (position[1] <= stageHeight) && ((position[1] > 0))) {
      
@@ -141,7 +142,7 @@ class GenesPlot extends Component {
   handleClick = (event) => {
     const { stageWidth, stageHeight } = this.state;
     const { genes } = this.props;
-    let position = [d3.pointer(event)[0] - margins.gap, d3.pointer(event)[1] - margins.gap];
+    let position = [d3.pointer(event)[0] - margins.gapX, d3.pointer(event)[1] - margins.gapY];
 
     if ((position[0] < stageWidth) && ((position[0] >= 0)) && (position[1] <= stageHeight) && ((position[1] > 0))) {
      
@@ -259,7 +260,7 @@ window.pc = genes
               <rect x={0} y={0} width={stageWidth} height={stageHeight} />
             </clipPath>
             <text
-              transform={`translate(${[width / 2, margins.gap]})`}
+              transform={`translate(${[width / 2, margins.gapY]})`}
               textAnchor="middle"
               fontSize={16}
               dy="-4"
@@ -268,7 +269,7 @@ window.pc = genes
             </text>
             <g
               className="labels-container"
-              transform={`translate(${[0, margins.gap]})`}
+              transform={`translate(${[0, margins.gapY]})`}
             >
              <text
               transform={`translate(${[0, yScale(1)]})rotate(90)`}
@@ -290,11 +291,11 @@ window.pc = genes
             <g
               clipPath="url(#clipping)"
               className="labels-container"
-              transform={`translate(${[margins.gap, margins.gap]})`}
+              transform={`translate(${[margins.gapX, margins.gapY]})`}
             >
               {texts}
             </g>
-            <g transform={`translate(${[margins.gap,margins.gap]})`} >
+            <g transform={`translate(${[margins.gapX,margins.gapY]})`} >
               {<Grid
                 showY={false}
                 scaleX={xScale}
@@ -304,7 +305,7 @@ window.pc = genes
                 chromoBins={chromoBins}
               />}
             </g>
-            {tooltip.visible && <g transform={`translate(${[margins.gap,margins.gap]})`} >
+            {tooltip.visible && <g transform={`translate(${[margins.gapX,margins.gapY]})`} >
               <rect x={xScale(tooltip.shape.startPlace)} y={yScale(tooltip.shape.y) - margins.rectangleHeight / 2} width={xScale(tooltip.shape.endPlace) - xScale(tooltip.shape.startPlace)} height={margins.rectangleHeight} stroke={d3.rgb("#FF7F0E").darker()} fill="#FF7F0E"/>
             </g>}
             {tooltip.visible && <g
@@ -351,7 +352,6 @@ GenesPlot.defaultProps = {
 const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
-  xDomain: state.App.domain,
   chromoBins: state.App.chromoBins,
   defaultDomain: state.App.defaultDomain
 });
