@@ -269,7 +269,25 @@ class LegendMultiBrush extends Component {
     );
   }
 
-  componentDidUpdate() {}
+  componentDidUpdate() {
+    const { domains } = this.props;
+    this.fragments.filter(d => d.selection).forEach((fragment, index) => {
+      this.update();
+      fragment = d3
+        .select(this.container)
+        .select("#brush-" + fragment.id)
+        .datum();
+      fragment.domain = domains[index];
+      fragment.selection = [
+        this.genomeScale(fragment.domain[0]),
+        this.genomeScale(fragment.domain[1]),
+      ];
+      d3.select(this.container)
+        .select("#brush-" + fragment.id)
+        .call(fragment.brush.move, fragment.selection);
+      this.update();
+    });
+  }
 
   render() {
     const { width, defaultDomain, chromoBins } = this.props;

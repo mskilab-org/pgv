@@ -99,7 +99,7 @@ class BarPlotPanel extends Component {
                     inViewport && (
                       <Row style={{ width }} gutter={[margins.gap, 0]}>
                         {domains.map((domain, i) => (
-                          <Col flex={1}>
+                          <Col key={i} flex={1}>
                             <BarPlot
                               {...{
                                 width:
