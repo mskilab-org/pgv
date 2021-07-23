@@ -222,9 +222,10 @@ class GenomePlot extends Component {
     const { width, height } = this.props;
     const { intervals } = this.state;
     let primaryKey = d3.select(e.target) && d3.select(e.target).attr("id");
+    let shapeClass = d3.select(e.target) && d3.select(e.target).attr("class");
     let shapeType = d3.select(e.target) && d3.select(e.target).attr("type");
     let shape = null;
-    if (primaryKey) {
+    if (primaryKey && shapeClass !== "zoom-background") {
       if (shapeType === "interval") {
         shape = intervals.find(e => e.primaryKey === primaryKey);
       } else if (shapeType === "connection") {
@@ -237,6 +238,16 @@ class GenomePlot extends Component {
       }
     } else {
       this.state.tooltip.visible && this.setState({ tooltip: { shapeId: null, visible: false } })
+    }
+  }
+
+  handleConnectionClick(event, connection) {
+    console.log(event, connection)
+    if (connection.kind === "ANCHOR") {
+      let newDomain = [connection.otherEnd.interval.startPlace, connection.otherEnd.interval.endPlace];
+      let newDomains = [...this.props.domains];
+      newDomains.push(newDomain);
+      this.props.updateDomains(newDomains);
     }
   }
 
@@ -262,6 +273,7 @@ class GenomePlot extends Component {
           <g transform={`translate(${[margins.gap, margins.gap]})`} >
             {this.panels.map((panel, i) => 
               <g key={`panel-${panel.index}`} id={`panel-${panel.index}`} transform={`translate(${[panel.offset, 0]})`} >
+                  <rect className="zoom-background" id={`panel-rect-${panel.index}`} x={0.5} width={panel.panelWidth} height={panel.panelHeight} style={{stroke: "steelblue", fill: "transparent", strokeWidth: 1, opacity: 0.375, pointerEvents: 'all'}}/>
                   <g ref={(elem) => (this.grid = elem)}>
                     {<Grid
                       scaleX={panel.xScale}
@@ -284,7 +296,6 @@ class GenomePlot extends Component {
                       />
                     })}
                   </g>
-                  <rect id={`panel-rect-${panel.index}`} x={0.5} width={panel.panelWidth} height={panel.panelHeight} style={{stroke: "steelblue", fill: "transparent", strokeWidth: 1, opacity: 0.375, pointerEvents: 'all'}}/>
               </g>
             )}
             <g clipPath="url(#cuttOffViewPaneii)">
@@ -296,6 +307,7 @@ class GenomePlot extends Component {
                   transform={d.transform}
                   className={`connection ${d.primaryKey === tooltip.shapeId ? "highlighted" : ""}`}
                   d={d.render}
+                  onClick={(event) => this.handleConnectionClick(event, d)}
                   style={{ fill: d.fill, stroke: d.color, strokeWidth: d.strokeWidth, strokeDasharray: d.dash, opacity: d.opacity, pointerEvents: 'all' }}
                 />
               )}
