@@ -65,7 +65,6 @@ class LegendMultiBrush extends Component {
       .select(this.container)
       .select("#brush-" + fragment.id)
       .datum();
-      console.log(fragment)
     fragment.domain = domain;
     fragment.selection = [
       this.genomeScale(fragment.domain[0]),
@@ -274,7 +273,14 @@ class LegendMultiBrush extends Component {
     const { domains } = this.props;
     let visibleFragments = this.fragments.filter(d => d.selection);
     if (visibleFragments.length < domains.length) {
-      this.createDefaults(domains[domains.length - 1]);
+      this.createBrush();
+      let fragment = this.fragments[this.fragments.length - 1];
+      fragment.domain = domains[domains.length - 1];
+      fragment.selection = [this.genomeScale(fragment.domain[0]), this.genomeScale(fragment.domain[1])];
+      this.update();
+      fragment = d3.select('#brush-' + fragment.id).datum();
+      d3.select('#brush-' + fragment.id).call(fragment.brush.move, fragment.selection);
+      this.update();
     } else {
       visibleFragments.forEach((fragment, index) => {
         this.update();

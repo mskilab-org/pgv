@@ -24,7 +24,7 @@ class GenomePlot extends Component {
     this.zoom = null;
     this.container = null;
     this.grid = null;
-    const { domains, width, height, defaultDomain, chromoBins, genome } = this.props;
+    const { width, height, defaultDomain, chromoBins, genome } = this.props;
 
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 3 * margins.gap;
@@ -59,8 +59,8 @@ class GenomePlot extends Component {
     this.state = {
       stageWidth,
       stageHeight,
-      domains,
       intervals,
+      defaultDomain,
       genomeScale,
       currentTransform,
       intervalBins,
@@ -77,7 +77,8 @@ class GenomePlot extends Component {
   }
 
   updatePanels() {
-    const { stageWidth, stageHeight, intervals, domains, frameConnections } = this.state;
+    const { stageWidth, stageHeight, intervals, defaultDomain, frameConnections } = this.state;
+    let { domains } = this.props;
     let panelWidth = (stageWidth - (domains.length - 1) * margins.gap) / domains.length;
     let panelHeight = stageHeight;
     this.connections = [];
@@ -92,8 +93,9 @@ class GenomePlot extends Component {
       let range = [index * (panelWidth + margins.gap), (index + 1) * panelWidth + index * margins.gap];
       let scale = d3.scaleLinear().domain(domain).range(range);
       let innerScale = d3.scaleLinear().domain(domain).range([0, panelWidth]);
+      let panelGenomeScale = d3.scaleLinear().domain(defaultDomain).range([0, panelWidth]);
       let zoom = d3.zoom().scaleExtent([1, Infinity]).translateExtent([[0, 0], [panelWidth, panelHeight]]).extent([[0, 0], [panelWidth, panelHeight]]).on('zoom', (event) => this.zooming(event, index)).on('end', (event) => this.zoomEnded(event, index));
-      let panel = {index, zoom, domain, panelWidth, panelHeight, xScale, offset, intervals: filteredIntervals, domainWidth, range, scale, innerScale};
+      let panel = {index, zoom, domain, panelWidth, panelHeight, xScale, panelGenomeScale, offset, intervals: filteredIntervals, domainWidth, range, scale, innerScale};
       return panel;
     });
     this.yDomain = [
@@ -175,11 +177,11 @@ class GenomePlot extends Component {
   }
 
   componentDidMount() {
-    const { domains } = this.state;
+    const { domains } = this.props;
     this.panels.forEach((panel, index) => {
       let domain = domains[index];
-      var s = [panel.xScale(domain[0]), panel.xScale(domain[1])];
-      d3.select(this.container).select(`#panel-rect-${index}`).attr('preserveAspectRatio', 'xMinYMin meet').call(panel.zoom).on("wheel", (event) => { event.preventDefault(); });;
+      var s = [panel.panelGenomeScale(domain[0]), panel.panelGenomeScale(domain[1])];
+      d3.select(this.container).select(`#panel-rect-${index}`).attr('preserveAspectRatio', 'xMinYMin meet').call(panel.zoom)//.on("wheel", (event) => { event.preventDefault(); });;
       d3.select(this.container).select(`#panel-rect-${index}`).call(panel.zoom.transform, d3.zoomIdentity.scale(panel.panelWidth / (s[1] - s[0])).translate(-s[0], 0));
     });
   }
@@ -188,18 +190,18 @@ class GenomePlot extends Component {
     const { domains } = this.props;
     this.panels.forEach((panel, index) => {
       let domain = domains[index];
-      var s = [panel.xScale(domain[0]), panel.xScale(domain[1])];
-      d3.select(this.container).select(`#panel-rect-${index}`).attr('preserveAspectRatio', 'xMinYMin meet').call(panel.zoom).on("wheel", (event) => { event.preventDefault(); });;
+      var s = [panel.panelGenomeScale(domain[0]), panel.panelGenomeScale(domain[1])];
+      d3.select(this.container).select(`#panel-rect-${index}`).attr('preserveAspectRatio', 'xMinYMin meet').call(panel.zoom)//.on("wheel", (event) => { event.preventDefault(); });;
       d3.select(this.container).select(`#panel-rect-${index}`).call(panel.zoom.transform, d3.zoomIdentity.scale(panel.panelWidth / (s[1] - s[0])).translate(-s[0], 0));
     });
   }
 
   zooming(event, index) {
     let panel = this.panels[index];
-    let newDomain = event.transform.rescaleX(panel.xScale).domain().map(Math.floor);
-    let newDomains = [...this.state.domains];
+    let newDomain = event.transform.rescaleX(panel.panelGenomeScale).domain().map(Math.floor);
+    let newDomains = [...this.props.domains];
     newDomains[index] = newDomain;
-    if (newDomains.toString() !== this.state.domains.toString()) {
+    if (newDomains.toString() !== this.props.domains.toString()) {
       this.setState({ domains: newDomains }, () => {
          this.props.updateDomains(newDomains);
       })
@@ -208,10 +210,10 @@ class GenomePlot extends Component {
 
   zoomEnded(event, index) {
     let panel = this.panels[index];
-    let newDomain = event.transform.rescaleX(panel.xScale).domain().map(Math.floor);
-    let newDomains = [...this.state.domains];
+    let newDomain = event.transform.rescaleX(panel.panelGenomeScale).domain().map(Math.floor);
+    let newDomains = [...this.props.domains];
     newDomains[index] = newDomain;
-    if (newDomains.toString() !== this.state.domains.toString()) {
+    if (newDomains.toString() !== this.props.domains.toString()) {
       this.setState({ domains: newDomains }, () => {
          this.props.updateDomains(newDomains);
       })
@@ -242,9 +244,8 @@ class GenomePlot extends Component {
   }
 
   handleConnectionClick(event, connection) {
-    console.log(event, connection)
     if (connection.kind === "ANCHOR") {
-      let newDomain = [connection.otherEnd.interval.startPlace, connection.otherEnd.interval.endPlace];
+      let newDomain = [Math.floor(0.98 * connection.otherEnd.interval.startPlace), Math.floor(1.02 * connection.otherEnd.interval.endPlace)];
       let newDomains = [...this.props.domains];
       newDomains.push(newDomain);
       this.props.updateDomains(newDomains);

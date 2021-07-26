@@ -1,5 +1,5 @@
 import actions from "./actions";
-import { domainsToLocation } from "../../helpers/utility";
+import { domainsToLocation, deconflictDomains } from "../../helpers/utility";
 
 const initState = {
   loading: false,
@@ -35,11 +35,12 @@ export default function appReducer(state = initState, action) {
       geography.forEach((d, i) => (geographyHash[d.id] = d));
       return { ...state, geography, file: action.file, geographyHash, loading: false };
     case actions.DOMAINS_UPDATED:      
+      let doms = deconflictDomains(action.domains)
       let url = new URL(decodeURI(document.location));
       let params = new URLSearchParams(url.search);
-      let newURL = `${url.origin}/?file=${params.get("file")}&location=${domainsToLocation(state.chromoBins, action.domains)}`; 
+      let newURL = `${url.origin}/?file=${params.get("file")}&location=${domainsToLocation(state.chromoBins, doms)}`; 
       window.history.replaceState(newURL, 'Pan Genome Viewer', newURL);
-      return { ...state, domains: action.domains };
+      return { ...state, domains: doms };
     default:
       return state;
   }
