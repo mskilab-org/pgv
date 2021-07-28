@@ -129,16 +129,18 @@ export function locationToDomains(chromoBins, loc) {
 }
 
 export function deconflictDomains(domains) {
-  let doms = domains.sort((a,b) => d3.ascending(a[0], b[0]));
-  doms.forEach((d, index) => {
-    for (let j = index + 1; j < domains.length; j++) {
-      if (d[0] <= domains[j][1] && d[1] >= domains[j][0]) {
-        d[0] = d3.min([d[0], domains[j][0] - 2]);
-        d[1] = d3.min([d[1], domains[j][0] - 1]);
-      }
-    }
-  });
-  return doms;
+  return domains;
+  // TODO: Refactor so as to properly calculate the de-conflicting
+  // let doms = domains.sort((a,b) => d3.ascending(a[0], b[0]));
+  // doms.forEach((d, index) => {
+  //   for (let j = index + 1; j < domains.length; j++) {
+  //     if (d[0] <= domains[j][1] && d[1] >= domains[j][0]) {
+  //       d[0] = d3.min([d[0], domains[j][0] - 2]);
+  //       d[1] = d3.min([d[1], domains[j][0] - 1]);
+  //     }
+  //   }
+  // });
+  // return doms;
 }
 
 export function downloadCanvasAsPng(canvas, filename) {
