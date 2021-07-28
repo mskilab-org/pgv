@@ -5,6 +5,7 @@ const actions = {
   LAUNCH_APP: "LAUNCH_APP",
   LAUNCH_APP_SUCCESS: "LAUNCH_APP_SUCCESS",
   LAUNCH_APP_FAILED: "LAUNCH_APP_FAILED",
+  PLOTS_UPDATED: "PLOTS_UPDATED",
   launchApp: () => ({
     type: actions.LAUNCH_APP,
   }),
@@ -15,6 +16,10 @@ const actions = {
   updateDomains: (domains) => ({
     type: actions.DOMAINS_UPDATED,
     domains
+  }),
+  updatePlots: (plots) => ({
+    type: actions.PLOTS_UPDATED,
+    plots
   }),
 };
 

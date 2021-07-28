@@ -20,14 +20,6 @@ const margins = {
 class GenomePanel extends Component {
   container = null;
 
-  state = {
-    checked: this.props.visible,
-  };
-
-  onSwitchChange = (checked) => {
-    this.setState({ checked });
-  };
-
   onDownloadButtonClicked = () => {
     htmlToImage
       .toCanvas(this.container, { pixelRatio: 2 })
@@ -49,7 +41,6 @@ class GenomePanel extends Component {
       title,
       inViewport
     } = this.props;
-    const { checked } = this.state;
     if (Object.keys(genome).length < 1) return null;
     return (
       <Wrapper>
@@ -72,13 +63,6 @@ class GenomePanel extends Component {
           }
           extra={
             <Space>
-              <Tooltip title={t("components.visibility-switch-tooltip")}>
-                <Switch
-                  size="small"
-                  checked={checked}
-                  onClick={(e) => this.onSwitchChange(e)}
-                />
-              </Tooltip>
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
                   type="default"
@@ -91,7 +75,7 @@ class GenomePanel extends Component {
             </Space>
           }
         >
-          {checked && (
+          {(
             <div className="ant-wrapper" ref={(elem) => (this.container = elem)}>
               <ContainerDimensions>
                 {({ width, height }) => {

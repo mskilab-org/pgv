@@ -20,14 +20,6 @@ const margins = {
 class PhylogenyPanel extends Component {
   container = null;
 
-  state = {
-    checked: this.props.visible,
-  };
-
-  onSwitchChange = (checked) => {
-    this.setState({ checked });
-  };
-
   onDownloadButtonClicked = () => {
     htmlToImage
       .toCanvas(this.container, { pixelRatio: 2 })
@@ -44,7 +36,6 @@ class PhylogenyPanel extends Component {
 
   render() {
     const { t, phylogeny, strainsList, geography, loading, title, inViewport, onNodeClick } = this.props;
-    const { checked } = this.state;
     if (!phylogeny) return null;
     return (
       <Wrapper>
@@ -64,13 +55,6 @@ class PhylogenyPanel extends Component {
           }
           extra={
             <Space>
-            <Tooltip title={t("components.visibility-switch-tooltip")}>
-              <Switch
-                size="small"
-                checked={checked}
-                onClick={(e) => this.onSwitchChange(e)}
-              />
-            </Tooltip>
             <Tooltip title={t("components.download-as-png-tooltip")}>
               <Button
                 type="default"
@@ -82,8 +66,8 @@ class PhylogenyPanel extends Component {
             </Tooltip>
           </Space>}
         >
-          {checked && !phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
-          {checked && phylogeny && (<div ref={(elem) => (this.container = elem)}><ContainerDimensions>
+          {!phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
+          {phylogeny && (<div ref={(elem) => (this.container = elem)}><ContainerDimensions>
             {({ width, height }) => {
               return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick }} />;
             }}

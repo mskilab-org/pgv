@@ -31,6 +31,10 @@
   "components": {
     "visibility-switch-tooltip": "Toggle visibility",
     "download-as-png-tooltip": "Download as PNG",
+    "settings": {
+      "tooltip": "Settings",
+      "title": "Settings Panel"
+    },
     "filters-panel": {
       "header": "Search Filters",
       "tags-section": {

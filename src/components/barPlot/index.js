@@ -104,7 +104,6 @@ class BarPlot extends Component {
       outliers()
     );
     barsStruct.domainY = [0, d3.max(filtered) || globalMaxY];
-    console.log(barsStruct.domainY);
     this.bars.rescaleXY(this.props.xDomain, barsStruct.domainY);
   }
 

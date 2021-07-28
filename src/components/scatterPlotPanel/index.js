@@ -21,14 +21,6 @@ const margins = {
 class ScatterPlotPanel extends Component {
   container = null;
 
-  state = {
-    checked: this.props.visible,
-  };
-
-  onSwitchChange = (checked) => {
-    this.setState({ checked });
-  };
-
   onDownloadButtonClicked = () => {
     htmlToImage
       .toCanvas(this.container, { pixelRatio: 2 })
@@ -45,7 +37,6 @@ class ScatterPlotPanel extends Component {
 
   render() {
     const { t, loading, data, title, domains, inViewport } = this.props;
-    const { checked } = this.state;
     if (!data) {
       return null;
     }
@@ -75,13 +66,6 @@ class ScatterPlotPanel extends Component {
           }
           extra={
             <Space>
-              <Tooltip title={t("components.visibility-switch-tooltip")}>
-                <Switch
-                  size="small"
-                  checked={checked}
-                  onClick={(e) => this.onSwitchChange(e)}
-                />
-              </Tooltip>
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
                   type="default"
@@ -94,7 +78,7 @@ class ScatterPlotPanel extends Component {
             </Space>
           }
         >
-          {checked && (
+          {(
             <div
               className="ant-wrapper"
               ref={(elem) => (this.container = elem)}
@@ -105,7 +89,7 @@ class ScatterPlotPanel extends Component {
                     inViewport && (
                       <Row style={{ width }} gutter={[margins.gap, 0]}>
                         {domains.map((domain, i) => (
-                          <Col flex={1}>
+                          <Col key={i} flex={1}>
                             <ScatterPlot
                               {...{
                                 width:

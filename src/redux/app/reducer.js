@@ -34,6 +34,8 @@ export default function appReducer(state = initState, action) {
       geographyHash = {};
       geography.forEach((d, i) => (geographyHash[d.id] = d));
       return { ...state, geography, file: action.file, geographyHash, loading: false };
+    case actions.PLOTS_UPDATED:
+      return { ...state, plots: action.plots };
     case actions.DOMAINS_UPDATED:      
       let doms = deconflictDomains(action.domains)
       let url = new URL(decodeURI(document.location));

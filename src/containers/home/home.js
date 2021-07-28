@@ -66,7 +66,7 @@ class Home extends Component {
       } else if (d.type === "scatterplot") {
         plotComponent = <ScatterPlotPanel {...{data: d.data, title: d.title, chromoBins, visible: d.visible, loading}} />
       }
-      plotComponents.push(  
+      d.visible && plotComponents.push(  
         <Row key={i} id={`${d.sample}-${d.type}`} className="ant-panel-container ant-home-map-panel-container">
           <Col className="gutter-row" span={24}>
             {plotComponent}

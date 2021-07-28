@@ -21,14 +21,6 @@ const margins = {
 class BarPlotPanel extends Component {
   container = null;
 
-  state = {
-    checked: this.props.visible,
-  };
-
-  onSwitchChange = (checked) => {
-    this.setState({ checked });
-  };
-
   onDownloadButtonClicked = () => {
     htmlToImage
       .toCanvas(this.container, { pixelRatio: 2 })
@@ -45,7 +37,6 @@ class BarPlotPanel extends Component {
 
   render() {
     const { t, loading, data, domains, title, inViewport } = this.props;
-    const { checked } = this.state;
     if (!data) {
       return null;
     }
@@ -69,13 +60,6 @@ class BarPlotPanel extends Component {
           }
           extra={
             <Space>
-              <Tooltip title={t("components.visibility-switch-tooltip")}>
-                <Switch
-                  size="small"
-                  checked={checked}
-                  onClick={(e) => this.onSwitchChange(e)}
-                />
-              </Tooltip>
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
                   type="default"
@@ -88,7 +72,7 @@ class BarPlotPanel extends Component {
             </Space>
           }
         >
-          {checked && (
+          {(
             <div
               className="ant-wrapper"
               ref={(elem) => (this.container = elem)}

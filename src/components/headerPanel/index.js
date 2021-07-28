@@ -2,33 +2,62 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { withTranslation } from "react-i18next";
 import { connect } from "react-redux";
-import { PageHeader, Space, Tag, Button, Tooltip, message } from "antd";
-import { AiOutlineDownload } from "react-icons/ai";
+import {
+  PageHeader,
+  Space,
+  Tag,
+  Button,
+  Tooltip,
+  message,
+  Drawer,
+  Row,
+  Col,
+  Switch,
+} from "antd";
+import { AiOutlineDownload, AiOutlineSetting } from "react-icons/ai";
 import { downloadCanvasAsPng } from "../../helpers/utility";
-import html2canvas from 'html2canvas';
+import html2canvas from "html2canvas";
 import Wrapper from "./index.style";
+import appActions from "../../redux/app/actions";
+
+const { updatePlots } = appActions;
 
 class HeaderPanel extends Component {
+  state = { visible: false };
+
+  showDrawer = () => {
+    this.setState({
+      visible: true,
+    });
+  };
+
+  onClose = () => {
+    this.setState({
+      visible: false,
+    });
+  };
 
   onDownloadButtonClicked = () => {
-    html2canvas(document.body).then((canvas) => {
-      downloadCanvasAsPng(
-        canvas,
-        `${this.props.file.replace(/\s+/g, "_").toLowerCase()}.png`
-      );
-  }).catch((error) => {
-    message.error(this.props.t("general.error", { error }));
-  });
+    html2canvas(document.body)
+      .then((canvas) => {
+        downloadCanvasAsPng(
+          canvas,
+          `${this.props.file.replace(/\s+/g, "_").toLowerCase()}.png`
+        );
+      })
+      .catch((error) => {
+        message.error(this.props.t("general.error", { error }));
+      });
+  };
+
+  onCheckChanged = (checked, index) => {
+    let plots = [...this.props.plots];
+    plots[index].visible = checked;
+    this.props.updatePlots(plots);
   };
 
   render() {
-    const {
-      t,
-      description,
-      file,
-      strainsList,
-      tags,
-    } = this.props;
+    const { t, description, file, strainsList, tags, plots } = this.props;
     return (
       <Wrapper>
         <PageHeader
@@ -43,26 +72,37 @@ class HeaderPanel extends Component {
           }
           extra={
             <Space>
-            <Tooltip title={t("components.download-as-png-tooltip")}>
-              <Button
-                type="default"
-                shape="circle"
-                icon={<AiOutlineDownload />}
-                size="small"
-                onClick={() => this.onDownloadButtonClicked()}
-              />
-            </Tooltip>
-          </Space>
+              <Tooltip title={t("components.download-as-png-tooltip")}>
+                <Button
+                  type="default"
+                  shape="circle"
+                  icon={<AiOutlineDownload />}
+                  size="small"
+                  onClick={() => this.onDownloadButtonClicked()}
+                />
+              </Tooltip>
+              <Tooltip title={t("components.settings.tooltip")}>
+                <Button
+                  type="text"
+                  shape="circle"
+                  icon={<AiOutlineSetting />}
+                  size="small"
+                  onClick={this.showDrawer}
+                />
+              </Tooltip>
+            </Space>
           }
           footer={
-              <Space>
-                <span>
-                  <b>{strainsList.length}</b> {t("containers.home.strain", {count: strainsList.length})}
-                </span>
-                <span>
-                  <b>{tags.length}</b> {t("containers.home.category", {count: tags.length})}
-                </span>
-              </Space>
+            <Space>
+              <span>
+                <b>{strainsList.length}</b>{" "}
+                {t("containers.home.strain", { count: strainsList.length })}
+              </span>
+              <span>
+                <b>{tags.length}</b>{" "}
+                {t("containers.home.category", { count: tags.length })}
+              </span>
+            </Space>
           }
         >
           <div className="site-page-content">
@@ -72,6 +112,28 @@ class HeaderPanel extends Component {
               ))}
             </Space>
           </div>
+          <Drawer
+            title={t("components.settings.title")}
+            placement="right"
+            closable={true}
+            onClose={this.onClose}
+            visible={this.state.visible}
+          >
+            <Row gutter={[16, 16]}>
+              {plots.map((d, index) => (
+                <Col span={24}>
+                  <Space>
+                    <Switch
+                      onChange={(checked) => this.onCheckChanged(checked, index)}
+                      size="small"
+                      checked={d.visible}
+                    />
+                    {d.title}
+                  </Space>
+                </Col>
+              ))}
+            </Row>
+          </Drawer>
         </PageHeader>
       </Wrapper>
     );
@@ -88,8 +150,13 @@ HeaderPanel.defaultProps = {
   description: [],
   tags: [],
 };
-const mapDispatchToProps = (dispatch) => ({});
-const mapStateToProps = (state) => ({});
+const mapDispatchToProps = (dispatch) => ({
+  updatePlots: (plots) =>
+    dispatch(updatePlots(plots)),
+});
+const mapStateToProps = (state) => ({
+  plots: state.App.plots,
+});
 export default connect(
   mapStateToProps,
   mapDispatchToProps
