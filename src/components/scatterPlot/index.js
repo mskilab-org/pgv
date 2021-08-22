@@ -19,18 +19,14 @@ class ScatterPlot extends Component {
   container = null;
   dataPointsX = null;
   dataPointsY = null;
+  maxDataPointsY = null;
 
   constructor(props) {
     super(props);
-    let { results, width, height } = this.props;
+    let { results } = this.props;
     this.dataPointsY = results.getColumn("y").toArray();
+    this.maxDataPointsY = d3.max(this.dataPointsY);
     this.dataPointsX = results.getColumn("x").toArray();
-    let stageWidth = width - 2 * margins.gapX;
-    let stageHeight = height - 3 * margins.gapY;
-    this.state = {
-      stageWidth,
-      stageHeight,
-    };
   }
 
   componentDidMount() {
@@ -74,8 +70,13 @@ class ScatterPlot extends Component {
     matched = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
       outliers()
     );
-    let yExtent = [0, d3.max(matched)];
-    this.points.rescaleXY(this.props.xDomain, yExtent);
+    let yExtent = [0, d3.max(matched) || this.maxDataPointsY];
+    if (prevProps.width !== this.props.width) { console.log("calld!")
+      this.regl.destroy();
+      this.componentDidMount();
+    } else {
+      this.points.rescaleXY(this.props.xDomain, yExtent);
+    }
   }
 
   componentWillUnmount() {
@@ -85,9 +86,10 @@ class ScatterPlot extends Component {
   }
 
   updateStage() {
-    let { results, xDomain } = this.props;
-    let { stageWidth, stageHeight } = this.state;
-
+    let { results, xDomain, width, height } = this.props;
+    let stageWidth = width - 2 * margins.gapX;
+    let stageHeight = height - 3 * margins.gapY;
+   
     this.regl.poll();
     let xExtent = xDomain;
 
@@ -100,7 +102,7 @@ class ScatterPlot extends Component {
     matched = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
       outliers()
     );
-    let yExtent = [0, d3.max(matched)];
+    let yExtent = [0, d3.max(matched) || this.maxDataPointsY];
     let dataPointsColor = results.getColumn("color").toArray();
 
     this.points.load(
@@ -117,8 +119,9 @@ class ScatterPlot extends Component {
   }
 
   render() {
-    const { width, height, results, xDomain, chromoBins, title } = this.props;
-    let { stageWidth, stageHeight } = this.state;
+    const { width, height, xDomain, chromoBins, title } = this.props;
+    let stageWidth = width - 2 * margins.gapX;
+    let stageHeight = height - 3 * margins.gapY;
 
     let matched = Array.prototype.slice.call(
       this.dataPointsY.slice(
@@ -129,7 +132,7 @@ class ScatterPlot extends Component {
     matched = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
       outliers()
     );
-    let yExtent = [0, d3.max(matched)];
+    let yExtent = [0, d3.max(matched) || this.maxDataPointsY];
     const yScale = d3.scaleLinear().domain(yExtent).range([stageHeight, 0]);
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     let yTicks = yScale.ticks(margins.yTicksCount);

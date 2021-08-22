@@ -3,7 +3,7 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Switch, Button, Tooltip, message, Row, Col } from "antd";
+import { Card, Space, Button, Tooltip, message, Row, Col } from "antd";
 import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import { AiOutlineDotChart } from "react-icons/ai";

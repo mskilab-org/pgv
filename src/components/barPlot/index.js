@@ -27,10 +27,7 @@ class BarPlot extends Component {
     this.container = null;
     this.plotContainer = null;
     this.grid = null;
-    let { width, height, results, xDomain } = this.props;
-
-    let stageWidth = width - 2 * margins.gapX;
-    let stageHeight = height - 3 * margins.gapY;
+    let { results, xDomain } = this.props;
 
     let barsStruct = {
       barsY: results.getColumn("y").toArray(),
@@ -52,8 +49,6 @@ class BarPlot extends Component {
     barsStruct.domainY = [0, d3.max(filtered) || globalMaxY];
 
     this.state = {
-      stageWidth,
-      stageHeight,
       barsStruct,
       globalMaxY,
     };
@@ -80,7 +75,9 @@ class BarPlot extends Component {
       stencil: true,
     });
     this.bars = new Bars(this.regl);
-    let { stageWidth, stageHeight, barsStruct } = this.state;
+    let { barsStruct } = this.state;
+    let stageWidth = this.props.width - 2 * margins.gapX;
+    let stageHeight = this.props.height - 3 * margins.gapY;
     this.bars.load(stageWidth, stageHeight, barsStruct);
     this.bars.render();
   }
@@ -104,7 +101,12 @@ class BarPlot extends Component {
       outliers()
     );
     barsStruct.domainY = [0, d3.max(filtered) || globalMaxY];
-    this.bars.rescaleXY(this.props.xDomain, barsStruct.domainY);
+    if (prevProps.width !== this.props.width) {
+      this.regl.destroy();
+      this.componentDidMount();
+    } else {
+      this.bars.rescaleXY(this.props.xDomain, barsStruct.domainY);
+    }
   }
 
   componentWillUnmount() {
@@ -115,7 +117,10 @@ class BarPlot extends Component {
 
   render() {
     const { width, height, xDomain, chromoBins, title } = this.props;
-    let { stageWidth, stageHeight, barsStruct, globalMaxY } = this.state;
+    let { barsStruct, globalMaxY } = this.state;
+    
+    let stageWidth = width - 2 * margins.gapX;
+    let stageHeight = height - 3 * margins.gapY;
 
     let matched = Array.prototype.slice.call(
       barsStruct.barsY.slice(
