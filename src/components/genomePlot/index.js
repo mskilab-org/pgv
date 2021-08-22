@@ -200,24 +200,56 @@ class GenomePlot extends Component {
     let panel = this.panels[index];
     let newDomain = event.transform.rescaleX(panel.panelGenomeScale).domain().map(Math.floor);
     let newDomains = [...this.props.domains];
-    newDomains[index] = newDomain;
+    let selection = Object.assign([], newDomain);
+
+    let otherSelections = this.props.domains.filter((d, i) => i !== index);
+    let lowerEdge = d3.max(
+      otherSelections
+        .filter(
+          (d, i) =>
+          selection &&
+            d[0] <= selection[0] &&
+            selection[0] <= d[1]
+        )
+        .map((d, i) => d[1])
+    );
+
+    // calculate the upper allowed selection edge this brush can move
+    let upperEdge = d3.min(
+      otherSelections
+        .filter(
+          (d, i) =>
+          selection &&
+            d[1] >= selection[0] &&
+            selection[1] <= d[1]
+        )
+        .map((d, i) => d[0])
+    );
+
+    // if there is an upper edge, then set this to be the upper bound of the current selection
+    if (upperEdge !== undefined && selection[1] >= upperEdge) {
+      selection[1] = upperEdge;
+      selection[0] = d3.min([selection[0], upperEdge - 1]);
+    }
+
+    // if there is a lower edge, then set this to the be the lower bound of the current selection
+    if (lowerEdge !== undefined && selection[0] <= lowerEdge) {
+      selection[0] = lowerEdge;
+      selection[1] = d3.max([selection[1], lowerEdge + 1]);
+    }
+
+    newDomains[index] = selection;
+
     if (newDomains.toString() !== this.props.domains.toString()) {
       this.setState({ domains: newDomains }, () => {
          this.props.updateDomains(newDomains);
       })
     }
+
   }
 
   zoomEnded(event, index) {
-    let panel = this.panels[index];
-    let newDomain = event.transform.rescaleX(panel.panelGenomeScale).domain().map(Math.floor);
-    let newDomains = [...this.props.domains];
-    newDomains[index] = newDomain;
-    if (newDomains.toString() !== this.props.domains.toString()) {
-      this.setState({ domains: newDomains }, () => {
-         this.props.updateDomains(newDomains);
-      })
-    }
+    this.zooming(event, index);
   }
 
   handleMouseMove = (e) => {
