@@ -13,6 +13,7 @@ import {
   Row,
   Col,
   Switch,
+  Divider
 } from "antd";
 import { AiOutlineDownload, AiOutlineSetting } from "react-icons/ai";
 import { downloadCanvasAsPng } from "../../helpers/utility";
@@ -20,7 +21,7 @@ import html2canvas from "html2canvas";
 import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 
-const { updatePlots } = appActions;
+const { updatePlots, updateLegendPin } = appActions;
 
 class HeaderPanel extends Component {
   state = { visible: false };
@@ -56,8 +57,12 @@ class HeaderPanel extends Component {
     this.props.updatePlots(plots);
   };
 
+  onLegendPinChanged = (checked) => {
+    this.props.updateLegendPin(checked);
+  };
+
   render() {
-    const { t, description, file, strainsList, tags, plots } = this.props;
+    const { t, description, file, strainsList, tags, plots, legendPinned } = this.props;
     return (
       <Wrapper>
         <PageHeader
@@ -120,6 +125,22 @@ class HeaderPanel extends Component {
             visible={this.state.visible}
           >
             <Row gutter={[16, 16]}>
+              <Col span={24}>
+                <Divider>{t("components.settings-panel.pinning")}</Divider>
+              </Col>
+              <Col span={24}>
+                <Space>
+                  <Switch
+                    onChange={(checked) => this.onLegendPinChanged(checked)}
+                    size="small"
+                    checked={legendPinned}
+                  />
+                  {t("components.settings-panel.legend-pinned")}
+                </Space>
+              </Col>
+              <Col span={24}>
+                <Divider>{t("components.settings-panel.plot-visibility")}</Divider>
+              </Col>
               {plots.map((d, index) => (
                 <Col span={24}>
                   <Space>
@@ -153,9 +174,12 @@ HeaderPanel.defaultProps = {
 const mapDispatchToProps = (dispatch) => ({
   updatePlots: (plots) =>
     dispatch(updatePlots(plots)),
+  updateLegendPin: (legendPinned) => 
+    dispatch(updateLegendPin(legendPinned))
 });
 const mapStateToProps = (state) => ({
   plots: state.App.plots,
+  legendPinned: state.App.legendPinned
 });
 export default connect(
   mapStateToProps,

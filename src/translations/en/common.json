@@ -119,6 +119,9 @@
     },
     "settings-panel": {
       "coordinates": { "label": "Reference" },
+      "pinning": "Pin to Viewport",
+      "plot-visibility": "Plot Visibility",
+      "legend-pinned": "Reference pinned",
       "panels": {
         "label": "Visible Panels"
       }

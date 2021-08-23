@@ -41,6 +41,7 @@ class Home extends Component {
       loading,
       selectedCoordinate,
       chromoBins,
+      legendPinned,
       plots,
     } = this.props;
 
@@ -132,13 +133,17 @@ class Home extends Component {
           <div className="ant-home-content-container">
             <Row className="ant-panel-container ant-home-legend-container">
               <Col className="gutter-row" span={24}>
-                <Affix offsetTop={120}>
+                {legendPinned ? <Affix offsetTop={120}>
                   <LegendPanel
                     {...{
                       selectedCoordinate,
                     }}
                   />
-                </Affix>
+                </Affix> : <LegendPanel
+                    {...{
+                      selectedCoordinate,
+                    }}
+                  />}
               </Col>
             </Row>
             {plotComponents.map((d, i) => d)}
@@ -161,6 +166,7 @@ const mapStateToProps = (state) => ({
   datafiles: state.App.datafiles,
   chromoBins: state.App.chromoBins,
   plots: state.App.plots,
+  legendPinned: state.App.legendPinned,
   loading: state.App.loading,
 });
 export default connect(

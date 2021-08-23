@@ -6,6 +6,7 @@ const actions = {
   LAUNCH_APP_SUCCESS: "LAUNCH_APP_SUCCESS",
   LAUNCH_APP_FAILED: "LAUNCH_APP_FAILED",
   PLOTS_UPDATED: "PLOTS_UPDATED",
+  LEGEND_PINNED: "LEGEND_PINNED",
   launchApp: () => ({
     type: actions.LAUNCH_APP,
   }),
@@ -20,6 +21,10 @@ const actions = {
   updatePlots: (plots) => ({
     type: actions.PLOTS_UPDATED,
     plots
+  }),
+  updateLegendPin: (legendPinned) => ({
+    type: actions.LEGEND_PINNED,
+    legendPinned
   }),
 };
 
