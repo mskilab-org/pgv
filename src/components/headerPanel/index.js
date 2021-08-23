@@ -21,7 +21,7 @@ import html2canvas from "html2canvas";
 import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 
-const { updatePlots, updateLegendPin } = appActions;
+const { updatePlots, updateLegendPin, updateRenderOutsideViewport } = appActions;
 
 class HeaderPanel extends Component {
   state = { visible: false };
@@ -61,8 +61,12 @@ class HeaderPanel extends Component {
     this.props.updateLegendPin(checked);
   };
 
+  onRenderOutsideViewPortChanged = (checked) => {
+    this.props.updateRenderOutsideViewport(checked);
+  };
+
   render() {
-    const { t, description, file, strainsList, tags, plots, legendPinned } = this.props;
+    const { t, description, file, strainsList, tags, plots, legendPinned, renderOutsideViewPort } = this.props;
     return (
       <Wrapper>
         <PageHeader
@@ -153,6 +157,18 @@ class HeaderPanel extends Component {
                   </Space>
                 </Col>
               ))}
+              <Col span={24}>
+                <Tooltip title={t("components.settings-panel.render-outside-viewport-help")}>
+                  <Space>
+                    <Switch
+                      onChange={(checked) => this.onRenderOutsideViewPortChanged(checked)}
+                      size="small"
+                      checked={renderOutsideViewPort}
+                    />
+                    {t("components.settings-panel.render-outside-viewport")}
+                  </Space>
+                </Tooltip>
+              </Col>
             </Row>
           </Drawer>
         </PageHeader>
@@ -175,11 +191,14 @@ const mapDispatchToProps = (dispatch) => ({
   updatePlots: (plots) =>
     dispatch(updatePlots(plots)),
   updateLegendPin: (legendPinned) => 
-    dispatch(updateLegendPin(legendPinned))
+    dispatch(updateLegendPin(legendPinned)),
+  updateRenderOutsideViewport: (renderOutsideViewPort) => 
+    dispatch(updateRenderOutsideViewport(renderOutsideViewPort))
 });
 const mapStateToProps = (state) => ({
   plots: state.App.plots,
-  legendPinned: state.App.legendPinned
+  legendPinned: state.App.legendPinned,
+  renderOutsideViewPort: state.App.renderOutsideViewPort
 });
 export default connect(
   mapStateToProps,

@@ -6,7 +6,8 @@ const actions = {
   LAUNCH_APP_SUCCESS: "LAUNCH_APP_SUCCESS",
   LAUNCH_APP_FAILED: "LAUNCH_APP_FAILED",
   PLOTS_UPDATED: "PLOTS_UPDATED",
-  LEGEND_PINNED: "LEGEND_PINNED",
+  LEGEND_PIN_UPDATED: "LEGEND_PIN_UPDATED",
+  RENDER_OUTSIDE_VIEWPORT_UPDATED: "RENDER_OUTSIDE_VIEWPORT_UPDATED",
   launchApp: () => ({
     type: actions.LAUNCH_APP,
   }),
@@ -23,8 +24,12 @@ const actions = {
     plots
   }),
   updateLegendPin: (legendPinned) => ({
-    type: actions.LEGEND_PINNED,
+    type: actions.LEGEND_PIN_UPDATED,
     legendPinned
+  }),
+  updateRenderOutsideViewport: (renderOutsideViewPort) => ({
+    type: actions.RENDER_OUTSIDE_VIEWPORT_UPDATED,
+    renderOutsideViewPort
   }),
 };
 

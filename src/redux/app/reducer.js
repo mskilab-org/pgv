@@ -16,7 +16,8 @@ const initState = {
   tags: [],
   plots: [],
   geographyHash: {},
-  legendPinned: true
+  legendPinned: true,
+  renderOutsideViewPort: false
 };
 
 export default function appReducer(state = initState, action) {
@@ -37,8 +38,10 @@ export default function appReducer(state = initState, action) {
       return { ...state, geography, file: action.file, geographyHash, loading: false };
     case actions.PLOTS_UPDATED:
       return { ...state, plots: action.plots };
-    case actions.LEGEND_PINNED:
+    case actions.LEGEND_PIN_UPDATED:
       return { ...state, legendPinned: action.legendPinned };
+    case actions.RENDER_OUTSIDE_VIEWPORT_UPDATED:
+      return { ...state, renderOutsideViewPort: action.renderOutsideViewPort };
     case actions.DOMAINS_UPDATED:      
       let doms = deconflictDomains(action.domains)
       let url = new URL(decodeURI(document.location));

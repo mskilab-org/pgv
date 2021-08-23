@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Switch, Button, Tooltip, message } from "antd";
+import { Card, Space, Button, Tooltip, message } from "antd";
 import * as d3 from "d3";
 import { GiDna2 } from "react-icons/gi";
 import { AiOutlineDownload } from "react-icons/ai";
@@ -39,13 +39,14 @@ class GenomePanel extends Component {
       t,
       genome,
       title,
-      inViewport
+      inViewport,
+      renderOutsideViewPort
     } = this.props;
     if (Object.keys(genome).length < 1) return null;
     return (
       <Wrapper>
         <Card
-          style={transitionStyle(inViewport)}
+          style={transitionStyle(inViewport || renderOutsideViewPort)}
           size="small"
           title={
             <Space>
@@ -80,7 +81,7 @@ class GenomePanel extends Component {
               <ContainerDimensions>
                 {({ width, height }) => {
                   return (
-                    inViewport && <GenomePlot
+                    (inViewport || renderOutsideViewPort) && <GenomePlot
                       {...{
                         width: width - 2 * margins.padding,
                         height,
@@ -101,7 +102,9 @@ GenomePanel.propTypes = {};
 GenomePanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
 });
-const mapStateToProps = (state) => ({});
+const mapStateToProps = (state) => ({
+  renderOutsideViewPort: state.App.renderOutsideViewPort
+});
 export default connect(
   mapStateToProps,
   mapDispatchToProps

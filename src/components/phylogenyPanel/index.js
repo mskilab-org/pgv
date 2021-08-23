@@ -35,12 +35,12 @@ class PhylogenyPanel extends Component {
   };
 
   render() {
-    const { t, phylogeny, strainsList, geography, loading, title, inViewport, onNodeClick } = this.props;
+    const { t, phylogeny, strainsList, geography, loading, title, inViewport, renderOutsideViewPort, onNodeClick } = this.props;
     if (!phylogeny) return null;
     return (
       <Wrapper>
         <Card
-          style={transitionStyle(inViewport)}
+          style={transitionStyle(inViewport || renderOutsideViewPort)}
           loading={loading}
           size="small"
           title={
@@ -86,7 +86,8 @@ PhylogenyPanel.defaultProps = {
 const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
-  loading: state.App.loading
+  loading: state.App.loading,
+  renderOutsideViewPort: state.App.renderOutsideViewPort
 });
 export default connect(
   mapStateToProps,

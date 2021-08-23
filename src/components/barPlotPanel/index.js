@@ -36,14 +36,14 @@ class BarPlotPanel extends Component {
   };
 
   render() {
-    const { t, loading, data, domains, title, inViewport } = this.props;
+    const { t, loading, data, domains, title, inViewport, renderOutsideViewPort } = this.props;
     if (!data) {
       return null;
     }
     return (
       <Wrapper>
         <Card
-          style={transitionStyle(inViewport)}
+          style={transitionStyle(inViewport || renderOutsideViewPort)}
           loading={loading}
           size="small"
           title={
@@ -80,7 +80,7 @@ class BarPlotPanel extends Component {
               <ContainerDimensions>
                 {({ width, height }) => {
                   return (
-                    inViewport && (
+                    (inViewport || renderOutsideViewPort) && (
                       <Row style={{ width }} gutter={[margins.gap, 0]}>
                         {domains.map((domain, i) => (
                           <Col key={i} flex={1}>
@@ -113,6 +113,7 @@ BarPlotPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   domains: state.App.domains,
+  renderOutsideViewPort: state.App.renderOutsideViewPort
 });
 export default connect(
   mapStateToProps,

@@ -121,6 +121,8 @@
       "coordinates": { "label": "Reference" },
       "pinning": "Pin to Viewport",
       "plot-visibility": "Plot Visibility",
+      "render-outside-viewport": "Render outside the viewport",
+      "render-outside-viewport-help": "When checked, plots outside the viewport will still be rendered. This is to faciliate the full page export to PNG.",
       "legend-pinned": "Reference pinned",
       "panels": {
         "label": "Visible Panels"

@@ -36,12 +36,12 @@ class GenesPanel extends Component {
   };
 
   render() {
-    const { t, genes, inViewport, domains } = this.props;
+    const { t, genes, inViewport, renderOutsideViewPort, domains } = this.props;
     if (!genes) return null;
     return (
       <Wrapper>
         {<Card
-          style={transitionStyle(inViewport)}
+          style={transitionStyle(inViewport || renderOutsideViewPort)}
           size="small"
           title={
             <Space>
@@ -101,7 +101,8 @@ GenesPanel.propTypes = {
 GenesPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
-  domains: state.App.domains
+  domains: state.App.domains,
+  renderOutsideViewPort: state.App.renderOutsideViewPort
 });
 export default connect(
   mapStateToProps,
