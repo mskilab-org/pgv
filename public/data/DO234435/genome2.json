@@ -477,17 +477,99 @@
     {
       "chromosome": "15",
       "startPoint": 1,
-      "endPoint": 102531392,
-      "iid": 32,
-      "y": 1,
+      "endPoint": 64635401,
+      "iid": 103,
+      "y": 6,
       "annotation": "",
-      "title": "32",
+      "title": "103",
       "type": "interval",
       "strand": "*",
       "metadata": {
-        "SEM": 0.0014,
-        "cn.high": 1,
-        "cn.low": 0
+        "SEM": 0.0072
+      }
+    },
+    {
+      "chromosome": "15",
+      "startPoint": 64635402,
+      "endPoint": 77663168,
+      "iid": 104,
+      "y": 4,
+      "annotation": "del=19",
+      "title": "104",
+      "type": "interval",
+      "strand": "*",
+      "metadata": {
+        "SEM": 0.0103
+      }
+    },
+    {
+      "chromosome": "15",
+      "startPoint": 77663169,
+      "endPoint": 79060365,
+      "iid": 105,
+      "y": 6,
+      "annotation": "",
+      "title": "105",
+      "type": "interval",
+      "strand": "*",
+      "metadata": {
+        "SEM": 0.0385
+      }
+    },
+    {
+      "chromosome": "15",
+      "startPoint": 79060366,
+      "endPoint": 79060465,
+      "iid": 106,
+      "y": 11,
+      "annotation": "dup=6",
+      "title": "106",
+      "type": "interval",
+      "strand": "*",
+      "metadata": {
+        "SEM": 0.5972
+      }
+    },
+    {
+      "chromosome": "15",
+      "startPoint": 79060466,
+      "endPoint": 88424938,
+      "iid": 107,
+      "y": 6,
+      "annotation": "",
+      "title": "107",
+      "type": "interval",
+      "strand": "*",
+      "metadata": {
+        "SEM": 0.0162
+      }
+    },
+    {
+      "chromosome": "15",
+      "startPoint": 88424939,
+      "endPoint": 88425378,
+      "iid": 108,
+      "y": 5,
+      "annotation": "del=20",
+      "title": "108",
+      "type": "interval",
+      "strand": "*",
+      "metadata": {
+        "SEM": 0.9922
+      }
+    },
+    {
+      "chromosome": "15",
+      "startPoint": 88425379,
+      "endPoint": 102531392,
+      "iid": 109,
+      "y": 6,
+      "annotation": "",
+      "title": "109",
+      "type": "interval",
+      "strand": "*",
+      "metadata": {
+        "SEM": 0.0131
       }
     },
     {
@@ -2576,15 +2658,6 @@
       "metadata": {}
     },
     {
-      "cid": 102,
-      "source": -32,
-      "title": "",
-      "type": "LOOSE",
-      "weight": 1,
-      "annotation": "",
-      "metadata": {}
-    },
-    {
       "cid": 103,
       "source": -33,
       "title": "",
@@ -2855,15 +2928,6 @@
       "metadata": {}
     },
     {
-      "cid": 133,
-      "source": 32,
-      "title": "",
-      "type": "LOOSE",
-      "weight": 1,
-      "annotation": "",
-      "metadata": {}
-    },
-    {
       "cid": 134,
       "source": 33,
       "title": "",
@@ -3049,6 +3113,135 @@
       "title": "",
       "type": "LOOSE",
       "weight": 2,
+      "annotation": "",
+      "metadata": {}
+    },
+    {
+      "cid": 574,
+      "source": -103,
+      "title": "",
+      "type": "LOOSE",
+      "weight": 6,
+      "annotation": "",
+      "metadata": {}
+    },
+    {
+      "cid": 623,
+      "source": 109,
+      "title": "",
+      "type": "LOOSE",
+      "weight": 6,
+      "annotation": "",
+      "metadata": {}
+    },
+    {
+      "cid": 1320,
+      "source": 103,
+      "sink": -104,
+      "title": "REF",
+      "type": "REF",
+      "weight": 4,
+      "annotation": "",
+      "metadata": {}
+    },
+    {
+      "cid": 1330,
+      "source": 103,
+      "sink": -105,
+      "title": "DEL-like",
+      "type": "ALT",
+      "weight": 2,
+      "annotation": "del=19",
+      "metadata": {
+        "SCTG": "16:64635401(+)-16:77663169(-)__16_77640501_77665501D",
+        "QUAL": 32,
+        "AD": 0,
+        "SR": 0,
+        "GQ": "4.5",
+        "DR": 0
+      }
+    },
+    {
+      "cid": 1340,
+      "source": 104,
+      "sink": -105,
+      "title": "REF",
+      "type": "REF",
+      "weight": 4,
+      "annotation": "",
+      "metadata": {}
+    },
+    {
+      "cid": 1350,
+      "source": 105,
+      "sink": -106,
+      "title": "REF",
+      "type": "REF",
+      "weight": 6,
+      "annotation": "",
+      "metadata": {}
+    },
+    {
+      "cid": 1360,
+      "source": 106,
+      "sink": -106,
+      "title": "DUP-like",
+      "type": "ALT",
+      "weight": 5,
+      "annotation": "dup=6",
+      "metadata": {
+        "SCTG": "c_16_79037001_79062001_14C",
+        "QUAL": 23,
+        "AD": 0,
+        "SR": 0,
+        "GQ": "3.9",
+        "DR": 0
+      }
+    },
+    {
+      "cid": 1370,
+      "source": 106,
+      "sink": -107,
+      "title": "REF",
+      "type": "REF",
+      "weight": 6,
+      "annotation": "",
+      "metadata": {}
+    },
+    {
+      "cid": 1380,
+      "source": 107,
+      "sink": -108,
+      "title": "REF",
+      "type": "REF",
+      "weight": 5,
+      "annotation": "",
+      "metadata": {}
+    },
+    {
+      "cid": 1390,
+      "source": 107,
+      "sink": -109,
+      "title": "DEL-like",
+      "type": "ALT",
+      "weight": 1,
+      "annotation": "del=20",
+      "metadata": {
+        "SCTG": "c_16_88420501_88445501_57C",
+        "QUAL": 0,
+        "AD": 0,
+        "SR": 0,
+        "GQ": "8.4",
+        "DR": 0
+      }
+    },
+    {
+      "cid": 1400,
+      "source": 108,
+      "sink": -109,
+      "title": "REF",
+      "type": "REF",
+      "weight": 5,
       "annotation": "",
       "metadata": {}
     }
