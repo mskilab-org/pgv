@@ -6,8 +6,11 @@ const Wrapper = styled.div`
     padding: 0px;
     min-height: 400px;
   }
-  .konvajs-content canvas {
-    padding: 0px !important;
+  .annotated {
+    fill-opacity: 0.33;
+    stroke: #A020F0 !important;
+    stroke-width: 2 !important;
+    opacity: 1 !important;
   }
   .shape.highlighted {
     fill: white !important;

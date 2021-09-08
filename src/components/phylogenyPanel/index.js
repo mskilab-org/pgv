@@ -11,11 +11,14 @@ import { GrTree } from "react-icons/gr";
 import ContainerDimensions from "react-container-dimensions";
 import PhyloTree from "./phyloTree";
 import Wrapper from "./index.style";
+import appActions from "../../redux/app/actions";
 
 const margins = {
   padding: 0,
   minHeight: 600
 };
+
+const { selectPhylogenyNodes } = appActions;
 
 class PhylogenyPanel extends Component {
   container = null;
@@ -35,7 +38,7 @@ class PhylogenyPanel extends Component {
   };
 
   render() {
-    const { t, phylogeny, strainsList, geography, loading, title, inViewport, renderOutsideViewPort, onNodeClick } = this.props;
+    const { t, phylogeny, strainsList, geography, loading, title, inViewport, renderOutsideViewPort, selectPhylogenyNodes } = this.props;
     if (!phylogeny) return null;
     return (
       <Wrapper>
@@ -69,7 +72,7 @@ class PhylogenyPanel extends Component {
           {!phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
           {phylogeny && (<div ref={(elem) => (this.container = elem)}><ContainerDimensions>
             {({ width, height }) => {
-              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick }} />;
+              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick: selectPhylogenyNodes }} />;
             }}
           </ContainerDimensions></div>)}
         </Card>
@@ -84,6 +87,8 @@ PhylogenyPanel.defaultProps = {
   geography: []
 };
 const mapDispatchToProps = (dispatch) => ({
+  selectPhylogenyNodes: (nodeIds) =>
+    dispatch(selectPhylogenyNodes(nodeIds)),
 });
 const mapStateToProps = (state) => ({
   loading: state.App.loading,

@@ -15,6 +15,9 @@ const initState = {
   geography: [],
   tags: [],
   plots: [],
+  nodeIds: [],
+  selectedConnectionIds: [],
+  connectionsAssociations: [],
   geographyHash: {},
   legendPinned: true,
   renderOutsideViewPort: false
@@ -42,6 +45,10 @@ export default function appReducer(state = initState, action) {
       return { ...state, legendPinned: action.legendPinned };
     case actions.RENDER_OUTSIDE_VIEWPORT_UPDATED:
       return { ...state, renderOutsideViewPort: action.renderOutsideViewPort };
+    case actions.PHYLOGENY_NODES_SELECTED:
+      let connectionIds = action.nodeIds.map(nodeId => state.connectionsAssociations.filter(e => e.sample === nodeId).map(e => e.connections)).filter(d => d.length > 0).flat();
+      let selectedConnectionIds = connectionIds.length > 0 ? connectionIds.reduce((p,c) => p.filter(e => c.includes(e))) : []; 
+      return { ...state, nodeIds: action.nodeIds, selectedConnectionIds };
     case actions.DOMAINS_UPDATED:      
       let doms = deconflictDomains(action.domains)
       let url = new URL(decodeURI(document.location));

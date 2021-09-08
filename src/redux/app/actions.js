@@ -8,6 +8,7 @@ const actions = {
   PLOTS_UPDATED: "PLOTS_UPDATED",
   LEGEND_PIN_UPDATED: "LEGEND_PIN_UPDATED",
   RENDER_OUTSIDE_VIEWPORT_UPDATED: "RENDER_OUTSIDE_VIEWPORT_UPDATED",
+  PHYLOGENY_NODES_SELECTED: "PHYLOGENY_NODES_SELECTED",
   launchApp: () => ({
     type: actions.LAUNCH_APP,
   }),
@@ -31,6 +32,10 @@ const actions = {
     type: actions.RENDER_OUTSIDE_VIEWPORT_UPDATED,
     renderOutsideViewPort
   }),
+  selectPhylogenyNodes: (nodeIds) => ({
+    type: actions.PHYLOGENY_NODES_SELECTED,
+    nodeIds
+  })
 };
 
 export default actions;

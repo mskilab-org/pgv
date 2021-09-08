@@ -18,7 +18,11 @@
       "category": "category",
       "category_plural": "categories",
       "strain": "strain",
-      "strain_plural": "strains"
+      "strain_plural": "strains",
+      "node": "selected node",
+      "node_plural": "selected nodes",
+      "connection": "annotated connection",
+      "connection_plural": "annotated connections"
     },
     "data-selection": {
       "missing": {

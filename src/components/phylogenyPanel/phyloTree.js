@@ -105,9 +105,9 @@ class PhyloTree extends Component {
     this.tree.on("click", (e) => {
       var node = this.tree.getNodeAtMousePosition(e);
       if (node) {
-        this.props.onNodeClick(node.id);
         this.tree.tooltip.close();
       }
+      this.props.onNodeClick(this.tree.getSelectedNodeIds());
     });
     // to trigger the redrawing
     d3.select(".phylocanvas").node().click();
@@ -126,7 +126,8 @@ PhyloTree.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   strainsList: PropTypes.array,
-  geography: PropTypes.array
+  geography: PropTypes.array,
+  onNodeClick: PropTypes.func
 };
 PhyloTree.defaultProps = {
   strainsList: [],

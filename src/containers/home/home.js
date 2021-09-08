@@ -21,6 +21,7 @@ import appActions from "../../redux/app/actions";
 const { getDependencies, updateDomain } = appActions;
 
 class Home extends Component {
+
   scrollToPlot = (id) => {
     var element = document.getElementById(`${id}-genome`);
     if (element) {

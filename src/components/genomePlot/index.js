@@ -173,7 +173,7 @@ class GenomePlot extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return (nextProps.domains.toString() !== this.props.domains.toString()) || (nextState.tooltip.shapeId !== this.state.tooltip.shapeId);
+    return (nextProps.domains.toString() !== this.props.domains.toString()) || (nextState.tooltip.shapeId !== this.state.tooltip.shapeId) || (nextProps.selectedConnectionIds.toString() !== this.props.selectedConnectionIds.toString());
   }
 
   componentDidMount() {
@@ -285,7 +285,7 @@ class GenomePlot extends Component {
   }
 
   render() {
-    const { width, height } = this.props;
+    const { width, height, selectedConnectionIds } = this.props;
     const { stageWidth, stageHeight, tooltip } = this.state;
 
     this.updatePanels();
@@ -338,7 +338,7 @@ class GenomePlot extends Component {
                   type="connection"
                   key={d.identifier}
                   transform={d.transform}
-                  className={`connection ${d.primaryKey === tooltip.shapeId ? "highlighted" : ""}`}
+                  className={`connection ${(d.primaryKey === tooltip.shapeId) && "highlighted"} ${selectedConnectionIds.includes(d.cid) && "annotated" }`}
                   d={d.render}
                   onClick={(event) => this.handleConnectionClick(event, d)}
                   style={{ fill: d.fill, stroke: d.color, strokeWidth: d.strokeWidth, strokeDasharray: d.dash, opacity: d.opacity, pointerEvents: 'all' }}
@@ -395,7 +395,8 @@ const mapDispatchToProps = (dispatch) => ({
 const mapStateToProps = (state) => ({
   chromoBins: state.App.chromoBins,
   defaultDomain: state.App.defaultDomain,
-  domains: state.App.domains
+  domains: state.App.domains,
+  selectedConnectionIds: state.App.selectedConnectionIds
 });
 export default connect(
   mapStateToProps,

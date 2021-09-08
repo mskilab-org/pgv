@@ -71,7 +71,12 @@ function* launchApplication() {
 
     yield all([...plots.filter((d,i) => ["genes", "barplot", "scatterplot"].includes(d.type)).map(x => call(fetchArrowData, x))]);
 
-    let properties = {datafile, defaultDomain, genomeLength, datafiles: files, selectedCoordinate, tags, file, domains, chromoBins, plots};
+    const { response } = yield axios.get(`/data/${file}/connections.associations.json`)
+    .then((response) => ({ response }))
+    .catch((error) => ({ error }));
+    let connectionsAssociations = (response && response.data) || [];
+
+    let properties = {datafile, defaultDomain, genomeLength, datafiles: files, selectedCoordinate, tags, file, domains, chromoBins, plots, connectionsAssociations};
     yield put({ type: actions.LAUNCH_APP_SUCCESS, properties });
   } else {
     yield put({ type: actions.LAUNCH_APP_FAILED });
