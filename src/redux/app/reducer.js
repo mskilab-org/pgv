@@ -15,7 +15,7 @@ const initState = {
   geography: [],
   tags: [],
   plots: [],
-  nodeIds: [],
+  nodes: [],
   selectedConnectionIds: [],
   connectionsAssociations: [],
   geographyHash: {},
@@ -46,9 +46,11 @@ export default function appReducer(state = initState, action) {
     case actions.RENDER_OUTSIDE_VIEWPORT_UPDATED:
       return { ...state, renderOutsideViewPort: action.renderOutsideViewPort };
     case actions.PHYLOGENY_NODES_SELECTED:
-      let connectionIds = action.nodeIds.map(nodeId => state.connectionsAssociations.filter(e => e.sample === nodeId).map(e => e.connections)).filter(d => d.length > 0).flat();
-      let selectedConnectionIds = connectionIds.length > 0 ? connectionIds.reduce((p,c) => p.filter(e => c.includes(e))) : []; 
-      return { ...state, nodeIds: action.nodeIds, selectedConnectionIds };
+      let matchedConnectionIds = action.nodes.filter(node => node.selected).map(node => state.connectionsAssociations.filter(e => e.sample === node.id).map(e => e.connections)).filter(d => d.length > 0).flat();
+      let selectedConnectionIds = matchedConnectionIds.length > 0 ? matchedConnectionIds.reduce((p,c) => p.filter(e => c.includes(e))) : []; 
+      let unmatchedConnectionIds = action.nodes.filter(node => !node.selected).map(node => state.connectionsAssociations.filter(e => e.sample === node.id).map(e => e.connections)).filter(d => d.length > 0).flat();
+      selectedConnectionIds = unmatchedConnectionIds.length > 0 ? selectedConnectionIds.filter(x => !unmatchedConnectionIds.flat().includes(x)) : selectedConnectionIds; 
+      return { ...state, nodes: action.nodes, selectedConnectionIds };
     case actions.DOMAINS_UPDATED:      
       let doms = deconflictDomains(action.domains)
       let url = new URL(decodeURI(document.location));

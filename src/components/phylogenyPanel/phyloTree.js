@@ -22,6 +22,11 @@ class PhyloTree extends Component {
   container = null;
   tree = null;
 
+  constructor(props) {
+    super(props);
+    this.state = { selectedNodes: []};
+  }
+
   componentDidMount() {
     this.tree = Phylocanvas.createTree(this.container, {
       contextMenu: {
@@ -53,7 +58,7 @@ class PhyloTree extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {newickString, strainsList, geography} = this.props;
+    const {newickString, strainsList, geography } = this.props;
     if (!newickString) {
       return;
     }
@@ -70,6 +75,7 @@ class PhyloTree extends Component {
         }
         leaf.data = leaf.data || {};
         leaf.data.geography = geographyHash[leaf.data && leaf.data.gid] || {};
+        leaf.selected = this.state.selectedNodes.includes(leaf.id); 
         leaf.setDisplay({
           leafStyle: {
             strokeStyle: geographyHash[leaf.data.gid] ? d3.rgb(geographyHash[leaf.data && leaf.data.gid].fill).darker() : "#808080",
@@ -92,7 +98,7 @@ class PhyloTree extends Component {
     this.tree.setNodeSize(3 * pixelRatio);
     this.tree.setTextSize(8 * pixelRatio);
     this.tree.setSize((this.props.width - 2 * margins.padding) / pixelRatio, (this.tree.leaves.length * 10) / pixelRatio);
-    this.tree.draw();
+    
     this.tree.adjustForPixelRatio();
     this.tree.disableZoom = true;
     this.tree.tooltip = new PhyloTooltip(this.tree);
@@ -107,10 +113,9 @@ class PhyloTree extends Component {
       if (node) {
         this.tree.tooltip.close();
       }
-      this.props.onNodeClick(this.tree.getSelectedNodeIds());
+      this.tree.getSelectedNodeIds().toString() !== this.state.selectedNodes.toString() && this.setState({selectedNodes: this.tree.getSelectedNodeIds()}, () => {this.props.onNodeClick(this.tree.leaves.map(d => {return {id: d.id, selected: d.selected}}))});
     });
-    // to trigger the redrawing
-    d3.select(".phylocanvas").node().click();
+    this.tree.draw();
   }
 
   render() {

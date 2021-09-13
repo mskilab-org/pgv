@@ -32,9 +32,9 @@ const actions = {
     type: actions.RENDER_OUTSIDE_VIEWPORT_UPDATED,
     renderOutsideViewPort
   }),
-  selectPhylogenyNodes: (nodeIds) => ({
+  selectPhylogenyNodes: (nodes) => ({
     type: actions.PHYLOGENY_NODES_SELECTED,
-    nodeIds
+    nodes
   })
 };
 

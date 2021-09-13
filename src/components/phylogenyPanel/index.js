@@ -5,7 +5,7 @@ import handleViewport from "react-in-viewport";
 import { Card, Space, Empty, Tooltip, Switch, Button, message } from "antd";
 import { AiOutlineDownload } from "react-icons/ai";
 import * as htmlToImage from "html-to-image";
-import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
+import { downloadCanvasAsPng } from "../../helpers/utility";
 import { withTranslation } from "react-i18next";
 import { GrTree } from "react-icons/gr";
 import ContainerDimensions from "react-container-dimensions";
@@ -38,12 +38,11 @@ class PhylogenyPanel extends Component {
   };
 
   render() {
-    const { t, phylogeny, strainsList, geography, loading, title, inViewport, renderOutsideViewPort, selectPhylogenyNodes } = this.props;
+    const { t, phylogeny, strainsList, geography, loading, title, selectPhylogenyNodes, nodes } = this.props;
     if (!phylogeny) return null;
     return (
       <Wrapper>
         <Card
-          style={transitionStyle(inViewport || renderOutsideViewPort)}
           loading={loading}
           size="small"
           title={
@@ -72,7 +71,7 @@ class PhylogenyPanel extends Component {
           {!phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
           {phylogeny && (<div ref={(elem) => (this.container = elem)}><ContainerDimensions>
             {({ width, height }) => {
-              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick: selectPhylogenyNodes }} />;
+              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick: selectPhylogenyNodes, nodes }} />;
             }}
           </ContainerDimensions></div>)}
         </Card>
@@ -87,12 +86,12 @@ PhylogenyPanel.defaultProps = {
   geography: []
 };
 const mapDispatchToProps = (dispatch) => ({
-  selectPhylogenyNodes: (nodeIds) =>
-    dispatch(selectPhylogenyNodes(nodeIds)),
+  selectPhylogenyNodes: (nodes) =>
+    dispatch(selectPhylogenyNodes(nodes)),
 });
 const mapStateToProps = (state) => ({
   loading: state.App.loading,
-  renderOutsideViewPort: state.App.renderOutsideViewPort
+  nodes: state.App.nodes
 });
 export default connect(
   mapStateToProps,

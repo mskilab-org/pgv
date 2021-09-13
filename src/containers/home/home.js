@@ -22,18 +22,6 @@ const { getDependencies, updateDomain } = appActions;
 
 class Home extends Component {
 
-  scrollToPlot = (id) => {
-    var element = document.getElementById(`${id}-genome`);
-    if (element) {
-      var screenPosition = element.getBoundingClientRect();
-      this.props.scroll({
-        x: screenPosition.x,
-        y: screenPosition.top,
-        smooth: true,
-      });
-    }
-  };
-
   render() {
     const {
       t,
@@ -68,8 +56,7 @@ class Home extends Component {
               loading,
               phylogeny: d.data,
               title: d.title,
-              visible: d.visible,
-              onNodeClick: this.scrollToPlot,
+              visible: d.visible
             }}
           />
         );

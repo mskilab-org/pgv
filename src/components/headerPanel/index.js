@@ -66,7 +66,7 @@ class HeaderPanel extends Component {
   };
 
   render() {
-    const { t, description, file, strainsList, tags, plots, legendPinned, renderOutsideViewPort, nodeIds, selectedConnectionIds } = this.props;
+    const { t, description, file, strainsList, tags, plots, legendPinned, renderOutsideViewPort, nodes, selectedConnectionIds } = this.props;
     return (
       <Wrapper>
         <PageHeader
@@ -112,8 +112,8 @@ class HeaderPanel extends Component {
                 {t("containers.home.category", { count: tags.length })}
               </span>
               <span>
-                <b>{nodeIds.length}</b>{" "}
-                {t("containers.home.node", { count: nodeIds.length })}
+                <b>{nodes.filter(d => d.selected).length}</b>{" "}
+                {t("containers.home.node", { count: nodes.filter(d => d.selected).length })}
               </span>
               <span>
                 <b>{selectedConnectionIds.length}</b>{" "}
@@ -207,7 +207,7 @@ const mapStateToProps = (state) => ({
   plots: state.App.plots,
   legendPinned: state.App.legendPinned,
   renderOutsideViewPort: state.App.renderOutsideViewPort,
-  nodeIds: state.App.nodeIds, 
+  nodes: state.App.nodes, 
   selectedConnectionIds: state.App.selectedConnectionIds
 });
 export default connect(
