@@ -21,7 +21,7 @@ import html2canvas from "html2canvas";
 import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 
-const { updatePlots, updateLegendPin, updateRenderOutsideViewport } = appActions;
+const { updatePlots, updateLegendPin, updateRenderOutsideViewport, updateDomains } = appActions;
 
 class HeaderPanel extends Component {
   state = { visible: false };
@@ -115,10 +115,12 @@ class HeaderPanel extends Component {
                 <b>{nodes.filter(d => d.selected).length}</b>{" "}
                 {t("containers.home.node", { count: nodes.filter(d => d.selected).length })}
               </span>
-              <span>
+              <Button type="link" onClick={() => this.props.updateDomains([this.props.selectedConnectionsRange])} disabled={selectedConnectionIds.length < 1}>
+                <span>
                 <b>{selectedConnectionIds.length}</b>{" "}
-                {t("containers.home.connection", { count: selectedConnectionIds.length })}
-              </span>
+                  {t("containers.home.connection", { count: selectedConnectionIds.length })}
+                </span>
+              </Button>
             </Space>
           }
         >
@@ -201,14 +203,16 @@ const mapDispatchToProps = (dispatch) => ({
   updateLegendPin: (legendPinned) => 
     dispatch(updateLegendPin(legendPinned)),
   updateRenderOutsideViewport: (renderOutsideViewPort) => 
-    dispatch(updateRenderOutsideViewport(renderOutsideViewPort))
+    dispatch(updateRenderOutsideViewport(renderOutsideViewPort)),
+  updateDomains: (domains) => dispatch(updateDomains(domains))
 });
 const mapStateToProps = (state) => ({
   plots: state.App.plots,
   legendPinned: state.App.legendPinned,
   renderOutsideViewPort: state.App.renderOutsideViewPort,
   nodes: state.App.nodes, 
-  selectedConnectionIds: state.App.selectedConnectionIds
+  selectedConnectionIds: state.App.selectedConnectionIds,
+  selectedConnectionsRange: state.App.selectedConnectionsRange
 });
 export default connect(
   mapStateToProps,
