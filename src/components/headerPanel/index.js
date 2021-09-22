@@ -21,7 +21,7 @@ import html2canvas from "html2canvas";
 import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 
-const { updatePlots, updateLegendPin, updateRenderOutsideViewport, updateDomains } = appActions;
+const { updatePlots, updateLegendPin, updateGenesPin, updateRenderOutsideViewport, updateDomains } = appActions;
 
 class HeaderPanel extends Component {
   state = { visible: false };
@@ -61,12 +61,16 @@ class HeaderPanel extends Component {
     this.props.updateLegendPin(checked);
   };
 
+  onGenesPinChanged = (checked) => {
+    this.props.updateGenesPin(checked);
+  };
+
   onRenderOutsideViewPortChanged = (checked) => {
     this.props.updateRenderOutsideViewport(checked);
   };
 
   render() {
-    const { t, description, file, strainsList, tags, plots, legendPinned, renderOutsideViewPort, nodes, selectedConnectionIds } = this.props;
+    const { t, description, file, strainsList, tags, plots, legendPinned, genesPinned, renderOutsideViewPort, nodes, selectedConnectionIds } = this.props;
     return (
       <Wrapper>
         <PageHeader
@@ -153,6 +157,16 @@ class HeaderPanel extends Component {
                 </Space>
               </Col>
               <Col span={24}>
+                <Space>
+                  <Switch
+                    onChange={(checked) => this.onGenesPinChanged(checked)}
+                    size="small"
+                    checked={genesPinned}
+                  />
+                  {t("components.settings-panel.genes-pinned")}
+                </Space>
+              </Col>
+              <Col span={24}>
                 <Divider>{t("components.settings-panel.plot-visibility")}</Divider>
               </Col>
               {plots.map((d, index) => (
@@ -202,6 +216,8 @@ const mapDispatchToProps = (dispatch) => ({
     dispatch(updatePlots(plots)),
   updateLegendPin: (legendPinned) => 
     dispatch(updateLegendPin(legendPinned)),
+  updateGenesPin: (genesPinned) => 
+    dispatch(updateGenesPin(genesPinned)),
   updateRenderOutsideViewport: (renderOutsideViewPort) => 
     dispatch(updateRenderOutsideViewport(renderOutsideViewPort)),
   updateDomains: (domains) => dispatch(updateDomains(domains))
@@ -209,6 +225,7 @@ const mapDispatchToProps = (dispatch) => ({
 const mapStateToProps = (state) => ({
   plots: state.App.plots,
   legendPinned: state.App.legendPinned,
+  genesPinned: state.App.genesPinned,
   renderOutsideViewPort: state.App.renderOutsideViewPort,
   nodes: state.App.nodes, 
   selectedConnectionIds: state.App.selectedConnectionIds,

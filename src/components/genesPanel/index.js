@@ -20,6 +20,7 @@ const margins = {
 
 class GenesPanel extends Component {
   container = null;
+  genesStructure = null;
 
   onDownloadButtonClicked = () => {
     htmlToImage
@@ -38,10 +39,20 @@ class GenesPanel extends Component {
   render() {
     const { t, genes, inViewport, renderOutsideViewPort, domains } = this.props;
     if (!genes) return null;
+    if (!this.genesStructure) {
+      this.genesStructure = {
+        geneTypes: genes.getColumn("type").toArray(),
+        geneTitles: genes.getColumn("title").toArray(),
+        genesStartPoint: genes.getColumn("startPlace").toArray(),
+        genesEndPoint: genes.getColumn("endPlace").toArray(),
+        genesY: genes.getColumn("y").toArray(),
+        genesStroke: genes.getColumn("color").toArray(),
+        genesStrand: genes.getColumn("strand").toArray(),
+      }
+    }
     return (
       <Wrapper>
         {<Card
-          style={transitionStyle(inViewport || renderOutsideViewPort)}
           size="small"
           title={
             <Space>
@@ -68,12 +79,13 @@ class GenesPanel extends Component {
           </Space>}
         >
           {(<div className="ant-wrapper" ref={(elem) => (this.container = elem)}>
-            <ContainerDimensions>
+              <ContainerDimensions>
                 {({ width, height }) => {
                   return (
-                     (<Row style={{ width }} gutter={[margins.gap, 0]}>
+                    (inViewport || renderOutsideViewPort) && (
+                      <Row style={{ width }} gutter={[margins.gap, 0]}>
                         {domains.map((domain, i) => (
-                          <Col flex={1}>
+                          <Col key={i} flex={1}>
                             <GenesPlot
                             {...{
                               width:
@@ -81,7 +93,8 @@ class GenesPanel extends Component {
                               domains.length,
                               height: height,
                               xDomain: domain,
-                              genes: genes
+                              genes: genes,
+                              genesStructure: this.genesStructure
                             }}/>
                           </Col>
                         ))}

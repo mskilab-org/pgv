@@ -23,6 +23,13 @@ const Wrapper = styled.div`
       stroke-width: 2;
     }
   }
+  .ant-card-extra {
+    font-size: 11px !important;
+  }
+  .ant-card-body {
+    padding-top: 4px !important;
+    padding-bottom: 2px !important;
+  }
 `;
 
 export default Wrapper;

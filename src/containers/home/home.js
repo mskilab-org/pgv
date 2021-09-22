@@ -21,7 +21,6 @@ import appActions from "../../redux/app/actions";
 const { getDependencies, updateDomain } = appActions;
 
 class Home extends Component {
-
   render() {
     const {
       t,
@@ -31,6 +30,7 @@ class Home extends Component {
       selectedCoordinate,
       chromoBins,
       legendPinned,
+      genesPinned,
       plots,
     } = this.props;
 
@@ -56,12 +56,16 @@ class Home extends Component {
               loading,
               phylogeny: d.data,
               title: d.title,
-              visible: d.visible
+              visible: d.visible,
             }}
           />
         );
       } else if (d.type === "genes") {
-        plotComponent = (
+        plotComponent = genesPinned ? (
+          <Affix offsetTop={legendPinned ? 240 : 132}>
+            <GenesPanel {...{ genes: d.data, chromoBins, visible: false }} />
+          </Affix>
+        ) : (
           <GenesPanel {...{ genes: d.data, chromoBins, visible: false }} />
         );
       } else if (d.type === "barplot") {
@@ -121,17 +125,21 @@ class Home extends Component {
           <div className="ant-home-content-container">
             <Row className="ant-panel-container ant-home-legend-container">
               <Col className="gutter-row" span={24}>
-                {legendPinned ? <Affix offsetTop={120}>
+                {legendPinned ? (
+                  <Affix offsetTop={132}>
+                    <LegendPanel
+                      {...{
+                        selectedCoordinate,
+                      }}
+                    />
+                  </Affix>
+                ) : (
                   <LegendPanel
                     {...{
                       selectedCoordinate,
                     }}
                   />
-                </Affix> : <LegendPanel
-                    {...{
-                      selectedCoordinate,
-                    }}
-                  />}
+                )}
               </Col>
             </Row>
             {plotComponents.map((d, i) => d)}
@@ -155,6 +163,7 @@ const mapStateToProps = (state) => ({
   chromoBins: state.App.chromoBins,
   plots: state.App.plots,
   legendPinned: state.App.legendPinned,
+  genesPinned: state.App.genesPinned,
   loading: state.App.loading,
 });
 export default connect(

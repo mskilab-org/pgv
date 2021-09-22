@@ -71,7 +71,7 @@ class ScatterPlot extends Component {
       outliers()
     );
     let yExtent = [0, d3.max(matched) || this.maxDataPointsY];
-    if (prevProps.width !== this.props.width) { console.log("calld!")
+    if (prevProps.width !== this.props.width) {
       this.regl.destroy();
       this.componentDidMount();
     } else {

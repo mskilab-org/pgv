@@ -116,8 +116,8 @@ class Plot {
     const stroke = this.regl.buffer(genesStroke);
     const valY = this.regl.buffer(genesY);
     const instances = genesStartPoint.length;
-    const stageWidth = width;
-    const stageHeight = height;
+    const stageWidth =  Math.floor(width);
+    const stageHeight =  Math.floor(height);
     let color = stroke;
     this.dataBufferStroke = {stageWidth, stageHeight, startPoint, endPoint, color, valY, domainX, domainY, instances};
     color = this.regl.buffer(genesStroke.map((d,i) => i + 3000));
@@ -130,11 +130,11 @@ class Plot {
     this.dataBufferFboIntervals = {stageWidth, stageHeight, startPoint, endPoint, color, valY, domainX, domainY, instances};
   }
 
-  rescaleX(domainX) {
+  rescaleX(stageWidth, stageHeight, domainX) {
     this.dataBufferStroke.domainX = domainX;
     this.fboIntervals = this.regl.framebuffer({
-      width: this.dataBufferFboIntervals.stageWidth,
-      height: this.dataBufferFboIntervals.stageHeight,
+      width:  Math.floor(stageWidth),
+      height:  Math.floor(stageHeight),
       colorFormat: 'rgba',
     });
     this.drawFboIntervals = this.regl({...this.commonSpecIntervals, framebuffer: this.fboIntervals});

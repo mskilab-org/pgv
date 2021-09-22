@@ -7,6 +7,7 @@ const actions = {
   LAUNCH_APP_FAILED: "LAUNCH_APP_FAILED",
   PLOTS_UPDATED: "PLOTS_UPDATED",
   LEGEND_PIN_UPDATED: "LEGEND_PIN_UPDATED",
+  GENES_PIN_UPDATED: "GENES_PIN_UPDATED",
   RENDER_OUTSIDE_VIEWPORT_UPDATED: "RENDER_OUTSIDE_VIEWPORT_UPDATED",
   PHYLOGENY_NODES_SELECTED: "PHYLOGENY_NODES_SELECTED",
   launchApp: () => ({
@@ -27,6 +28,10 @@ const actions = {
   updateLegendPin: (legendPinned) => ({
     type: actions.LEGEND_PIN_UPDATED,
     legendPinned
+  }),
+  updateGenesPin: (genesPinned) => ({
+    type: actions.GENES_PIN_UPDATED,
+    genesPinned
   }),
   updateRenderOutsideViewport: (renderOutsideViewPort) => ({
     type: actions.RENDER_OUTSIDE_VIEWPORT_UPDATED,

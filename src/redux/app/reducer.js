@@ -22,6 +22,7 @@ const initState = {
   selectedConnectionsRange: [],
   geographyHash: {},
   legendPinned: true,
+  genesPinned: false,
   renderOutsideViewPort: false
 };
 
@@ -45,6 +46,8 @@ export default function appReducer(state = initState, action) {
       return { ...state, plots: action.plots };
     case actions.LEGEND_PIN_UPDATED:
       return { ...state, legendPinned: action.legendPinned };
+    case actions.GENES_PIN_UPDATED:
+        return { ...state, genesPinned: action.genesPinned };
     case actions.RENDER_OUTSIDE_VIEWPORT_UPDATED:
       return { ...state, renderOutsideViewPort: action.renderOutsideViewPort };
     case actions.PHYLOGENY_NODES_SELECTED:

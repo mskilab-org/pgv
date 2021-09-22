@@ -15,7 +15,7 @@ const margins = {
 
 class LegendPanel extends Component {
   render() {
-    const { t, selectedCoordinate } = this.props;
+    const { t } = this.props;
     return (
       <Wrapper>
         <Card
@@ -30,14 +30,13 @@ class LegendPanel extends Component {
               </span>
             </Space>
           }
-          extra={<p>{selectedCoordinate}</p>}
+          extra={<GenomeRangePanel/>}
         >          
           <ContainerDimensions>
             {({ width }) => {
               return <LegendMultiBrush className="ant-wrapper" {...{ width: (width - 2 * margins.padding) }} />;
             }}
           </ContainerDimensions>
-          <Meta description={<GenomeRangePanel/>} />
         </Card>
       </Wrapper>
     );
