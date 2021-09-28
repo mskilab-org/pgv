@@ -89,9 +89,9 @@ class PhyloTree extends Component {
     this.tree.fillCanvas = true;
     this.tree.showInternalNodeLabels = true;
     this.tree.branchColour = "#808080";
-    this.tree.selectedColour = "#FF7F0E";
+    this.tree.selectedColour = "#79b321";
     this.tree.setTreeType("rectangular");
-    this.tree.highlightColour = "#FF7F0E";
+    this.tree.highlightColour = "#79b321";
     this.tree.highlightWidth = 2;
     this.tree.padding = margins.padding;
     this.tree.zoomFactor = 1;

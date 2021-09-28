@@ -128,19 +128,41 @@ export function locationToDomains(chromoBins, loc) {
   return domains;
 }
 
-export function deconflictDomains(domains) {
-  return domains;
-  // TODO: Refactor so as to properly calculate the de-conflicting
-  // let doms = domains.sort((a,b) => d3.ascending(a[0], b[0]));
-  // doms.forEach((d, index) => {
-  //   for (let j = index + 1; j < domains.length; j++) {
-  //     if (d[0] <= domains[j][1] && d[1] >= domains[j][0]) {
-  //       d[0] = d3.min([d[0], domains[j][0] - 2]);
-  //       d[1] = d3.min([d[1], domains[j][0] - 1]);
-  //     }
-  //   }
-  // });
-  // return doms;
+export function merge(intervals) {
+  // test if there are at least 2 intervals
+  if(intervals.length <= 1) {
+    return intervals;
+  }
+
+  var stack = [];
+  var topp   = null;
+
+  // sort the intervals based on their start values
+  intervals = intervals.sort((a, b) => {return a.startPlace - b.startPlace});
+
+  // push the 1st interval into the stack
+  stack.push(intervals[0]);
+
+  // start from the next interval and merge if needed
+  for (var i = 1; i < intervals.length; i++) {
+    // get the topp element
+    topp = stack[stack.length - 1];
+
+    // if the current interval doesn't overlap with the
+    // stack topp element, push it to the stack
+    if (topp.endPlace < intervals[i].startPlace) {
+      stack.push(intervals[i]);
+    }
+    // otherwise update the end value of the topp element
+    // if end of current interval is higher
+    else if (topp.endPlace < intervals[i].endPlace) {
+      topp.endPlace = intervals[i].endPlace;
+      stack.pop();
+      stack.push(topp);
+    }
+  }
+
+  return stack;
 }
 
 export function downloadCanvasAsPng(canvas, filename) {

@@ -103,7 +103,7 @@ class GenomePlot extends Component {
       d3.max(
        this.panels.map(d => d.intervals).flat(),
         (d) => d.y
-      ) + 1,
+      ) + 3,
     ];
     this.yScale = d3
     .scaleLinear()
@@ -173,7 +173,10 @@ class GenomePlot extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return (nextProps.domains.toString() !== this.props.domains.toString()) || (nextState.tooltip.shapeId !== this.state.tooltip.shapeId) || (nextProps.selectedConnectionIds.toString() !== this.props.selectedConnectionIds.toString());
+    return (nextProps.domains.toString() !== this.props.domains.toString()) 
+    || (nextState.tooltip.shapeId !== this.state.tooltip.shapeId) 
+    || (nextProps.selectedConnectionIds.toString() !== this.props.selectedConnectionIds.toString())
+    || (nextProps.annotation !== this.props.annotation);
   }
 
   componentDidMount() {
@@ -285,11 +288,10 @@ class GenomePlot extends Component {
   }
 
   render() {
-    const { width, height, selectedConnectionIds } = this.props;
+    const { width, height, selectedConnectionIds, annotation } = this.props;
     const { stageWidth, stageHeight, tooltip } = this.state;
 
     this.updatePanels();
-
     return (
       <Wrapper className="ant-wrapper">
         <svg width={width} height={height} onMouseMove={(e) => this.handleMouseMove(e)} ref={(elem) => (this.container = elem)} >
@@ -302,6 +304,10 @@ class GenomePlot extends Component {
                 <rect x={0} y={0} width={panel.panelWidth} height={2 * panel.panelHeight} />
               </clipPath>
             )}
+            <pattern id="crossgrad" width="80" height="80" patternUnits="userSpaceOnUse">
+              <rect fill="#A020F0" x="0" y="0" width="40" height="80"/>
+              <rect fill="#79b321" x="40" y="0" width="40" height="80"/>
+            </pattern>
           </defs>
           <g transform={`translate(${[margins.gap, margins.gap]})`} >
             {this.panels.map((panel, i) => 
@@ -321,7 +327,7 @@ class GenomePlot extends Component {
                         id={d.primaryKey}
                         type="interval"
                         key={i}
-                        className={`shape ${d.primaryKey === tooltip.shapeId ? "highlighted" : ""}`}
+                        className={`shape ${(d.primaryKey === tooltip.shapeId) && "highlighted"} ${((annotation && d.annotationArray.includes(annotation)) && "annotated")}`}
                         transform={`translate(${[panel.xScale(d.startPlace), this.yScale(d.y) - 0.5 * margins.bar]})`}
                         width={panel.xScale(d.endPlace) - panel.xScale(d.startPlace)}
                         height={margins.bar}
@@ -338,7 +344,7 @@ class GenomePlot extends Component {
                   type="connection"
                   key={d.identifier}
                   transform={d.transform}
-                  className={`connection ${(d.primaryKey === tooltip.shapeId) && "highlighted"} ${selectedConnectionIds.includes(d.cid) && "annotated" }`}
+                  className={`connection ${(d.primaryKey === tooltip.shapeId) && "highlighted"} ${selectedConnectionIds.includes(d.cid) && annotation && d.annotationArray.includes(annotation) ? "cross-annotated" : ((selectedConnectionIds.includes(d.cid) && "phylogeny-annotated") || ((annotation && d.annotationArray.includes(annotation)) && "annotated"))}`}
                   d={d.render}
                   onClick={(event) => this.handleConnectionClick(event, d)}
                   style={{ fill: d.fill, stroke: d.color, strokeWidth: d.strokeWidth, strokeDasharray: d.dash, opacity: d.opacity, pointerEvents: 'all' }}
@@ -384,6 +390,7 @@ GenomePlot.propTypes = {
   title: PropTypes.string,
   chromoBins: PropTypes.object,
   updateDomain: PropTypes.func,
+  annotation: PropTypes.string
 };
 GenomePlot.defaultProps = {
   xDomain: [],

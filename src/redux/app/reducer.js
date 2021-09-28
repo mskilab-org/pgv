@@ -61,12 +61,15 @@ export default function appReducer(state = initState, action) {
         let selectedNode = selectedNodes[0];
         let selectedPlot = state.plots.find(d => d.sample === selectedNode.id && d.type === "genome");
         let selectedIntervals = selectedConnectionIds.map(e => selectedPlot.data.connections.find(d => d.cid === e)).map(d => [Math.abs(d.source), Math.abs(d.sink)].map(k => selectedPlot.data.intervals.filter(e => e.iid === k)).flat()).flat();
-        let selectedChromosomes = [...new Set(selectedIntervals.map(d => d.chromosome))];
-        selectedConnectionsRange = [d3.min([selectedChromosomes.map(d => state.chromoBins[d].startPlace)]), d3.max([selectedChromosomes.map(d => state.chromoBins[d].endPlace)])].flat();
+        selectedConnectionsRange = [
+          0.999 * d3.min(selectedIntervals.map(d => state.chromoBins[d.chromosome].startPlace + d.startPoint)), 
+          1.001 * d3.max(selectedIntervals.map(d => state.chromoBins[d.chromosome].startPlace + d.endPoint))]
+          .flat().map(d => Math.floor(d));
       }
+      
       return { ...state, nodes: action.nodes, selectedConnectionIds, selectedConnectionsRange };
     case actions.DOMAINS_UPDATED:      
-      let doms = deconflictDomains(action.domains)
+      let doms = action.domains;
       let url = new URL(decodeURI(document.location));
       let params = new URLSearchParams(url.search);
       let newURL = `${url.origin}/?file=${params.get("file")}&location=${domainsToLocation(state.chromoBins, doms)}`; 

@@ -202,12 +202,12 @@ class Connection {
           ],
           [
             d3.min([origin + Math.sign(originSign) * 25, midPointX - 5]),
-            this.yScale(midPointY + (midPointY < 10 ? 0.5 : 5)),
+            this.yScale(midPointY + (midPointY < 10 ? 0.5 : 1)),
           ],
-          [midPointX, this.yScale(midPointY + (midPointY < 10 ? 0.75 : 10))],
+          [midPointX, this.yScale(midPointY + (midPointY < 10 ? 0.75 : 2))],
           [
             d3.max([target + Math.sign(targetSign) * 25, midPointX + 5]),
-            this.yScale(midPointY + (midPointY < 10 ? 0.5 : 5)),
+            this.yScale(midPointY + (midPointY < 10 ? 0.5 : 1)),
           ],
           [
             d3.max([target + Math.sign(targetSign) * 5, midPointX + 5]),
@@ -222,13 +222,13 @@ class Connection {
           [
             origin + Math.sign(originSign) * 25,
             this.yScale(
-              originY + Math.sign(targetY - originY) * (originY < 10 ? 0.25 : 5)
+              originY + Math.sign(targetY - originY) * (originY < 10 ? 0.25 : 2)
             ),
           ],
           [
             target + Math.sign(targetSign) * 25,
             this.yScale(
-              targetY - Math.sign(targetY - originY) * (targetY < 10 ? 0.25 : 5)
+              targetY - Math.sign(targetY - originY) * (targetY < 10 ? 0.25 : 2)
             ),
           ],
           [target + Math.sign(targetSign) * 5, this.yScale(targetY)],
@@ -270,6 +270,7 @@ class Connection {
   get tooltipContent() {
     let attributes = [
       { label: "cid", value: this.cid },
+      { label: "type", value: this.type },
       { label: "title", value: this.title },
       {
         label: "Source Chromosome",

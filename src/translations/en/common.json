@@ -119,7 +119,8 @@
     "genome-panel": {
       "header": "Genome Graph",
       "interval": "interval",
-      "interval_plural": "intervals"
+      "interval_plural": "intervals",
+      "select-annotation-placeholder": "Select an annotation"
     },
     "settings-panel": {
       "coordinates": { "label": "Reference" },
