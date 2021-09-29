@@ -78,7 +78,6 @@ class GenomePanel extends Component {
   };
 
   onAnnotationSelectChange = (value) => {
-    console.log('here', value)
     this.setState({activeAnnotation: value}, () => {
       if (value !== undefined) {
         let clusters = this.changeAnnotationHandler(value);
@@ -93,11 +92,33 @@ class GenomePanel extends Component {
     let annotated = annotatedIntervals.concat(annotatedConnections);
     annotated = [...new Set(annotated)].sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
     annotated = merge(annotated);
-    return [
-      [0.999 * d3.min(annotated.map(d => d.startPlace)), 
-      1.001 * d3.max(annotated.map(d => d.endPlace))]
-      .map(d => Math.floor(d))
-      ];
+
+    let clusters = [{startPlace: annotated[0].startPlace, endPlace: annotated[0].endPlace}];
+    for (let i = 0; i < annotated.length - 1; i++) {
+      if (annotated[i + 1].startPlace - annotated[i].endPlace > margins.annotations.minDistance) {
+        clusters.push({startPlace: annotated[i + 1].startPlace, endPlace: annotated[i + 1].endPlace});
+      } else {
+        clusters[clusters.length - 1].endPlace = annotated[i + 1].endPlace;
+      }
+    }
+    while (clusters.length > margins.annotations.maxClusters) {
+      clusters = clusters.sort((a,b) => a.startPlace - b.startPlace);
+      let minDistance = Number.MAX_SAFE_INTEGER;
+      let minIndex = 0;
+      for (let i = 0; i < clusters.length - 1; i++) {
+        if ((clusters[i + 1].startPlace - clusters[i].endPlace) < minDistance) {
+          minDistance = clusters[i + 1].startPlace - clusters[i].endPlace;
+          minIndex = i;
+        }
+      }
+      clusters = clusters.slice(0,minIndex).concat([{startPlace: clusters[minIndex].startPlace, endPlace: clusters[minIndex+1].endPlace}]).concat(clusters.slice(minIndex + 2, clusters.length));
+    }
+    clusters = merge(clusters.map((d,i) => { return {
+      startPlace: d3.max([(d.startPlace - 0.66 * (d.endPlace - d.startPlace)),1]),
+      endPlace: d3.min([(d.endPlace + 0.66 * (d.endPlace - d.startPlace)), this.props.genomeLength])
+    }})).sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
+    
+    return clusters.map((d,i) => [Math.floor(d.startPlace), Math.floor(d.endPlace)]);
   }
 
   render() {

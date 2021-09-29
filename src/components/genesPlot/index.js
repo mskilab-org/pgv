@@ -245,7 +245,6 @@ class GenesPlot extends Component {
           }
         }
       }
-      //console.log(texts)
 
     return (
       <Wrapper className="ant-wrapper" margins={margins}>

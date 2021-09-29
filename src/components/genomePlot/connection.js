@@ -272,6 +272,7 @@ class Connection {
       { label: "cid", value: this.cid },
       { label: "type", value: this.type },
       { label: "title", value: this.title },
+      { label: "annotation", value: this.annotation },
       {
         label: "Source Chromosome",
         value: !this.source ? "Unknown" : this.source.interval.chromosome,

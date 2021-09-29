@@ -46,6 +46,7 @@ class Interval {
   get tooltipContent() {
     let attributes = [
       { label: "iid", value: this.iid },
+      { label: "annotation", value: this.annotation },
       { label: "Chromosome", value: this.chromosome },
       { label: "Y", value: this.y },
       { label: "Start Point", value: d3.format(",")(this.startPoint) },

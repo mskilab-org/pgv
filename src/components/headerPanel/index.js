@@ -70,7 +70,7 @@ class HeaderPanel extends Component {
   };
 
   render() {
-    const { t, description, file, strainsList, tags, plots, legendPinned, genesPinned, renderOutsideViewPort, nodes, selectedConnectionIds } = this.props;
+    const { t, description, file, strainsList, tags, plots, legendPinned, genesPinned, renderOutsideViewPort, nodes, selectedConnectionsRange, selectedConnectionIds } = this.props;
     return (
       <Wrapper>
         <PageHeader
@@ -119,7 +119,7 @@ class HeaderPanel extends Component {
                 <b>{nodes.filter(d => d.selected).length}</b>{" "}
                 {t("containers.home.node", { count: nodes.filter(d => d.selected).length })}
               </span>
-              <Button type="link" onClick={() => this.props.updateDomains([this.props.selectedConnectionsRange])} disabled={selectedConnectionIds.length < 1}>
+              <Button type="link" onClick={() => this.props.updateDomains([selectedConnectionsRange])} disabled={selectedConnectionIds.length < 1}>
                 <span>
                 <b>{selectedConnectionIds.length}</b>{" "}
                   {t("containers.home.connection", { count: selectedConnectionIds.length })}
