@@ -3,7 +3,6 @@ import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
-import outliers from "outliers";
 import Grid from "../grid/index";
 import Bars from "./bars";
 import Wrapper from "./index.style";
@@ -43,10 +42,9 @@ class BarPlot extends Component {
         barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[1])
       )
     );
-    let filtered = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
-      outliers()
-    );
-    barsStruct.domainY = [0, d3.max(filtered) || globalMaxY];
+
+    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
+    barsStruct.domainY = [0, points[Math.floor(0.01 * points.length)] || globalMaxY];
 
     this.state = {
       barsStruct,
@@ -97,10 +95,10 @@ class BarPlot extends Component {
         barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[1])
       )
     );
-    let filtered = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
-      outliers()
-    );
-    barsStruct.domainY = [0, d3.max(filtered) || globalMaxY];
+
+    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
+    barsStruct.domainY = [0, points[Math.floor(0.01 * points.length)] || globalMaxY];
+
     if (prevProps.width !== this.props.width) {
       this.regl.destroy();
       this.componentDidMount();
@@ -128,10 +126,9 @@ class BarPlot extends Component {
         barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[1])
       )
     );
-    let filtered = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
-      outliers()
-    );
-    let yExtent = [0, d3.max(filtered) || globalMaxY];
+
+    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
+    let yExtent = [0, points[Math.floor(0.01 * points.length)] || globalMaxY];
 
     const yScale = d3.scaleLinear().domain(yExtent).range([stageHeight, 0]);
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);

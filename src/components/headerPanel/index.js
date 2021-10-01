@@ -119,7 +119,7 @@ class HeaderPanel extends Component {
                 <b>{nodes.filter(d => d.selected).length}</b>{" "}
                 {t("containers.home.node", { count: nodes.filter(d => d.selected).length })}
               </span>
-              <Button type="link" onClick={() => this.props.updateDomains([selectedConnectionsRange])} disabled={selectedConnectionIds.length < 1}>
+              <Button type="link" onClick={() => this.props.updateDomains(selectedConnectionsRange)} disabled={selectedConnectionIds.length < 1}>
                 <span>
                 <b>{selectedConnectionIds.length}</b>{" "}
                   {t("containers.home.connection", { count: selectedConnectionIds.length })}

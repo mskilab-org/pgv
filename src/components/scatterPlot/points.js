@@ -53,7 +53,7 @@ class Points {
           float red = floor(color / 65536.0);
           float green = floor((color - red * 65536.0) / 256.0);
           float blue = color - red * 65536.0 - green * 256.0;
-          vColor = vec4(red / 255.0, green / 255.0, blue / 255.0, 0.88);
+          vColor = vec4(red / 255.0, green / 255.0, blue / 255.0, 1.0);
         }`,
 
       blend: {

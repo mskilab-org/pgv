@@ -1,6 +1,5 @@
 import actions from "./actions";
-import * as d3 from "d3";
-import { domainsToLocation, deconflictDomains } from "../../helpers/utility";
+import { domainsToLocation, cluster } from "../../helpers/utility";
 
 const initState = {
   loading: false,
@@ -61,10 +60,8 @@ export default function appReducer(state = initState, action) {
         let selectedNode = selectedNodes[0];
         let selectedPlot = state.plots.find(d => d.sample === selectedNode.id && d.type === "genome");
         let selectedIntervals = selectedConnectionIds.map(e => selectedPlot.data.connections.find(d => d.cid === e)).map(d => [Math.abs(d.source), Math.abs(d.sink)].map(k => selectedPlot.data.intervals.filter(e => e.iid === k)).flat()).flat();
-        selectedConnectionsRange = [
-          0.999 * d3.min(selectedIntervals.map(d => state.chromoBins[d.chromosome].startPlace + d.startPoint)), 
-          1.001 * d3.max(selectedIntervals.map(d => state.chromoBins[d.chromosome].startPlace + d.endPoint))]
-          .flat().map(d => Math.floor(d));
+        let annottated = selectedIntervals.map(d => {return {startPlace: (state.chromoBins[d.chromosome].startPlace + d.startPoint), endPlace: state.chromoBins[d.chromosome].startPlace + d.endPoint}});
+        selectedConnectionsRange = cluster(annottated, state.genomeLength);
       }
       
       return { ...state, nodes: action.nodes, selectedConnectionIds, selectedConnectionsRange };

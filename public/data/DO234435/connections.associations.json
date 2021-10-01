@@ -1,10 +1,10 @@
 [
   {
     "sample": "7E",
-    "connections": [464, 468, 602]
+    "connections": [25, 464, 468, 602]
   },
   {
     "sample": "7G",
-    "connections": [464, 468]
+    "connections": [25, 464, 468]
   }
 ]

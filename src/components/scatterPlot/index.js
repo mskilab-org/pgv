@@ -3,7 +3,6 @@ import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
-import outliers from "outliers";
 import Grid from "../grid/index";
 import Points from "./points";
 import Wrapper from "./index.style";
@@ -67,10 +66,9 @@ class ScatterPlot extends Component {
         this.dataPointsX.findIndex((d) => d >= this.props.xDomain[1])
       )
     );
-    matched = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
-      outliers()
-    );
-    let yExtent = [0, d3.max(matched) || this.maxDataPointsY];
+
+    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
+    let yExtent = [0, points[Math.floor(0.01 * points.length)] || this.maxDataPointsY];
     if (prevProps.width !== this.props.width) {
       this.regl.destroy();
       this.componentDidMount();
@@ -99,10 +97,8 @@ class ScatterPlot extends Component {
         this.dataPointsX.findIndex((d) => d >= xDomain[1])
       )
     );
-    matched = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
-      outliers()
-    );
-    let yExtent = [0, d3.max(matched) || this.maxDataPointsY];
+    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
+    let yExtent = [0, points[Math.floor(0.01 * points.length)] || this.maxDataPointsY];
     let dataPointsColor = results.getColumn("color").toArray();
 
     this.points.load(
@@ -129,10 +125,8 @@ class ScatterPlot extends Component {
         this.dataPointsX.findIndex((d) => d >= xDomain[1])
       )
     );
-    matched = [...new Set(matched.map((e) => +e.toFixed(1)))].filter(
-      outliers()
-    );
-    let yExtent = [0, d3.max(matched) || this.maxDataPointsY];
+    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
+    let yExtent = [0, points[Math.floor(0.01 * points.length)] || this.maxDataPointsY];
     const yScale = d3.scaleLinear().domain(yExtent).range([stageHeight, 0]);
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     let yTicks = yScale.ticks(margins.yTicksCount);

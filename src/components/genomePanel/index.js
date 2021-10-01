@@ -8,7 +8,7 @@ import { Card, Space, Button, Tooltip, message, Select } from "antd";
 import * as d3 from "d3";
 import { GiDna2 } from "react-icons/gi";
 import { AiOutlineDownload } from "react-icons/ai";
-import { downloadCanvasAsPng, transitionStyle, merge } from "../../helpers/utility";
+import { downloadCanvasAsPng, transitionStyle, merge, cluster } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
 import GenomePlot from "../genomePlot";
@@ -93,32 +93,7 @@ class GenomePanel extends Component {
     annotated = [...new Set(annotated)].sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
     annotated = merge(annotated);
 
-    let clusters = [{startPlace: annotated[0].startPlace, endPlace: annotated[0].endPlace}];
-    for (let i = 0; i < annotated.length - 1; i++) {
-      if (annotated[i + 1].startPlace - annotated[i].endPlace > margins.annotations.minDistance) {
-        clusters.push({startPlace: annotated[i + 1].startPlace, endPlace: annotated[i + 1].endPlace});
-      } else {
-        clusters[clusters.length - 1].endPlace = annotated[i + 1].endPlace;
-      }
-    }
-    while (clusters.length > margins.annotations.maxClusters) {
-      clusters = clusters.sort((a,b) => a.startPlace - b.startPlace);
-      let minDistance = Number.MAX_SAFE_INTEGER;
-      let minIndex = 0;
-      for (let i = 0; i < clusters.length - 1; i++) {
-        if ((clusters[i + 1].startPlace - clusters[i].endPlace) < minDistance) {
-          minDistance = clusters[i + 1].startPlace - clusters[i].endPlace;
-          minIndex = i;
-        }
-      }
-      clusters = clusters.slice(0,minIndex).concat([{startPlace: clusters[minIndex].startPlace, endPlace: clusters[minIndex+1].endPlace}]).concat(clusters.slice(minIndex + 2, clusters.length));
-    }
-    clusters = merge(clusters.map((d,i) => { return {
-      startPlace: d3.max([(d.startPlace - 0.66 * (d.endPlace - d.startPlace)),1]),
-      endPlace: d3.min([(d.endPlace + 0.66 * (d.endPlace - d.startPlace)), this.props.genomeLength])
-    }})).sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
-    
-    return clusters.map((d,i) => [Math.floor(d.startPlace), Math.floor(d.endPlace)]);
+    return cluster(annotated, this.props.genomeLength);
   }
 
   render() {
