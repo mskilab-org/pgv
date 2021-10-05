@@ -128,7 +128,8 @@ export function locationToDomains(chromoBins, loc) {
   return domains;
 }
 
-export function cluster(annotated, genomeLength, maxClusters = 6, minDistance = 100000000) {
+export function cluster(annotatedIntervals, genomeLength, maxClusters = 6, minDistance = 1e7) {
+  let annotated = annotatedIntervals.sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
   let clusters = [{startPlace: annotated[0].startPlace, endPlace: annotated[0].endPlace}];
   for (let i = 0; i < annotated.length - 1; i++) {
     if (annotated[i + 1].startPlace - annotated[i].endPlace > minDistance) {
@@ -138,7 +139,7 @@ export function cluster(annotated, genomeLength, maxClusters = 6, minDistance = 
     }
   }
   while (clusters.length > maxClusters) {
-    clusters = clusters.sort((a,b) => a.startPlace - b.startPlace);
+    clusters = clusters.sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
     let minDistance = Number.MAX_SAFE_INTEGER;
     let minIndex = 0;
     for (let i = 0; i < clusters.length - 1; i++) {
@@ -150,10 +151,9 @@ export function cluster(annotated, genomeLength, maxClusters = 6, minDistance = 
     clusters = clusters.slice(0,minIndex).concat([{startPlace: clusters[minIndex].startPlace, endPlace: clusters[minIndex+1].endPlace}]).concat(clusters.slice(minIndex + 2, clusters.length));
   }
   clusters = merge(clusters.map((d,i) => { return {
-    startPlace: d3.max([(d.startPlace - 0.66 * (d.endPlace - d.startPlace)),1]),
-    endPlace: d3.min([(d.endPlace + 0.66 * (d.endPlace - d.startPlace)), genomeLength])
+    startPlace: d3.max([(d.startPlace - 0.16 * (d.endPlace - d.startPlace)),1]),
+    endPlace: d3.min([(d.endPlace + 0.16 * (d.endPlace - d.startPlace)), genomeLength])
   }})).sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
-  
   return clusters.map((d,i) => [Math.floor(d.startPlace), Math.floor(d.endPlace)]);
 }
 

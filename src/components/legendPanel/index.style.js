@@ -24,7 +24,7 @@ const Wrapper = styled.div`
     }
   }
   .ant-card-extra {
-    font-size: 11px !important;
+    font-size: 14px !important;
   }
   .ant-card-body {
     padding-top: 4px !important;

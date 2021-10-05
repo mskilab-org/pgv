@@ -88,7 +88,7 @@ class GenomePanel extends Component {
 
   changeAnnotationHandler(value) {
     let annotatedIntervals = this.state.intervals.filter(d => d.annotationArray.includes(value)).map((d,i) => { return {startPlace: d.startPlace, endPlace: d.endPlace} });
-    let annotatedConnections = this.state.connections.filter(d => d.source && d.sink && d.annotationArray.includes(value)).map((d,i) => [{startPlace: (d.source.place - 1), endPlace: (d.source.place + 1)}, {startPlace: (d.sink.place - 1), endPlace: (d.sink.place + 1)}]).flat();
+    let annotatedConnections = this.state.connections.filter(d => d.source && d.sink && d.annotationArray.includes(value)).map((d,i) => [{startPlace: (d.source.place - 1e3), endPlace: (d.source.place + 1e3)}, {startPlace: (d.sink.place - 1e3), endPlace: (d.sink.place + 1e3)}]).flat();
     let annotated = annotatedIntervals.concat(annotatedConnections);
     annotated = [...new Set(annotated)].sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
     annotated = merge(annotated);
