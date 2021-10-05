@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import * as d3 from "d3";
+import * as outliers from "outliers";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import Grid from "../grid/index";
@@ -53,6 +54,7 @@ class ScatterPlot extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    const { xDomain } = this.props;
     this.regl.clear({
       color: [0, 0, 0, 0.0],
       depth: false,
@@ -60,15 +62,15 @@ class ScatterPlot extends Component {
 
     this.regl.poll();
 
-    let matched = Array.prototype.slice.call(
-      this.dataPointsY.slice(
-        this.dataPointsX.findIndex((d) => d >= this.props.xDomain[0]),
-        this.dataPointsX.findIndex((d) => d >= this.props.xDomain[1])
-      )
-    );
-
+    let matched = [];
+    this.dataPointsX.forEach((d,i) => {
+      if ((d >= xDomain[0]) && (d <= xDomain[1])) {
+        matched.push(this.dataPointsY[i]);
+      }
+    });
+    
     let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
-    let yExtent = [0, points[Math.floor(0.01 * points.length)] || this.maxDataPointsY];
+    let yExtent = [0, points[Math.floor(0.1 * points.length)] || this.maxDataPointsY];
     if (prevProps.width !== this.props.width) {
       this.regl.destroy();
       this.componentDidMount();
@@ -91,14 +93,15 @@ class ScatterPlot extends Component {
     this.regl.poll();
     let xExtent = xDomain;
 
-    let matched = Array.prototype.slice.call(
-      this.dataPointsY.slice(
-        this.dataPointsX.findIndex((d) => d >= xDomain[0]),
-        this.dataPointsX.findIndex((d) => d >= xDomain[1])
-      )
-    );
+    let matched = [];
+    this.dataPointsX.forEach((d,i) => {
+      if ((d >= xDomain[0]) && (d <= xDomain[1])) {
+        matched.push(this.dataPointsY[i]);
+      }
+    });
+
     let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
-    let yExtent = [0, points[Math.floor(0.01 * points.length)] || this.maxDataPointsY];
+    let yExtent = [0, points[Math.floor(0.1 * points.length)] || this.maxDataPointsY];
     let dataPointsColor = results.getColumn("color").toArray();
 
     this.points.load(
@@ -119,14 +122,16 @@ class ScatterPlot extends Component {
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
 
-    let matched = Array.prototype.slice.call(
-      this.dataPointsY.slice(
-        this.dataPointsX.findIndex((d) => d >= xDomain[0]),
-        this.dataPointsX.findIndex((d) => d >= xDomain[1])
-      )
-    );
+    let matched = [];
+    this.dataPointsX.forEach((d,i) => {
+      if ((d >= xDomain[0]) && (d <= xDomain[1])) {
+        matched.push(this.dataPointsY[i]);
+      }
+    });
+
     let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
-    let yExtent = [0, points[Math.floor(0.01 * points.length)] || this.maxDataPointsY];
+    let yExtent = [0, points[Math.floor(0.1 * points.length)] || this.maxDataPointsY];
+    
     const yScale = d3.scaleLinear().domain(yExtent).range([stageHeight, 0]);
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     let yTicks = yScale.ticks(margins.yTicksCount);

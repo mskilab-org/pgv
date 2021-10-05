@@ -64,7 +64,6 @@ export default function appReducer(state = initState, action) {
         let annottated = selectedIntervals.map(d => {return {startPlace: d3.max([(state.chromoBins[d.chromosome].startPlace + d.startPoint - 1e3), 1]), endPlace: d3.min([state.chromoBins[d.chromosome].startPlace + d.endPoint + 1e3, state.genomeLength])}});
         selectedConnectionsRange = cluster(annottated, state.genomeLength);
       }
-      
       return { ...state, nodes: action.nodes, selectedConnectionIds, selectedConnectionsRange };
     case actions.DOMAINS_UPDATED:      
       let doms = action.domains;
