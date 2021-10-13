@@ -10,7 +10,7 @@ import { measureText, guid, k_combinations } from "../../helpers/utility";
 import Grid from "../grid/index";
 import appActions from "../../redux/app/actions";
 
-const { updateDomains } = appActions;
+const { updateDomains, selectPhylogenyNodes } = appActions;
 
 const margins = {
   gap: 24,
@@ -284,6 +284,8 @@ class GenomePlot extends Component {
       let newDomains = [...this.props.domains];
       newDomains.push(newDomain);
       this.props.updateDomains(newDomains);
+    } else {
+      this.props.selectPhylogenyNodes(this.props.connectionsAssociations.map((d,i) => {return {id: d.sample, selected: d.connections.includes(connection.cid)}}));
     }
   }
 
@@ -397,13 +399,16 @@ GenomePlot.defaultProps = {
   defaultDomain: [],
 };
 const mapDispatchToProps = (dispatch) => ({
-  updateDomains: (domains) => dispatch(updateDomains(domains))
+  updateDomains: (domains) => dispatch(updateDomains(domains)),
+  selectPhylogenyNodes: (nodes) =>
+  dispatch(selectPhylogenyNodes(nodes)),
 });
 const mapStateToProps = (state) => ({
   chromoBins: state.App.chromoBins,
   defaultDomain: state.App.defaultDomain,
   domains: state.App.domains,
-  selectedConnectionIds: state.App.selectedConnectionIds
+  selectedConnectionIds: state.App.selectedConnectionIds,
+  connectionsAssociations: state.App.connectionsAssociations
 });
 export default connect(
   mapStateToProps,

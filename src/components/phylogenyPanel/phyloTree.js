@@ -62,6 +62,13 @@ class PhyloTree extends Component {
     if (!newickString) {
       return;
     }
+
+    let selectedNodes = this.props.nodes.filter(d => d.selected).map(d => d.id);
+    let previousSelectedNodes = prevProps.nodes.filter(d => d.selected).map(d => d.id);
+    if (previousSelectedNodes.toString() !== selectedNodes.toString()) {
+      this.setState({selectedNodes});
+    }
+
     const pixelRatio = window.devicePixelRatio || 2.0;
     const geographyHash = {};
     geography.forEach((d, i) => (geographyHash[d.id] = d));
@@ -85,6 +92,7 @@ class PhyloTree extends Component {
         });
       });
     });
+
     this.tree.lineWidth = 1.2 * pixelRatio;
     this.tree.fillCanvas = true;
     this.tree.showInternalNodeLabels = true;
@@ -109,10 +117,7 @@ class PhyloTree extends Component {
       }
     });
     this.tree.on("click", (e) => {
-      var node = this.tree.getNodeAtMousePosition(e);
-      if (node) {
-        this.tree.tooltip.close();
-      }
+      this.tree.tooltip.close();
       this.tree.getSelectedNodeIds().toString() !== this.state.selectedNodes.toString() && this.setState({selectedNodes: this.tree.getSelectedNodeIds()}, () => {this.props.onNodeClick(this.tree.leaves.map(d => {return {id: d.id, selected: d.selected}}))});
     });
     this.tree.draw();

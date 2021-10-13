@@ -92,7 +92,7 @@ export default function appReducer(state = initState, action) {
           : selectedConnectionIds;
       let selectedNodes = action.nodes.filter((node) => node.selected);
       let selectedConnectionsRange = [];
-      if (selectedNodes.length > 0) {
+      if (selectedNodes.length > 0 && selectedConnectionIds.length > 0) {
         let selectedNode = selectedNodes[0];
         let selectedPlot = state.plots.find(
           (d) => d.sample === selectedNode.id && d.type === "genome"
