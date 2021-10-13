@@ -130,6 +130,7 @@
       "render-outside-viewport-help": "When checked, plots outside the viewport will still be rendered. This is to faciliate the full page export to PNG.",
       "legend-pinned": "Reference Panel pinned",
       "genes-pinned": "Genes Panel pinned",
+      "phylogeny-pinned": "Phylogeny Panel pinned",
       "panels": {
         "label": "Visible Panels"
       }

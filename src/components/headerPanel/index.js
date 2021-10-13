@@ -13,15 +13,28 @@ import {
   Row,
   Col,
   Switch,
-  Divider
+  Divider,
+  Menu,
+  Dropdown,
 } from "antd";
-import { AiOutlineDownload, AiOutlineSetting } from "react-icons/ai";
+import {
+  AiOutlineDownload,
+  AiOutlineSetting,
+  AiOutlineDown,
+} from "react-icons/ai";
 import { downloadCanvasAsPng } from "../../helpers/utility";
 import html2canvas from "html2canvas";
 import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 
-const { updatePlots, updateLegendPin, updateGenesPin, updateRenderOutsideViewport, updateDomains } = appActions;
+const {
+  updatePlots,
+  updateLegendPin,
+  updateGenesPin,
+  updatePhylogenyPin,
+  updateRenderOutsideViewport,
+  updateDomains,
+} = appActions;
 
 class HeaderPanel extends Component {
   state = { visible: false };
@@ -65,12 +78,30 @@ class HeaderPanel extends Component {
     this.props.updateGenesPin(checked);
   };
 
+  onPhylogenyPinChanged = (checked) => {
+    this.props.updatePhylogenyPin(checked);
+  };
+
   onRenderOutsideViewPortChanged = (checked) => {
     this.props.updateRenderOutsideViewport(checked);
   };
 
   render() {
-    const { t, description, file, strainsList, tags, plots, legendPinned, genesPinned, renderOutsideViewPort, nodes, selectedConnectionsRange, selectedConnectionIds } = this.props;
+    const {
+      t,
+      description,
+      file,
+      strainsList,
+      tags,
+      plots,
+      legendPinned,
+      genesPinned,
+      phylogenyPinned,
+      renderOutsideViewPort,
+      nodes,
+      selectedConnectionsRange,
+      selectedConnectionIds,
+    } = this.props;
     return (
       <Wrapper>
         <PageHeader
@@ -81,13 +112,65 @@ class HeaderPanel extends Component {
               {description.map((d) => (
                 <span key={d}>{d}</span>
               ))}
+              <span>
+                <b>{strainsList.length}</b>{" "}
+                {t("containers.home.strain", { count: strainsList.length })}
+              </span>
+              <Dropdown
+                overlay={
+                  <Menu>
+                    {tags.map((d, i) => (
+                      <Menu.Item className="no-click-item" key={d}>
+                        {d}
+                      </Menu.Item>
+                    ))}
+                  </Menu>
+                }
+              >
+                <a
+                  className="ant-dropdown-link"
+                  onClick={(e) => e.preventDefault()}
+                  href="/#"
+                >
+                  <Space>
+                    <span className="aligned-center" style={{}}>
+                      <span>
+                        <b>{tags.length}</b>{" "}
+                        {t("containers.home.category", { count: tags.length })}
+                      </span>
+                      &nbsp;
+                      <AiOutlineDown />
+                    </span>
+                  </Space>
+                </a>
+              </Dropdown>
+              <span>
+                <b>{nodes.filter((d) => d.selected).length}</b>{" "}
+                {t("containers.home.node", {
+                  count: nodes.filter((d) => d.selected).length,
+                })}
+              </span>
+              <Button
+                type="link"
+                onClick={() =>
+                  this.props.updateDomains(selectedConnectionsRange)
+                }
+                disabled={selectedConnectionIds.length < 1}
+              >
+                <span>
+                  <b>{selectedConnectionIds.length}</b>{" "}
+                  {t("containers.home.connection", {
+                    count: selectedConnectionIds.length,
+                  })}
+                </span>
+              </Button>
             </Space>
           }
           extra={
             <Space>
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
-                  type="default"
+                  type="text"
                   shape="circle"
                   icon={<AiOutlineDownload />}
                   size="small"
@@ -105,36 +188,7 @@ class HeaderPanel extends Component {
               </Tooltip>
             </Space>
           }
-          footer={
-            <Space>
-              <span>
-                <b>{strainsList.length}</b>{" "}
-                {t("containers.home.strain", { count: strainsList.length })}
-              </span>
-              <span>
-                <b>{tags.length}</b>{" "}
-                {t("containers.home.category", { count: tags.length })}
-              </span>
-              <span>
-                <b>{nodes.filter(d => d.selected).length}</b>{" "}
-                {t("containers.home.node", { count: nodes.filter(d => d.selected).length })}
-              </span>
-              <Button type="link" onClick={() => this.props.updateDomains(selectedConnectionsRange)} disabled={selectedConnectionIds.length < 1}>
-                <span>
-                <b>{selectedConnectionIds.length}</b>{" "}
-                  {t("containers.home.connection", { count: selectedConnectionIds.length })}
-                </span>
-              </Button>
-            </Space>
-          }
         >
-          <div className="site-page-content">
-            <Space wrap={true}>
-              {tags.map((d, i) => (
-                <Tag key={i}>{d}</Tag>
-              ))}
-            </Space>
-          </div>
           <Drawer
             title={t("components.settings.title")}
             placement="right"
@@ -167,13 +221,27 @@ class HeaderPanel extends Component {
                 </Space>
               </Col>
               <Col span={24}>
-                <Divider>{t("components.settings-panel.plot-visibility")}</Divider>
+                <Space>
+                  <Switch
+                    onChange={(checked) => this.onPhylogenyPinChanged(checked)}
+                    size="small"
+                    checked={phylogenyPinned}
+                  />
+                  {t("components.settings-panel.phylogeny-pinned")}
+                </Space>
+              </Col>
+              <Col span={24}>
+                <Divider>
+                  {t("components.settings-panel.plot-visibility")}
+                </Divider>
               </Col>
               {plots.map((d, index) => (
                 <Col span={24}>
                   <Space>
                     <Switch
-                      onChange={(checked) => this.onCheckChanged(checked, index)}
+                      onChange={(checked) =>
+                        this.onCheckChanged(checked, index)
+                      }
                       size="small"
                       checked={d.visible}
                     />
@@ -182,10 +250,16 @@ class HeaderPanel extends Component {
                 </Col>
               ))}
               <Col span={24}>
-                <Tooltip title={t("components.settings-panel.render-outside-viewport-help")}>
+                <Tooltip
+                  title={t(
+                    "components.settings-panel.render-outside-viewport-help"
+                  )}
+                >
                   <Space>
                     <Switch
-                      onChange={(checked) => this.onRenderOutsideViewPortChanged(checked)}
+                      onChange={(checked) =>
+                        this.onRenderOutsideViewPortChanged(checked)
+                      }
                       size="small"
                       checked={renderOutsideViewPort}
                     />
@@ -212,24 +286,23 @@ HeaderPanel.defaultProps = {
   tags: [],
 };
 const mapDispatchToProps = (dispatch) => ({
-  updatePlots: (plots) =>
-    dispatch(updatePlots(plots)),
-  updateLegendPin: (legendPinned) => 
-    dispatch(updateLegendPin(legendPinned)),
-  updateGenesPin: (genesPinned) => 
-    dispatch(updateGenesPin(genesPinned)),
-  updateRenderOutsideViewport: (renderOutsideViewPort) => 
+  updatePlots: (plots) => dispatch(updatePlots(plots)),
+  updateLegendPin: (legendPinned) => dispatch(updateLegendPin(legendPinned)),
+  updateGenesPin: (genesPinned) => dispatch(updateGenesPin(genesPinned)),
+  updatePhylogenyPin: (phylogenyPinned) => dispatch(updatePhylogenyPin(phylogenyPinned)),
+  updateRenderOutsideViewport: (renderOutsideViewPort) =>
     dispatch(updateRenderOutsideViewport(renderOutsideViewPort)),
-  updateDomains: (domains) => dispatch(updateDomains(domains))
+  updateDomains: (domains) => dispatch(updateDomains(domains)),
 });
 const mapStateToProps = (state) => ({
   plots: state.App.plots,
   legendPinned: state.App.legendPinned,
   genesPinned: state.App.genesPinned,
+  phylogenyPinned: state.App.phylogenyPinned,
   renderOutsideViewPort: state.App.renderOutsideViewPort,
-  nodes: state.App.nodes, 
+  nodes: state.App.nodes,
   selectedConnectionIds: state.App.selectedConnectionIds,
-  selectedConnectionsRange: state.App.selectedConnectionsRange
+  selectedConnectionsRange: state.App.selectedConnectionsRange,
 });
 export default connect(
   mapStateToProps,

@@ -8,6 +8,13 @@ const Wrapper = styled.div`
     .site-page-content {
       margin-bottom: 24px;
     }
+    .aligned-center {
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+  .ant-dropdown-menu-item, .ant-dropdown-menu-submenu-title {
+    cursor: default !important;
   }
 `;
 

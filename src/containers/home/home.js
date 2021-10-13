@@ -31,6 +31,7 @@ class Home extends Component {
       chromoBins,
       legendPinned,
       genesPinned,
+      phylogenyPinned,
       plots,
     } = this.props;
 
@@ -50,7 +51,18 @@ class Home extends Component {
           />
         );
       } else if (d.type === "phylogeny") {
-        plotComponent = (
+        plotComponent = phylogenyPinned ? (
+          <Affix offsetTop={genesPinned ? (legendPinned ? 355 : 248) : (legendPinned ? 162 : 54)}>
+            <PhylogenyPanel
+              {...{
+                loading,
+                phylogeny: d.data,
+                title: d.title,
+                visible: d.visible,
+              }}
+            />
+          </Affix>
+        ) : (
           <PhylogenyPanel
             {...{
               loading,
@@ -62,7 +74,7 @@ class Home extends Component {
         );
       } else if (d.type === "genes") {
         plotComponent = genesPinned ? (
-          <Affix offsetTop={legendPinned ? 240 : 132}>
+          <Affix offsetTop={legendPinned ? 162 : 54}>
             <GenesPanel {...{ genes: d.data, chromoBins, visible: false }} />
           </Affix>
         ) : (
@@ -126,7 +138,7 @@ class Home extends Component {
             <Row className="ant-panel-container ant-home-legend-container">
               <Col className="gutter-row" span={24}>
                 {legendPinned ? (
-                  <Affix offsetTop={132}>
+                  <Affix offsetTop={54}>
                     <LegendPanel
                       {...{
                         selectedCoordinate,
@@ -164,6 +176,7 @@ const mapStateToProps = (state) => ({
   plots: state.App.plots,
   legendPinned: state.App.legendPinned,
   genesPinned: state.App.genesPinned,
+  phylogenyPinned: state.App.phylogenyPinned,
   loading: state.App.loading,
 });
 export default connect(

@@ -114,11 +114,11 @@ class Connection {
       this.touchPlaceY = this.source.y;
       this.touchPlaceSign = this.source.sign;
       this.color = "#000";
-      this.fill = d3.rgb(this.sink.interval.color).darker(1);
+      this.fill = d3.rgb(this.sink.interval.color);
       this.dash = null;
       this.stroke = "#000";
       this.strokeWidth = 1;
-      this.opacity = 0.375;
+      this.opacity = 1.0;
       this.otherEnd = this.sink;
     } else {
       this.sink.scale = fragment.scale;
@@ -129,11 +129,11 @@ class Connection {
       this.touchPlaceY = this.sink.y;
       this.touchPlaceSign = this.sink.sign;
       this.color = "#000";
-      this.fill = d3.rgb(this.source.interval.color).darker(1);
+      this.fill = d3.rgb(this.source.interval.color);
       this.stroke = "#000";
       this.strokeWidth = 1;
       this.dash = null;
-      this.opacity = 0.375;
+      this.opacity = 1.0;
       this.otherEnd = this.source;
     }
     this.touchScale = fragment.scale;

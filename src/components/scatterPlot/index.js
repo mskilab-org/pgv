@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import * as d3 from "d3";
-import * as outliers from "outliers";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import Grid from "../grid/index";
