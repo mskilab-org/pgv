@@ -50,7 +50,9 @@ export default function appReducer(state = initState, action) {
         loading: false,
       };
     case actions.PLOTS_UPDATED:
-      return { ...state, plots: action.plots };
+      let genesPinnedState = action.plots.find(d => d.type === "genes").visible ? state.genesPinned : false;
+      let phylogenyPinnedState = action.plots.find(d => d.type === "phylogeny").visible ? state.phylogenyPinned : false;
+      return { ...state, plots: action.plots, genesPinned: genesPinnedState, phylogenyPinned: phylogenyPinnedState};
     case actions.LEGEND_PIN_UPDATED:
       return { ...state, legendPinned: action.legendPinned };
     case actions.GENES_PIN_UPDATED:

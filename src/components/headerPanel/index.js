@@ -213,6 +213,7 @@ class HeaderPanel extends Component {
               <Col span={24}>
                 <Space>
                   <Switch
+                    disabled={!plots.find(d => d.type === "genes").visible}
                     onChange={(checked) => this.onGenesPinChanged(checked)}
                     size="small"
                     checked={genesPinned}
@@ -223,6 +224,7 @@ class HeaderPanel extends Component {
               <Col span={24}>
                 <Space>
                   <Switch
+                    disabled={!plots.find(d => d.type === "phylogeny").visible}
                     onChange={(checked) => this.onPhylogenyPinChanged(checked)}
                     size="small"
                     checked={phylogenyPinned}
