@@ -5,9 +5,9 @@ import { AiFillBoxPlot } from "react-icons/ai";
 import ContainerDimensions from "react-container-dimensions";
 import { Card, Space } from "antd";
 import { connect } from "react-redux";
-import Legend from "./legend";
 import Wrapper from "./index.style";
 import GenomeRangePanel from "./genomeRangePanel";
+import LegendMultiBrush from "./legend-multi-brush";
 const { Meta } = Card;
 const margins = {
   padding: 12
@@ -15,7 +15,7 @@ const margins = {
 
 class LegendPanel extends Component {
   render() {
-    const { t, selectedCoordinate } = this.props;
+    const { t } = this.props;
     return (
       <Wrapper>
         <Card
@@ -30,14 +30,13 @@ class LegendPanel extends Component {
               </span>
             </Space>
           }
-          extra={<p>{selectedCoordinate}</p>}
+          extra={<GenomeRangePanel/>}
         >          
           <ContainerDimensions>
             {({ width }) => {
-              return <Legend className="ant-wrapper" {...{ width: (width - 2 * margins.padding) }} />;
+              return <LegendMultiBrush className="ant-wrapper" {...{ width: (width - 2 * margins.padding) }} />;
             }}
           </ContainerDimensions>
-          <Meta description={<GenomeRangePanel/>} />
         </Card>
       </Wrapper>
     );

@@ -4,10 +4,9 @@ const Wrapper = styled.div`
   .ant-wrapper {
     background: white;
     padding: 0px;
-    min-height: 400px;
   }
   div.genome-plot canvas {
-    margin: ${props => props.margins.gap}px !important;
+    margin: ${props => props.margins.gapY}px ${props => props.margins.gapX}px !important;
     padding: 0px !important;
   }
   svg.plot-container {

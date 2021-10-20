@@ -11,6 +11,7 @@ import {
 import { LoadingOutlined } from "@ant-design/icons";
 import TopbarWrapper from "./topbar.style";
 import { siteConfig } from "../../settings";
+import { domainsToLocation } from "../../helpers/utility";
 import logo from "../../assets/images/logo.png";
 
 const { Header } = Layout;
@@ -38,8 +39,8 @@ class Topbar extends Component {
 
   render() {
     const { currentPage } = this.state;
-    const { t, file, domain, loading } = this.props;
-    let params = file && `?file=${file}&from=${domain[0]}&to=${domain[1]}`;
+    const { t, file, domains, chromoBins, loading } = this.props;
+    let params = file && `?file=${file}&location=${domainsToLocation(chromoBins, domains)}`;
 
     return (
       <TopbarWrapper>
@@ -116,7 +117,8 @@ const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
   file: state.App.file,
-  domain: state.App.domain,
+  domains: state.App.domains,
+  chromoBins: state.App.chromoBins,
   loading: state.App.loading
 });
 export default connect(

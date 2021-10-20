@@ -18,7 +18,11 @@
       "category": "category",
       "category_plural": "categories",
       "strain": "strain",
-      "strain_plural": "strains"
+      "strain_plural": "strains",
+      "node": "selected sample",
+      "node_plural": "selected samples",
+      "connection": "annotated connection",
+      "connection_plural": "annotated connections"
     },
     "data-selection": {
       "missing": {
@@ -31,6 +35,10 @@
   "components": {
     "visibility-switch-tooltip": "Toggle visibility",
     "download-as-png-tooltip": "Download as PNG",
+    "settings": {
+      "tooltip": "Settings",
+      "title": "Settings Panel"
+    },
     "filters-panel": {
       "header": "Search Filters",
       "tags-section": {
@@ -111,10 +119,18 @@
     "genome-panel": {
       "header": "Genome Graph",
       "interval": "interval",
-      "interval_plural": "intervals"
+      "interval_plural": "intervals",
+      "select-annotation-placeholder": "Select an annotation"
     },
     "settings-panel": {
       "coordinates": { "label": "Reference" },
+      "pinning": "Pin to Viewport",
+      "plot-visibility": "Plot Visibility",
+      "render-outside-viewport": "Render outside the viewport",
+      "render-outside-viewport-help": "When checked, plots outside the viewport will still be rendered. This is to faciliate the full page export to PNG.",
+      "legend-pinned": "Reference Panel pinned",
+      "genes-pinned": "Genes Panel pinned",
+      "phylogeny-pinned": "Phylogeny Panel pinned",
       "panels": {
         "label": "Visible Panels"
       }

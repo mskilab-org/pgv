@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Tooltip, Switch, Button, message } from "antd";
+import { Card, Space, Tooltip, Switch, Button, message, Row, Col } from "antd";
 import * as d3 from "d3";
 import { AiOutlineDownload } from "react-icons/ai";
 import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
@@ -15,18 +15,12 @@ import GenesPlot from "../genesPlot";
 
 const margins = {
   padding: 0,
+  gap: 0,
 };
 
 class GenesPanel extends Component {
   container = null;
-
-  state = {
-    checked: this.props.visible,
-  };
-
-  onSwitchChange = (checked) => {
-    this.setState({ checked });
-  };
+  genesStructure = null;
 
   onDownloadButtonClicked = () => {
     htmlToImage
@@ -43,13 +37,22 @@ class GenesPanel extends Component {
   };
 
   render() {
-    const { t, genes, inViewport } = this.props;
-    const { checked } = this.state;
+    const { t, genes, inViewport, renderOutsideViewPort, domains } = this.props;
     if (!genes) return null;
+    if (!this.genesStructure) {
+      this.genesStructure = {
+        geneTypes: genes.getColumn("type").toArray(),
+        geneTitles: genes.getColumn("title").toArray(),
+        genesStartPoint: genes.getColumn("startPlace").toArray(),
+        genesEndPoint: genes.getColumn("endPlace").toArray(),
+        genesY: genes.getColumn("y").toArray(),
+        genesStroke: genes.getColumn("color").toArray(),
+        genesStrand: genes.getColumn("strand").toArray(),
+      }
+    }
     return (
       <Wrapper>
         {<Card
-          style={transitionStyle(inViewport)}
           size="small"
           title={
             <Space>
@@ -64,13 +67,6 @@ class GenesPanel extends Component {
           }
           extra={
             <Space>
-            <Tooltip title={t("components.visibility-switch-tooltip")}>
-              <Switch
-                size="small"
-                checked={checked}
-                onClick={(e) => this.onSwitchChange(e)}
-              />
-            </Tooltip>
             <Tooltip title={t("components.download-as-png-tooltip")}>
               <Button
                 type="default"
@@ -82,20 +78,31 @@ class GenesPanel extends Component {
             </Tooltip>
           </Space>}
         >
-          {checked && (<div className="ant-wrapper" ref={(elem) => (this.container = elem)}>
-            <ContainerDimensions>
-              {({ width, height }) => {
-                return (
-                   <GenesPlot
-                    {...{
-                      width: width - 2 * margins.padding,
-                      height: height,
-                      genes: genes
-                    }}
-                  />
-                );
-              }}
-            </ContainerDimensions>
+          {(<div className="ant-wrapper" ref={(elem) => (this.container = elem)}>
+              <ContainerDimensions>
+                {({ width, height }) => {
+                  return (
+                    (inViewport || renderOutsideViewPort) && (
+                      <Row style={{ width }} gutter={[margins.gap, 0]}>
+                        {domains.map((domain, i) => (
+                          <Col key={i} flex={1}>
+                            <GenesPlot
+                            {...{
+                              width:
+                              (width - (domains.length - 1) * margins.gap) /
+                              domains.length,
+                              height: height,
+                              xDomain: domain,
+                              genes: genes,
+                              genesStructure: this.genesStructure
+                            }}/>
+                          </Col>
+                        ))}
+                      </Row>
+                    )
+                  );
+                }}
+              </ContainerDimensions>
           </div>)}
         </Card>}
       </Wrapper>
@@ -107,6 +114,8 @@ GenesPanel.propTypes = {
 GenesPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
+  domains: state.App.domains,
+  renderOutsideViewPort: state.App.renderOutsideViewPort
 });
 export default connect(
   mapStateToProps,

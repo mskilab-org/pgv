@@ -3,14 +3,14 @@ import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
-import outliers from "outliers";
 import Grid from "../grid/index";
 import Points from "./points";
 import Wrapper from "./index.style";
 
 const margins = {
-  gap: 24,
-  yTicksCount: 10
+  gapX: 24,
+  gapY: 24,
+  yTicksCount: 10,
 };
 
 class ScatterPlot extends Component {
@@ -18,18 +18,14 @@ class ScatterPlot extends Component {
   container = null;
   dataPointsX = null;
   dataPointsY = null;
+  maxDataPointsY = null;
 
   constructor(props) {
     super(props);
-    let { results, width, height } = this.props;
+    let { results } = this.props;
     this.dataPointsY = results.getColumn("y").toArray();
+    this.maxDataPointsY = d3.max(this.dataPointsY);
     this.dataPointsX = results.getColumn("x").toArray();
-    let stageWidth = width - 2 * margins.gap;
-    let stageHeight = height - 3 * margins.gap;
-    this.state = {
-      stageWidth,
-      stageHeight
-    }
   }
 
   componentDidMount() {
@@ -37,7 +33,12 @@ class ScatterPlot extends Component {
       extensions: ["ANGLE_instanced_arrays"],
       container: this.container,
       pixelRatio: window.devicePixelRatio || 1.5,
-      attributes: { antialias: true, depth: false, stencil: false, preserveDrawingBuffer: true },
+      attributes: {
+        antialias: true,
+        depth: false,
+        stencil: false,
+        preserveDrawingBuffer: true,
+      },
     });
 
     regl.cache = {};
@@ -52,6 +53,7 @@ class ScatterPlot extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    const { xDomain } = this.props;
     this.regl.clear({
       color: [0, 0, 0, 0.0],
       depth: false,
@@ -59,10 +61,21 @@ class ScatterPlot extends Component {
 
     this.regl.poll();
 
-    let matched =  Array.prototype.slice.call(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= this.props.xDomain[0]), this.dataPointsX.findIndex(d => d >= this.props.xDomain[1])));
-    matched = [...new Set(matched.map(e => +e.toFixed(1)))].filter(outliers());
-    let yExtent = [0, d3.max(matched)];
-    this.points.rescaleXY(this.props.xDomain, yExtent);
+    let matched = [];
+    this.dataPointsX.forEach((d,i) => {
+      if ((d >= xDomain[0]) && (d <= xDomain[1])) {
+        matched.push(this.dataPointsY[i]);
+      }
+    });
+    
+    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
+    let yExtent = [0, points[Math.floor(0.1 * points.length)] || this.maxDataPointsY];
+    if (prevProps.width !== this.props.width) {
+      this.regl.destroy();
+      this.componentDidMount();
+    } else {
+      this.points.rescaleXY(this.props.xDomain, yExtent);
+    }
   }
 
   componentWillUnmount() {
@@ -72,17 +85,24 @@ class ScatterPlot extends Component {
   }
 
   updateStage() {
-    let { results, xDomain } = this.props;
-    let { stageWidth, stageHeight } = this.state;
-
+    let { results, xDomain, width, height } = this.props;
+    let stageWidth = width - 2 * margins.gapX;
+    let stageHeight = height - 3 * margins.gapY;
+   
     this.regl.poll();
     let xExtent = xDomain;
 
-    let matched =  Array.prototype.slice.call(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= xDomain[0]), this.dataPointsX.findIndex(d => d >= xDomain[1])));
-    matched = [...new Set(matched.map(e => +e.toFixed(1)))].filter(outliers());
-    let yExtent = [0,d3.max(matched)];
+    let matched = [];
+    this.dataPointsX.forEach((d,i) => {
+      if ((d >= xDomain[0]) && (d <= xDomain[1])) {
+        matched.push(this.dataPointsY[i]);
+      }
+    });
+
+    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
+    let yExtent = [0, points[Math.floor(0.1 * points.length)] || this.maxDataPointsY];
     let dataPointsColor = results.getColumn("color").toArray();
-    
+
     this.points.load(
       stageWidth,
       stageHeight,
@@ -97,16 +117,21 @@ class ScatterPlot extends Component {
   }
 
   render() {
-    const { width, height, results, xDomain, chromoBins, title } = this.props;
-    let { stageWidth, stageHeight } = this.state;
+    const { width, height, xDomain, chromoBins, title } = this.props;
+    let stageWidth = width - 2 * margins.gapX;
+    let stageHeight = height - 3 * margins.gapY;
 
-    let matched =  Array.prototype.slice.call(this.dataPointsY.slice(this.dataPointsX.findIndex(d => d >= xDomain[0]), this.dataPointsX.findIndex(d => d >= xDomain[1])));
-    matched = [...new Set(matched.map(e => +e.toFixed(1)))].filter(outliers());
-    let yExtent = [0,d3.max(matched)];
-    const yScale = d3
-      .scaleLinear()
-      .domain(yExtent)
-      .range([stageHeight, 0]);
+    let matched = [];
+    this.dataPointsX.forEach((d,i) => {
+      if ((d >= xDomain[0]) && (d <= xDomain[1])) {
+        matched.push(this.dataPointsY[i]);
+      }
+    });
+
+    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
+    let yExtent = [0, points[Math.floor(0.1 * points.length)] || this.maxDataPointsY];
+    
+    const yScale = d3.scaleLinear().domain(yExtent).range([stageHeight, 0]);
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     let yTicks = yScale.ticks(margins.yTicksCount);
     yTicks[yTicks.length - 1] = yScale.domain()[1];
@@ -122,29 +147,45 @@ class ScatterPlot extends Component {
             <rect x={0} y={0} width={stageWidth} height={stageHeight} />
           </clipPath>
           <text
-            transform={`translate(${[width / 2, margins.gap]})`}
+            transform={`translate(${[width / 2, margins.gapY]})`}
             textAnchor="middle"
             fontSize={14}
             dy="-4"
           >
             {title}
           </text>
-          <g transform={`translate(${[margins.gap,margins.gap]})`} >
-          {<Grid
-            scaleX={xScale}
-            scaleY={yScale}
-            axisWidth={stageWidth}
-            axisHeight={stageHeight}
-            chromoBins={chromoBins}
-          />}
-        </g>
+          <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
+            {
+              <Grid
+                scaleX={xScale}
+                scaleY={yScale}
+                axisWidth={stageWidth}
+                axisHeight={stageHeight}
+                chromoBins={chromoBins}
+              />
+            }
+          </g>
           <g
-            transform={`translate(${[margins.gap, stageHeight + margins.gap]})`}
+            transform={`translate(${[margins.gapX, stageHeight + margins.gapY]})`}
           >
-            {Object.keys(chromoBins).map((d,i) => 
-            <g  key={d} transform={`translate(${[xScale(chromoBins[d].startPlace), 0]})`}>
-             <line x1="0" y1="0" x2="0" y2={-stageHeight} stroke="rgb(128, 128, 128)" strokeDasharray="4" />
-            </g>)}
+            {Object.keys(chromoBins).map((d, i) => (
+              <g
+                key={d}
+                transform={`translate(${[
+                  xScale(chromoBins[d].startPlace),
+                  0,
+                ]})`}
+              >
+                <line
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2={-stageHeight}
+                  stroke="rgb(128, 128, 128)"
+                  strokeDasharray="4"
+                />
+              </g>
+            ))}
           </g>
         </svg>
       </Wrapper>
@@ -157,17 +198,15 @@ ScatterPlot.propTypes = {
   xDomain: PropTypes.array,
   results: PropTypes.object,
   title: PropTypes.string,
-  chromoBins: PropTypes.object
+  chromoBins: PropTypes.object,
 };
 ScatterPlot.defaultProps = {
   xDomain: [],
 };
 
-const mapDispatchToProps = (dispatch) => ({
-});
+const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
-  xDomain: state.App.domain,
-  chromoBins: state.App.chromoBins
+  chromoBins: state.App.chromoBins,
 });
 export default connect(
   mapStateToProps,

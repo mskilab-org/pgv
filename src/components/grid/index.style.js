@@ -33,7 +33,7 @@ const Wrapper = styled.g`
     text-anchor: middle;
   }
   .label-magnitude {
-    font-size: 12px;
+    font-size: 10px;
     fill: #333;
   }
   .line-magnitude {

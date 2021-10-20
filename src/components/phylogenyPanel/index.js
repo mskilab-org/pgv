@@ -5,28 +5,23 @@ import handleViewport from "react-in-viewport";
 import { Card, Space, Empty, Tooltip, Switch, Button, message } from "antd";
 import { AiOutlineDownload } from "react-icons/ai";
 import * as htmlToImage from "html-to-image";
-import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
+import { downloadCanvasAsPng } from "../../helpers/utility";
 import { withTranslation } from "react-i18next";
 import { GrTree } from "react-icons/gr";
 import ContainerDimensions from "react-container-dimensions";
 import PhyloTree from "./phyloTree";
 import Wrapper from "./index.style";
+import appActions from "../../redux/app/actions";
 
 const margins = {
   padding: 0,
   minHeight: 600
 };
 
+const { selectPhylogenyNodes } = appActions;
+
 class PhylogenyPanel extends Component {
   container = null;
-
-  state = {
-    checked: this.props.visible,
-  };
-
-  onSwitchChange = (checked) => {
-    this.setState({ checked });
-  };
 
   onDownloadButtonClicked = () => {
     htmlToImage
@@ -43,13 +38,11 @@ class PhylogenyPanel extends Component {
   };
 
   render() {
-    const { t, phylogeny, strainsList, geography, loading, title, inViewport, onNodeClick } = this.props;
-    const { checked } = this.state;
+    const { t, phylogeny, strainsList, geography, loading, title, selectPhylogenyNodes, nodes } = this.props;
     if (!phylogeny) return null;
     return (
       <Wrapper>
         <Card
-          style={transitionStyle(inViewport)}
           loading={loading}
           size="small"
           title={
@@ -64,13 +57,6 @@ class PhylogenyPanel extends Component {
           }
           extra={
             <Space>
-            <Tooltip title={t("components.visibility-switch-tooltip")}>
-              <Switch
-                size="small"
-                checked={checked}
-                onClick={(e) => this.onSwitchChange(e)}
-              />
-            </Tooltip>
             <Tooltip title={t("components.download-as-png-tooltip")}>
               <Button
                 type="default"
@@ -82,10 +68,10 @@ class PhylogenyPanel extends Component {
             </Tooltip>
           </Space>}
         >
-          {checked && !phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
-          {checked && phylogeny && (<div ref={(elem) => (this.container = elem)}><ContainerDimensions>
+          {!phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
+          {phylogeny && (<div ref={(elem) => (this.container = elem)}><ContainerDimensions>
             {({ width, height }) => {
-              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick }} />;
+              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick: selectPhylogenyNodes, nodes }} />;
             }}
           </ContainerDimensions></div>)}
         </Card>
@@ -100,9 +86,12 @@ PhylogenyPanel.defaultProps = {
   geography: []
 };
 const mapDispatchToProps = (dispatch) => ({
+  selectPhylogenyNodes: (nodes) =>
+    dispatch(selectPhylogenyNodes(nodes)),
 });
 const mapStateToProps = (state) => ({
-  loading: state.App.loading
+  loading: state.App.loading,
+  nodes: state.App.nodes
 });
 export default connect(
   mapStateToProps,

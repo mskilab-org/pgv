@@ -83,50 +83,115 @@ export function updateChromoBins(coordinateSet) {
   return { genomeLength, chromoBins };
 }
 
-export function locateGenomeRange(chromoBins, from, to) {
+export function locateGenomeRange(chromoBins, domain) {
+  let from = domain[0];
+  let to = domain[1];
   let genomeRange = [];
   Object.keys(chromoBins).forEach((key, i) => {
     if (
       from <= chromoBins[key].endPlace &&
-      from >= chromoBins[key].startPlace &&
-      to <= chromoBins[key].endPlace &&
       from >= chromoBins[key].startPlace
     ) {
       genomeRange.push(
         `${key}:${
           from - chromoBins[key].startPlace + chromoBins[key].startPoint
-        }-${to - chromoBins[key].startPlace + chromoBins[key].startPoint}`
+        }`
       );
-    } else if (
-      from <= chromoBins[key].endPlace &&
-      from >= chromoBins[key].startPlace &&
-      to > chromoBins[key].endPlace
+    } 
+    if (
+      to <= chromoBins[key].endPlace &&
+      to >= chromoBins[key].startPlace
     ) {
       genomeRange.push(
         `${key}:${
-          from - chromoBins[key].startPlace + chromoBins[key].startPoint
-        }-${chromoBins[key].endPoint}`
-      );
-    } else if (
-      to <= chromoBins[key].endPlace &&
-      to >= chromoBins[key].startPlace &&
-      from < chromoBins[key].startPlace
-    ) {
-      genomeRange.push(
-        `${key}:${chromoBins[key].startPoint}-${
           to - chromoBins[key].startPlace + chromoBins[key].startPoint
         }`
       );
-    } else if (
-      from <= chromoBins[key].startPlace &&
-      to >= chromoBins[key].endPlace
-    ) {
-      genomeRange.push(
-        `${key}:${chromoBins[key].startPoint}-${chromoBins[key].endPoint}`
-      );
-    }
+    } 
   });
-  return genomeRange.join(" ");
+  return genomeRange.join("-");
+}
+
+export function domainsToLocation(chromoBins, domains) {
+  return domains.map(d => locateGenomeRange(chromoBins, d)).join("|");
+}
+
+export function locationToDomains(chromoBins, loc) {
+  let domains = [];
+  loc.split("|").forEach((d,i) => {
+    let domainString = d.split("-").map(e => e.split(":"));
+    let domain = [];
+    domain.push(chromoBins[domainString[0][0]].startPlace + (+domainString[0][1]) - chromoBins[domainString[0][0]].startPoint);
+    domain.push(chromoBins[domainString[1][0]].startPlace + (+domainString[1][1]) - chromoBins[domainString[1][0]].startPoint);
+    domains.push(domain);
+  });
+  return domains;
+}
+
+export function cluster(annotatedIntervals, genomeLength, maxClusters = 6, minDistance = 1e7) {
+  let annotated = annotatedIntervals.sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
+  let clusters = [{startPlace: annotated[0].startPlace, endPlace: annotated[0].endPlace}];
+  for (let i = 0; i < annotated.length - 1; i++) {
+    if (annotated[i + 1].startPlace - annotated[i].endPlace > minDistance) {
+      clusters.push({startPlace: annotated[i + 1].startPlace, endPlace: annotated[i + 1].endPlace});
+    } else {
+      clusters[clusters.length - 1].endPlace = annotated[i + 1].endPlace;
+    }
+  }
+  while (clusters.length > maxClusters) {
+    clusters = clusters.sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
+    let minDistance = Number.MAX_SAFE_INTEGER;
+    let minIndex = 0;
+    for (let i = 0; i < clusters.length - 1; i++) {
+      if ((clusters[i + 1].startPlace - clusters[i].endPlace) < minDistance) {
+        minDistance = clusters[i + 1].startPlace - clusters[i].endPlace;
+        minIndex = i;
+      }
+    }
+    clusters = clusters.slice(0,minIndex).concat([{startPlace: clusters[minIndex].startPlace, endPlace: clusters[minIndex+1].endPlace}]).concat(clusters.slice(minIndex + 2, clusters.length));
+  }
+  clusters = merge(clusters.map((d,i) => { return {
+    startPlace: d3.max([(d.startPlace - 0.16 * (d.endPlace - d.startPlace)),1]),
+    endPlace: d3.min([(d.endPlace + 0.16 * (d.endPlace - d.startPlace)), genomeLength])
+  }})).sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
+  return clusters.map((d,i) => [Math.floor(d.startPlace), Math.floor(d.endPlace)]);
+}
+
+export function merge(intervals) {
+  // test if there are at least 2 intervals
+  if(intervals.length <= 1) {
+    return intervals;
+  }
+
+  var stack = [];
+  var topp   = null;
+
+  // sort the intervals based on their start values
+  intervals = intervals.sort((a, b) => {return a.startPlace - b.startPlace});
+
+  // push the 1st interval into the stack
+  stack.push(intervals[0]);
+
+  // start from the next interval and merge if needed
+  for (var i = 1; i < intervals.length; i++) {
+    // get the topp element
+    topp = stack[stack.length - 1];
+
+    // if the current interval doesn't overlap with the
+    // stack topp element, push it to the stack
+    if (topp.endPlace < intervals[i].startPlace) {
+      stack.push(intervals[i]);
+    }
+    // otherwise update the end value of the topp element
+    // if end of current interval is higher
+    else if (topp.endPlace < intervals[i].endPlace) {
+      topp.endPlace = intervals[i].endPlace;
+      stack.pop();
+      stack.push(topp);
+    }
+  }
+
+  return stack;
 }
 
 export function downloadCanvasAsPng(canvas, filename) {
@@ -176,4 +241,129 @@ export function guid() {
   }
   // then to call it, plus stitch in '4' in the third group
   return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0,3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
+}
+
+/**
+ * K-combinations
+ * 
+ * Get k-sized combinations of elements in a set.
+ * 
+ * Usage:
+ *   k_combinations(set, k)
+ * 
+ * Parameters:
+ *   set: Array of objects of any type. They are treated as unique.
+ *   k: size of combinations to search for.
+ * 
+ * Return:
+ *   Array of found combinations, size of a combination is k.
+ * 
+ * Examples:
+ * 
+ *   k_combinations([1, 2, 3], 1)
+ *   -> [[1], [2], [3]]
+ * 
+ *   k_combinations([1, 2, 3], 2)
+ *   -> [[1,2], [1,3], [2, 3]
+ * 
+ *   k_combinations([1, 2, 3], 3)
+ *   -> [[1, 2, 3]]
+ * 
+ *   k_combinations([1, 2, 3], 4)
+ *   -> []
+ * 
+ *   k_combinations([1, 2, 3], 0)
+ *   -> []
+ * 
+ *   k_combinations([1, 2, 3], -1)
+ *   -> []
+ * 
+ *   k_combinations([], 0)
+ *   -> []
+ */
+export function k_combinations(set, k) {
+  var i, j, combs, head, tailcombs;
+  
+  // There is no way to take e.g. sets of 5 elements from
+  // a set of 4.
+  if (k > set.length || k <= 0) {
+    return [];
+  }
+  
+  // K-sized set has only one K-sized subset.
+  if (k === set.length) {
+    return [set];
+  }
+  
+  // There is N 1-sized subsets in a N-sized set.
+  if (k === 1) {
+    combs = [];
+    for (i = 0; i < set.length; i++) {
+      combs.push([set[i]]);
+    }
+    return combs;
+  }
+  
+  // Assert {1 < k < set.length}
+  
+  // Algorithm description:
+  // To get k-combinations of a set, we want to join each element
+  // with all (k-1)-combinations of the other elements. The set of
+  // these k-sized sets would be the desired result. However, as we
+  // represent sets with lists, we need to take duplicates into
+  // account. To avoid producing duplicates and also unnecessary
+  // computing, we use the following approach: each element i
+  // divides the list into three: the preceding elements, the
+  // current element i, and the subsequent elements. For the first
+  // element, the list of preceding elements is empty. For element i,
+  // we compute the (k-1)-computations of the subsequent elements,
+  // join each with the element i, and store the joined to the set of
+  // computed k-combinations. We do not need to take the preceding
+  // elements into account, because they have already been the i:th
+  // element so they are already computed and stored. When the length
+  // of the subsequent list drops below (k-1), we cannot find any
+  // (k-1)-combs, hence the upper limit for the iteration:
+  combs = [];
+  for (i = 0; i < set.length - k + 1; i++) {
+    // head is a list that includes only our current element.
+    head = set.slice(i, i + 1);
+    // We take smaller combinations from the subsequent elements
+    tailcombs = k_combinations(set.slice(i + 1), k - 1);
+    // For each (k-1)-combination we join it with the current
+    // and store it to the set of k-combinations.
+    for (j = 0; j < tailcombs.length; j++) {
+      combs.push(head.concat(tailcombs[j]));
+    }
+  }
+  return combs;
+}
+
+/**
+ * Combinations
+ * 
+ * Get all possible combinations of elements in a set.
+ * 
+ * Usage:
+ *   combinations(set)
+ * 
+ * Examples:
+ * 
+ *   combinations([1, 2, 3])
+ *   -> [[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
+ * 
+ *   combinations([1])
+ *   -> [[1]]
+ */
+ export function combinations(set) {
+  var k, i, combs, k_combs;
+  combs = [];
+  
+  // Calculate all non-empty k-combinations
+  for (k = 1; k <= set.length; k++) {
+    k_combs = k_combinations(set, k);
+    for (i = 0; i < k_combs.length; i++) {
+      combs.push(k_combs[i]);
+    }
+  }
+  return combs;
 }

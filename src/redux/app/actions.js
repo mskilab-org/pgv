@@ -1,55 +1,51 @@
 const actions = {
-  GET_SETTINGS: "GET_SETTINGS",
-  SETTINGS_RECEIVED: "SETTINGS_RECEIVED",
-  UPDATE_COORDINATES: "UPDATE_COORDINATES",
-  COORDINATES_UPDATED: "COORDINATES_UPDATED",
-  UPDATE_VISIBILITY: "UPDATE_VISIBILITY",
-  VISIBILITY_UPDATED: "VISIBILITY_UPDATED",
   GET_GEOGRAPHY: "GET_GEOGRAPHY",
   GEOGRAPHY_RECEIVED: "GEOGRAPHY_RECEIVED",
-  GET_DEPENDENCIES: "GET_DEPENDENCIES",
-  DEPENDENCIES_RECEIVED: "DEPENDENCIES_RECEIVED",
-  GET_GENES: "GET_GENES",
-  GENES_RECEIVED: "GENES_RECEIVED",
-  DOMAIN_UPDATED: "DOMAIN_UPDATED",
-  WINDOW_HISTORY_UPDATED: "WINDOW_HISTORY_UPDATED",
+  DOMAINS_UPDATED: "DOMAINS_UPDATED",
   LAUNCH_APP: "LAUNCH_APP",
   LAUNCH_APP_SUCCESS: "LAUNCH_APP_SUCCESS",
   LAUNCH_APP_FAILED: "LAUNCH_APP_FAILED",
+  PLOTS_UPDATED: "PLOTS_UPDATED",
+  LEGEND_PIN_UPDATED: "LEGEND_PIN_UPDATED",
+  GENES_PIN_UPDATED: "GENES_PIN_UPDATED",
+  PHYLOGENY_PIN_UPDATED: "PHYLOGENY_PIN_UPDATED",
+  RENDER_OUTSIDE_VIEWPORT_UPDATED: "RENDER_OUTSIDE_VIEWPORT_UPDATED",
+  PHYLOGENY_NODES_SELECTED: "PHYLOGENY_NODES_SELECTED",
   launchApp: () => ({
     type: actions.LAUNCH_APP,
-  }),
-  getSettings: () => ({
-    type: actions.GET_SETTINGS,
-  }),
-  updateCoordinates: (coordinate) => ({
-    type: actions.UPDATE_COORDINATES,
-    coordinate: coordinate
-  }),
-  updateVisibility: (panel, visible) => ({
-    type: actions.UPDATE_VISIBILITY,
-    panel: panel,
-    visible: visible
   }),
   getGeography: (file) => ({
     type: actions.GET_GEOGRAPHY,
     file: file
   }),
-  getDependencies: (file) => ({
-    type: actions.GET_DEPENDENCIES,
-    file: file
+  updateDomains: (domains) => ({
+    type: actions.DOMAINS_UPDATED,
+    domains
   }),
-  getGenes: (coordinate) => ({
-    type: actions.GET_GENES,
-    coordinate: coordinate
+  updatePlots: (plots) => ({
+    type: actions.PLOTS_UPDATED,
+    plots
   }),
-  updateDomain: (from, to, shouldChangeHistory, eventSource) => ({
-    type: actions.DOMAIN_UPDATED,
-    from: from,
-    to: to,
-    shouldChangeHistory: shouldChangeHistory,
-    eventSource: eventSource
+  updateLegendPin: (legendPinned) => ({
+    type: actions.LEGEND_PIN_UPDATED,
+    legendPinned
   }),
+  updateGenesPin: (genesPinned) => ({
+    type: actions.GENES_PIN_UPDATED,
+    genesPinned
+  }),
+  updatePhylogenyPin: (phylogenyPinned) => ({
+    type: actions.PHYLOGENY_PIN_UPDATED,
+    phylogenyPinned
+  }),
+  updateRenderOutsideViewport: (renderOutsideViewPort) => ({
+    type: actions.RENDER_OUTSIDE_VIEWPORT_UPDATED,
+    renderOutsideViewPort
+  }),
+  selectPhylogenyNodes: (nodes) => ({
+    type: actions.PHYLOGENY_NODES_SELECTED,
+    nodes
+  })
 };
 
 export default actions;

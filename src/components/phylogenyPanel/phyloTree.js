@@ -22,6 +22,11 @@ class PhyloTree extends Component {
   container = null;
   tree = null;
 
+  constructor(props) {
+    super(props);
+    this.state = { selectedNodes: []};
+  }
+
   componentDidMount() {
     this.tree = Phylocanvas.createTree(this.container, {
       contextMenu: {
@@ -53,10 +58,17 @@ class PhyloTree extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {newickString, strainsList, geography} = this.props;
+    const {newickString, strainsList, geography } = this.props;
     if (!newickString) {
       return;
     }
+
+    let selectedNodes = this.props.nodes.filter(d => d.selected).map(d => d.id);
+    let previousSelectedNodes = prevProps.nodes.filter(d => d.selected).map(d => d.id);
+    if (previousSelectedNodes.toString() !== selectedNodes.toString()) {
+      this.setState({selectedNodes});
+    }
+
     const pixelRatio = window.devicePixelRatio || 2.0;
     const geographyHash = {};
     geography.forEach((d, i) => (geographyHash[d.id] = d));
@@ -70,6 +82,7 @@ class PhyloTree extends Component {
         }
         leaf.data = leaf.data || {};
         leaf.data.geography = geographyHash[leaf.data && leaf.data.gid] || {};
+        leaf.selected = this.state.selectedNodes.includes(leaf.id); 
         leaf.setDisplay({
           leafStyle: {
             strokeStyle: geographyHash[leaf.data.gid] ? d3.rgb(geographyHash[leaf.data && leaf.data.gid].fill).darker() : "#808080",
@@ -79,20 +92,21 @@ class PhyloTree extends Component {
         });
       });
     });
+
     this.tree.lineWidth = 1.2 * pixelRatio;
     this.tree.fillCanvas = true;
     this.tree.showInternalNodeLabels = true;
     this.tree.branchColour = "#808080";
-    this.tree.selectedColour = "#FF7F0E";
+    this.tree.selectedColour = "#79b321";
     this.tree.setTreeType("rectangular");
-    this.tree.highlightColour = "#FF7F0E";
+    this.tree.highlightColour = "#79b321";
     this.tree.highlightWidth = 2;
     this.tree.padding = margins.padding;
     this.tree.zoomFactor = 1;
     this.tree.setNodeSize(3 * pixelRatio);
     this.tree.setTextSize(8 * pixelRatio);
     this.tree.setSize((this.props.width - 2 * margins.padding) / pixelRatio, (this.tree.leaves.length * 10) / pixelRatio);
-    this.tree.draw();
+    
     this.tree.adjustForPixelRatio();
     this.tree.disableZoom = true;
     this.tree.tooltip = new PhyloTooltip(this.tree);
@@ -103,14 +117,10 @@ class PhyloTree extends Component {
       }
     });
     this.tree.on("click", (e) => {
-      var node = this.tree.getNodeAtMousePosition(e);
-      if (node) {
-        this.props.onNodeClick(node.id);
-        this.tree.tooltip.close();
-      }
+      this.tree.tooltip.close();
+      this.tree.getSelectedNodeIds().toString() !== this.state.selectedNodes.toString() && this.setState({selectedNodes: this.tree.getSelectedNodeIds()}, () => {this.props.onNodeClick(this.tree.leaves.map(d => {return {id: d.id, selected: d.selected}}))});
     });
-    // to trigger the redrawing
-    d3.select(".phylocanvas").node().click();
+    this.tree.draw();
   }
 
   render() {
@@ -126,7 +136,8 @@ PhyloTree.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   strainsList: PropTypes.array,
-  geography: PropTypes.array
+  geography: PropTypes.array,
+  onNodeClick: PropTypes.func
 };
 PhyloTree.defaultProps = {
   strainsList: [],
