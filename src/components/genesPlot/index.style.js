@@ -22,6 +22,9 @@ const Wrapper = styled.div`
         font-weight: bold;
       }
     }
+    .weighted {
+      fill: #CF2908;
+    }
   }
 `;
 

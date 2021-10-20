@@ -4,10 +4,10 @@ import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Tooltip, Switch, Button, message, Row, Col } from "antd";
+import { Card, Space, Tooltip, Button, message, Row, Col } from "antd";
 import * as d3 from "d3";
 import { AiOutlineDownload } from "react-icons/ai";
-import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
+import { downloadCanvasAsPng } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import { CgArrowsBreakeH } from "react-icons/cg";
 import Wrapper from "./index.style";
@@ -48,6 +48,7 @@ class GenesPanel extends Component {
         genesY: genes.getColumn("y").toArray(),
         genesStroke: genes.getColumn("color").toArray(),
         genesStrand: genes.getColumn("strand").toArray(),
+        genesWeight: genes.getColumn("weight").toArray()
       }
     }
     return (

@@ -32,6 +32,7 @@ class GenesPlot extends Component {
       genesY: genesStructure.genesY,
       genesStroke: genesStructure.genesStroke,
       genesStrand: genesStructure.genesStrand,
+      genesWeight: genesStructure.genesWeight,
       domainX: xDomain,
       domainY: [-3, 3],
     };
@@ -201,7 +202,7 @@ class GenesPlot extends Component {
     const { width, height, chromoBins, genes, title, xDomain } =
       this.props;
     const { geneStruct, tooltip } = this.state;
-    const { geneTypes, genesStartPoint, geneTitles, genesY, genesStrand } = geneStruct;
+    const { geneTypes, genesStartPoint, geneTitles, genesY, genesStrand, genesWeight } = geneStruct;
 
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
@@ -209,6 +210,8 @@ class GenesPlot extends Component {
     const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
     const yScale = d3.scaleLinear().domain([-3, 3]).range([stageHeight, 0]);
     let texts = [];
+    let positiveStrandTexts = [];
+    let negativeStrandTexts = [];
 
       let startPosNext = { "+": -1, "-": -1 };
       for (let i = 0; i < genes.count(); i++) {
@@ -221,31 +224,38 @@ class GenesPlot extends Component {
           let xPos = xScale(genesStartPoint[i]);
           let textLength = measureText(geneTitles[i], 10);
           let yPos = yScale(genesY[i]);
-          if (
+          if ((
             isGene &&
             xPos > 0 &&
             xPos < stageWidth &&
             xPos > startPosNext[genesStrand[i].toString()]
-          ) {
+          ) || (genesWeight[i] > 1)) {
             let d = genes.get(i).toJSON();
-            texts.push(
+            let textBlock = 
               <text
                 key={d.iid}
                 x={xPos}
                 y={yPos}
+                endPos={xPos + textLength}
+                strand={genesStrand[i]}
                 dy={-10}
                 fontFamily="Arial"
                 fontSize={10}
                 textAnchor="start"
+                className={genesWeight[i] > 1 ? "weighted" : ""}
               >
                 {d.title}
-              </text>
-            );
+              </text>;
             startPosNext[d.strand] = xPos + textLength;
+            genesStrand[i] === "+" && positiveStrandTexts.push(textBlock);
+            genesStrand[i] === "-" && negativeStrandTexts.push(textBlock);
           }
         }
       }
 
+    positiveStrandTexts = positiveStrandTexts.filter((d,i) => d.props.className === "weighted" || ((i < positiveStrandTexts.length - 1) && d.props.endPos < positiveStrandTexts[i + 1].props.x));
+    negativeStrandTexts = negativeStrandTexts.filter((d,i) => d.props.className === "weighted" || ((i < negativeStrandTexts.length - 1) && d.props.endPos < negativeStrandTexts[i + 1].props.x));
+    texts = positiveStrandTexts.concat(negativeStrandTexts);
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div
