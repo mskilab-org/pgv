@@ -55,6 +55,7 @@ class PhyloTree extends Component {
         },
       },
     });
+    this.tree.tooltip = new PhyloTooltip(this.tree);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -109,15 +110,18 @@ class PhyloTree extends Component {
     
     this.tree.adjustForPixelRatio();
     this.tree.disableZoom = true;
-    this.tree.tooltip = new PhyloTooltip(this.tree);
     this.tree.on("mousemove", (e) => {
       var node = this.tree.getNodeAtMousePosition(e);
       if (node) {
         this.tree.tooltip.open(e.clientX, e.clientY, node);
+      } else {
+        this.tree.tooltip.close();
       }
     });
     this.tree.on("click", (e) => {
       this.tree.tooltip.close();
+      d3.select(this.container).selectAll(".phylocanvas-tooltip .tooltip-box").remove();
+      this.tree.tooltip = new PhyloTooltip(this.tree);
       this.tree.getSelectedNodeIds().toString() !== this.state.selectedNodes.toString() && this.setState({selectedNodes: this.tree.getSelectedNodeIds()}, () => {this.props.onNodeClick(this.tree.leaves.map(d => {return {id: d.id, selected: d.selected}}))});
     });
     this.tree.draw();
