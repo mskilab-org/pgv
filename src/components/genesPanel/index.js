@@ -37,7 +37,7 @@ class GenesPanel extends Component {
   };
 
   render() {
-    const { t, genes, inViewport, renderOutsideViewPort, domains } = this.props;
+    const { t, genes, domains } = this.props;
     if (!genes) return null;
     if (!this.genesStructure) {
       this.genesStructure = {
@@ -83,7 +83,7 @@ class GenesPanel extends Component {
               <ContainerDimensions>
                 {({ width, height }) => {
                   return (
-                    (inViewport || renderOutsideViewPort) && (
+                    (
                       <Row style={{ width }} gutter={[margins.gap, 0]}>
                         {domains.map((domain, i) => (
                           <Col key={i} flex={1}>

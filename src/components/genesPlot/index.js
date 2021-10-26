@@ -255,6 +255,9 @@ class GenesPlot extends Component {
 
     positiveStrandTexts = positiveStrandTexts.filter((d,i) => d.props.className === "weighted" || ((i < positiveStrandTexts.length - 1) && d.props.endPos < positiveStrandTexts[i + 1].props.x));
     negativeStrandTexts = negativeStrandTexts.filter((d,i) => d.props.className === "weighted" || ((i < negativeStrandTexts.length - 1) && d.props.endPos < negativeStrandTexts[i + 1].props.x));
+    positiveStrandTexts = positiveStrandTexts.filter((d,i) => ((i < positiveStrandTexts.length - 1) && d.props.endPos < positiveStrandTexts[i + 1].props.x));
+    negativeStrandTexts = negativeStrandTexts.filter((d,i) => ((i < negativeStrandTexts.length - 1) && d.props.endPos < negativeStrandTexts[i + 1].props.x));
+
     texts = positiveStrandTexts.concat(negativeStrandTexts);
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
