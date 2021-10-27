@@ -12,7 +12,7 @@ const margins = {
   gapX: 12,
   gapY: 0,
   bGap: 0,
-  rectangleHeight: 10
+  rectangleHeight: 10,
 };
 
 class GenesPlot extends Component {
@@ -46,8 +46,8 @@ class GenesPlot extends Component {
         shapeId: -1,
         x: -1000,
         y: -1000,
-        text: ""
-      }
+        text: "",
+      },
     };
   }
 
@@ -73,7 +73,7 @@ class GenesPlot extends Component {
     this.regl.clear({
       color: [0, 0, 0, 0.0],
       depth: false,
-      stencil: false
+      stencil: false,
     });
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
@@ -90,7 +90,7 @@ class GenesPlot extends Component {
     this.regl.clear({
       color: [0, 0, 0, 0.0],
       depth: false,
-      stencil: true
+      stencil: true,
     });
 
     this.regl.poll();
@@ -116,10 +116,17 @@ class GenesPlot extends Component {
 
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
-    let position = [d3.pointer(event)[0] - margins.gapX, d3.pointer(event)[1] - margins.gapY];
+    let position = [
+      d3.pointer(event)[0] - margins.gapX,
+      d3.pointer(event)[1] - margins.gapY,
+    ];
 
-    if ((position[0] < stageWidth) && ((position[0] >= 0)) && (position[1] <= stageHeight) && ((position[1] > 0))) {
-     
+    if (
+      position[0] < stageWidth &&
+      position[0] >= 0 &&
+      position[1] <= stageHeight &&
+      position[1] > 0
+    ) {
       const pixels = this.plot.regl.read({
         x: position[0],
         y: stageHeight - position[1],
@@ -129,28 +136,56 @@ class GenesPlot extends Component {
         framebuffer: this.plot.fboIntervals,
       });
       let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
-    
+
       if (genes.get(index)) {
         let selectedGene = genes.get(index).toJSON();
         let textData = this.tooltipContent(selectedGene);
-        let diffY = d3.min([0, height - event.nativeEvent.offsetY - textData.length * 16 - 12]);
-        let diffX = d3.min([0, width - event.nativeEvent.offsetX - d3.max(textData, (d) => measureText(`${d.label}: ${d.value}`, 12)) - 30]);
-        this.state.tooltip.shapeId !== selectedGene.iid && this.setState({tooltip: {shape: selectedGene, shapeId: selectedGene.iid, visible: true, x: (event.nativeEvent.offsetX + diffX), y: (event.nativeEvent.offsetY + diffY), text: textData}})
+        let diffY = d3.min([
+          0,
+          height - event.nativeEvent.offsetY - textData.length * 16 - 12,
+        ]);
+        let diffX = d3.min([
+          0,
+          width -
+            event.nativeEvent.offsetX -
+            d3.max(textData, (d) => measureText(`${d.label}: ${d.value}`, 12)) -
+            30,
+        ]);
+        this.state.tooltip.shapeId !== selectedGene.iid &&
+          this.setState({
+            tooltip: {
+              shape: selectedGene,
+              shapeId: selectedGene.iid,
+              visible: true,
+              x: event.nativeEvent.offsetX + diffX,
+              y: event.nativeEvent.offsetY + diffY,
+              text: textData,
+            },
+          });
       } else {
-        this.state.tooltip.visible && this.setState({tooltip: {shape: null, shapeId: null, visible: false}})
+        this.state.tooltip.visible &&
+          this.setState({
+            tooltip: { shape: null, shapeId: null, visible: false },
+          });
       }
     }
-    
-  }
+  };
 
   handleClick = (event) => {
     const { genes, width, height } = this.props;
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
-    let position = [d3.pointer(event)[0] - margins.gapX, d3.pointer(event)[1] - margins.gapY];
+    let position = [
+      d3.pointer(event)[0] - margins.gapX,
+      d3.pointer(event)[1] - margins.gapY,
+    ];
 
-    if ((position[0] < stageWidth) && ((position[0] >= 0)) && (position[1] <= stageHeight) && ((position[1] > 0))) {
-     
+    if (
+      position[0] < stageWidth &&
+      position[0] >= 0 &&
+      position[1] <= stageHeight &&
+      position[1] > 0
+    ) {
       const pixels = this.plot.regl.read({
         x: position[0],
         y: stageHeight - position[1],
@@ -160,19 +195,19 @@ class GenesPlot extends Component {
         framebuffer: this.plot.fboIntervals,
       });
       let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
-      let selectedGene = genes.get(index)
+      let selectedGene = genes.get(index);
       if (selectedGene) {
         window
-              .open(
-                `https://www.genecards.org/cgi-bin/carddisp.pl?gene=${
-                  selectedGene.toJSON().title
-                }`,
-                "_blank"
-              )
-              .focus();
+          .open(
+            `https://www.genecards.org/cgi-bin/carddisp.pl?gene=${
+              selectedGene.toJSON().title
+            }`,
+            "_blank"
+          )
+          .focus();
       }
     }
-  }
+  };
 
   tooltipContent(interval) {
     let attributes = [
@@ -199,10 +234,16 @@ class GenesPlot extends Component {
   }
 
   render() {
-    const { width, height, chromoBins, genes, title, xDomain } =
-      this.props;
+    const { width, height, chromoBins, genes, title, xDomain } = this.props;
     const { geneStruct, tooltip } = this.state;
-    const { geneTypes, genesStartPoint, geneTitles, genesY, genesStrand, genesWeight } = geneStruct;
+    const {
+      geneTypes,
+      genesStartPoint,
+      geneTitles,
+      genesY,
+      genesStrand,
+      genesWeight,
+    } = geneStruct;
 
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
@@ -213,52 +254,84 @@ class GenesPlot extends Component {
     let positiveStrandTexts = [];
     let negativeStrandTexts = [];
 
-      let startPosNext = { "+": -1, "-": -1 };
-      for (let i = 0; i < genes.count(); i++) {
-        if (
-          genesStartPoint[i] <= xDomain[1] &&
-          genesStartPoint[i] >= xDomain[0] &&
-          geneTypes[i] === "gene"
-        ) {
-          let isGene = geneTypes[i] === "gene";
-          let xPos = xScale(genesStartPoint[i]);
-          let textLength = measureText(geneTitles[i], 10);
-          let yPos = yScale(genesY[i]);
-          if ((
-            isGene &&
-            xPos > 0 &&
-            xPos < stageWidth &&
-            xPos > startPosNext[genesStrand[i].toString()]
-          ) || (genesWeight[i] > 1)) {
-            let d = genes.get(i).toJSON();
-            let textBlock = 
-              <text
-                key={d.iid}
-                x={xPos}
-                y={yPos}
-                endPos={xPos + textLength}
-                strand={genesStrand[i]}
-                dy={-10}
-                fontFamily="Arial"
-                fontSize={10}
-                textAnchor="start"
-                className={genesWeight[i] > 1 ? "weighted" : ""}
-              >
-                {d.title}
-              </text>;
-            startPosNext[d.strand] = xPos + textLength;
-            genesStrand[i] === "+" && positiveStrandTexts.push(textBlock);
-            genesStrand[i] === "-" && negativeStrandTexts.push(textBlock);
-          }
+    let startPosNext = { "+": -1, "-": -1 };
+    for (let i = 0; i < genes.count(); i++) {
+      if (
+        genesStartPoint[i] <= xDomain[1] &&
+        genesStartPoint[i] >= xDomain[0] &&
+        geneTypes[i] === "gene"
+      ) {
+        let isGene = geneTypes[i] === "gene";
+        let xPos = xScale(genesStartPoint[i]);
+        let textLength = measureText(geneTitles[i], 10);
+        let yPos = yScale(genesY[i]);
+        if (isGene && xPos > 0 && xPos < stageWidth) {
+          let d = genes.get(i).toJSON();
+          let textBlock = (
+            <text
+              key={d.iid}
+              x={xPos}
+              y={yPos}
+              endPos={xPos + textLength}
+              strand={genesStrand[i]}
+              dy={-10}
+              fontFamily="Arial"
+              fontSize={10}
+              textAnchor="start"
+              className={genesWeight[i] > 1 ? "weighted" : ""}
+            >
+              {d.title}
+            </text>
+          );
+          startPosNext[d.strand] = xPos + textLength;
+          genesStrand[i] === "+" && positiveStrandTexts.push(textBlock);
+          genesStrand[i] === "-" && negativeStrandTexts.push(textBlock);
         }
       }
+    }
 
-    positiveStrandTexts = positiveStrandTexts.filter((d,i) => d.props.className === "weighted" || ((i < positiveStrandTexts.length - 1) && d.props.endPos < positiveStrandTexts[i + 1].props.x));
-    negativeStrandTexts = negativeStrandTexts.filter((d,i) => d.props.className === "weighted" || ((i < negativeStrandTexts.length - 1) && d.props.endPos < negativeStrandTexts[i + 1].props.x));
-    positiveStrandTexts = positiveStrandTexts.filter((d,i) => ((i < positiveStrandTexts.length - 1) && d.props.endPos < positiveStrandTexts[i + 1].props.x));
-    negativeStrandTexts = negativeStrandTexts.filter((d,i) => ((i < negativeStrandTexts.length - 1) && d.props.endPos < negativeStrandTexts[i + 1].props.x));
+    positiveStrandTexts = positiveStrandTexts.sort((a, b) =>
+      d3.ascending(a.props.x, b.props.x)
+    );
+    let pTexts = [];
+    let sPos = -1;
+    let previousTextType = null;
+    positiveStrandTexts.forEach((d, i) => {
+      if (d.props.className === "weighted" && previousTextType !== "weighted") {
+        pTexts.pop();
+        pTexts.push(d);
+        sPos = d.props.endPos;
+        previousTextType = d.props.className;
+      } else {
+        if (d.props.x > sPos) {
+          pTexts.push(d);
+          sPos = d.props.endPos;
+          previousTextType = d.props.className;
+        }
+      }
+    });
+    negativeStrandTexts = negativeStrandTexts.sort((a, b) =>
+      d3.ascending(a.props.x, b.props.x)
+    );
+    let nTexts = [];
+    sPos = -1;
+    previousTextType = null;
+    negativeStrandTexts.forEach((d, i) => {
+      if (d.props.className === "weighted" && previousTextType !== "weighted") {
+        nTexts.pop();
+        nTexts.push(d);
+        sPos = d.props.endPos;
+        previousTextType = d.props.className;
+      } else {
+        if (d.props.x > sPos) {
+          nTexts.push(d);
+          sPos = d.props.endPos;
+          previousTextType = d.props.className;
+        }
+      }
+    });
 
-    texts = positiveStrandTexts.concat(negativeStrandTexts);
+    texts = nTexts.concat(pTexts);
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div
@@ -268,7 +341,7 @@ class GenesPlot extends Component {
           onMouseMove={(e) => this.handleMouseMove(e)}
           onClick={(e) => this.handleClick(e)}
         />
-        {(
+        {
           <svg
             width={width}
             height={height + margins.bGap}
@@ -290,22 +363,22 @@ class GenesPlot extends Component {
               className="labels-container"
               transform={`translate(${[0, margins.gapY]})`}
             >
-             <text
-              transform={`translate(${[0, yScale(1)]})rotate(90)`}
-              textAnchor="middle"
-              fontSize={16}
-              dy="-4"
-            >
-              {"-"}
-            </text>
-            <text
-              transform={`translate(${[0, yScale(-1)]})rotate(90)`}
-              textAnchor="middle"
-              fontSize={16}
-              dy="-4"
-            >
-              {"+"}
-            </text>
+              <text
+                transform={`translate(${[0, yScale(1)]})rotate(90)`}
+                textAnchor="middle"
+                fontSize={16}
+                dy="-4"
+              >
+                {"-"}
+              </text>
+              <text
+                transform={`translate(${[0, yScale(-1)]})rotate(90)`}
+                textAnchor="middle"
+                fontSize={16}
+                dy="-4"
+              >
+                {"+"}
+              </text>
             </g>
             <g
               clipPath="url(#clipping)"
@@ -314,45 +387,65 @@ class GenesPlot extends Component {
             >
               {texts}
             </g>
-            {false && <g transform={`translate(${[margins.gapX,margins.gapY]})`} >
-              {<Grid
-                showY={false}
-                scaleX={xScale}
-                scaleY={yScale}
-                axisWidth={stageWidth}
-                axisHeight={stageHeight}
-                chromoBins={chromoBins}
-              />}
-            </g>}
-            {tooltip.visible && <g transform={`translate(${[margins.gapX,margins.gapY]})`} >
-              <rect x={xScale(tooltip.shape.startPlace)} y={yScale(tooltip.shape.y) - margins.rectangleHeight / 2} width={xScale(tooltip.shape.endPlace) - xScale(tooltip.shape.startPlace)} height={margins.rectangleHeight} stroke={d3.rgb("#FF7F0E").darker()} fill="#FF7F0E"/>
-            </g>}
-            {tooltip.visible && <g
-            className="tooltip"
-            transform={`translate(${[tooltip.x + 30, tooltip.y]})`}
-            pointerEvents="none"
-          >
-            <rect
-              x="0"
-              y="0"
-              width={d3.max(tooltip.text, (d) =>
-                measureText(`${d.label}: ${d.value}`, 12) + 30
-              )}
-              height={tooltip.text.length * 16 + 12}
-              rx="5"
-              ry="5"
-              fill="rgb(97, 97, 97)"
-              fillOpacity="0.97"
-            />
-            <text x="10" y="28" fontSize="12" fill="#FFF">
-              {tooltip.text.map((d,i) => 
-                <tspan key={i} x={10} y={18 + i * 16}>
-                  <tspan fontWeight="bold">{d.label}</tspan>: {d.value}
-                </tspan>)}
-            </text>
-          </g>}
+            {false && (
+              <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
+                {
+                  <Grid
+                    showY={false}
+                    scaleX={xScale}
+                    scaleY={yScale}
+                    axisWidth={stageWidth}
+                    axisHeight={stageHeight}
+                    chromoBins={chromoBins}
+                  />
+                }
+              </g>
+            )}
+            {tooltip.visible && (
+              <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
+                <rect
+                  x={xScale(tooltip.shape.startPlace)}
+                  y={yScale(tooltip.shape.y) - margins.rectangleHeight / 2}
+                  width={
+                    xScale(tooltip.shape.endPlace) -
+                    xScale(tooltip.shape.startPlace)
+                  }
+                  height={margins.rectangleHeight}
+                  stroke={d3.rgb("#FF7F0E").darker()}
+                  fill="#FF7F0E"
+                />
+              </g>
+            )}
+            {tooltip.visible && (
+              <g
+                className="tooltip"
+                transform={`translate(${[tooltip.x + 30, tooltip.y]})`}
+                pointerEvents="none"
+              >
+                <rect
+                  x="0"
+                  y="0"
+                  width={d3.max(
+                    tooltip.text,
+                    (d) => measureText(`${d.label}: ${d.value}`, 12) + 30
+                  )}
+                  height={tooltip.text.length * 16 + 12}
+                  rx="5"
+                  ry="5"
+                  fill="rgb(97, 97, 97)"
+                  fillOpacity="0.97"
+                />
+                <text x="10" y="28" fontSize="12" fill="#FFF">
+                  {tooltip.text.map((d, i) => (
+                    <tspan key={i} x={10} y={18 + i * 16}>
+                      <tspan fontWeight="bold">{d.label}</tspan>: {d.value}
+                    </tspan>
+                  ))}
+                </text>
+              </g>
+            )}
           </svg>
-        )}
+        }
       </Wrapper>
     );
   }
@@ -368,11 +461,10 @@ GenesPlot.propTypes = {
 GenesPlot.defaultProps = {
   xDomain: [],
 };
-const mapDispatchToProps = (dispatch) => ({
-});
+const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   chromoBins: state.App.chromoBins,
-  defaultDomain: state.App.defaultDomain
+  defaultDomain: state.App.defaultDomain,
 });
 export default connect(
   mapStateToProps,
