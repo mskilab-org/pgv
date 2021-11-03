@@ -10,7 +10,7 @@ import { measureText, guid, k_combinations } from "../../helpers/utility";
 import Grid from "../grid/index";
 import appActions from "../../redux/app/actions";
 
-const { updateDomains, selectPhylogenyNodes } = appActions;
+const { updateDomains, selectPhylogenyNodes, highlightPhylogenyNodes } = appActions;
 
 const margins = {
   gap: 24,
@@ -271,10 +271,10 @@ class GenomePlot extends Component {
       if (shape) {
         let diffY = d3.min([0, height - e.nativeEvent.offsetY - shape.tooltipContent.length * 16 - 12]);
         let diffX = d3.min([0, width - e.nativeEvent.offsetX - d3.max(shape.tooltipContent, (d) => measureText(`${d.label}: ${d.value}`, 12)) - 30]);
-        this.state.tooltip.shapeId !== shape.primaryKey && this.setState({ tooltip: { shapeId: shape.primaryKey, visible: true, x: (e.nativeEvent.offsetX + diffX), y: (e.nativeEvent.offsetY + diffY), text: shape.tooltipContent } })
+        this.state.tooltip.shapeId !== shape.primaryKey && this.setState({ tooltip: { shapeId: shape.primaryKey, visible: true, x: (e.nativeEvent.offsetX + diffX), y: (e.nativeEvent.offsetY + diffY), text: shape.tooltipContent } }, () => {shapeType === "connection" && this.props.highlightPhylogenyNodes(this.props.connectionsAssociations.filter(d => d.connections.includes(shape.cid)).map((d,i) => d.sample));})
       }
     } else {
-      this.state.tooltip.visible && this.setState({ tooltip: { shapeId: null, visible: false } })
+      this.state.tooltip.visible && this.setState({tooltip: { shapeId: null, visible: false }}, () => { this.props.highlightPhylogenyNodes([]); })
     }
   }
 
@@ -402,6 +402,8 @@ const mapDispatchToProps = (dispatch) => ({
   updateDomains: (domains) => dispatch(updateDomains(domains)),
   selectPhylogenyNodes: (nodes) =>
   dispatch(selectPhylogenyNodes(nodes)),
+  highlightPhylogenyNodes: (nodes) =>
+  dispatch(highlightPhylogenyNodes(nodes)),
 });
 const mapStateToProps = (state) => ({
   chromoBins: state.App.chromoBins,

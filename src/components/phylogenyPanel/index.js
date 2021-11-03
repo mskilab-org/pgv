@@ -38,7 +38,7 @@ class PhylogenyPanel extends Component {
   };
 
   render() {
-    const { t, phylogeny, strainsList, geography, loading, title, selectPhylogenyNodes, nodes } = this.props;
+    const { t, phylogeny, strainsList, geography, loading, title, selectPhylogenyNodes, nodes, highlightedNodes } = this.props;
     if (!phylogeny) return null;
     return (
       <Wrapper>
@@ -71,7 +71,7 @@ class PhylogenyPanel extends Component {
           {!phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
           {phylogeny && (<div ref={(elem) => (this.container = elem)}><ContainerDimensions>
             {({ width, height }) => {
-              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick: selectPhylogenyNodes, nodes }} />;
+              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick: selectPhylogenyNodes, nodes, highlightedNodes }} />;
             }}
           </ContainerDimensions></div>)}
         </Card>
@@ -91,7 +91,8 @@ const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
   loading: state.App.loading,
-  nodes: state.App.nodes
+  nodes: state.App.nodes,
+  highlightedNodes: state.App.highlightedNodes
 });
 export default connect(
   mapStateToProps,

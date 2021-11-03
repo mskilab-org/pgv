@@ -81,6 +81,7 @@ class PhyloTree extends Component {
         if (leaf.data && leaf.data.strain) {
           leaf.label = leaf.data.strain;
         }
+        leaf.highlighted = this.props.highlightedNodes.includes(leaf.id);
         leaf.data = leaf.data || {};
         leaf.data.geography = geographyHash[leaf.data && leaf.data.gid] || {};
         leaf.selected = this.state.selectedNodes.includes(leaf.id); 
@@ -106,7 +107,7 @@ class PhyloTree extends Component {
     this.tree.zoomFactor = 1;
     this.tree.setNodeSize(3 * pixelRatio);
     this.tree.setTextSize(8 * pixelRatio);
-    this.tree.setSize((this.props.width - 2 * margins.padding) / pixelRatio, (this.tree.leaves.length * 10) / pixelRatio);
+    this.tree.setSize((this.props.width - 2 * margins.padding) / pixelRatio, (this.tree.leaves.length * 12) / pixelRatio);
     
     this.tree.adjustForPixelRatio();
     this.tree.disableZoom = true;

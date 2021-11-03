@@ -11,6 +11,7 @@ const actions = {
   PHYLOGENY_PIN_UPDATED: "PHYLOGENY_PIN_UPDATED",
   RENDER_OUTSIDE_VIEWPORT_UPDATED: "RENDER_OUTSIDE_VIEWPORT_UPDATED",
   PHYLOGENY_NODES_SELECTED: "PHYLOGENY_NODES_SELECTED",
+  PHYLOGENY_NODES_HIGHLIGHTED: "PHYLOGENY_NODES_HIGHLIGHTED",
   launchApp: () => ({
     type: actions.LAUNCH_APP,
   }),
@@ -44,6 +45,10 @@ const actions = {
   }),
   selectPhylogenyNodes: (nodes) => ({
     type: actions.PHYLOGENY_NODES_SELECTED,
+    nodes
+  }),
+  highlightPhylogenyNodes: (nodes) => ({
+    type: actions.PHYLOGENY_NODES_HIGHLIGHTED,
     nodes
   })
 };

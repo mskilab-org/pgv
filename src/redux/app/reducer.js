@@ -20,6 +20,7 @@ const initState = {
   selectedConnectionIds: [],
   connectionsAssociations: [],
   selectedConnectionsRange: [],
+  highlightedNodes: [],
   geographyHash: {},
   legendPinned: true,
   genesPinned: false,
@@ -61,6 +62,8 @@ export default function appReducer(state = initState, action) {
       return { ...state, phylogenyPinned: action.phylogenyPinned };
     case actions.RENDER_OUTSIDE_VIEWPORT_UPDATED:
       return { ...state, renderOutsideViewPort: action.renderOutsideViewPort };
+    case actions.PHYLOGENY_NODES_HIGHLIGHTED:
+      return { ...state, highlightedNodes: action.nodes };
     case actions.PHYLOGENY_NODES_SELECTED:
       let matchedConnectionIds = action.nodes
         .filter((node) => node.selected)
