@@ -63,8 +63,8 @@ function* launchApplication() {
     window.history.replaceState(newURL, 'Pan Genome Viewer', newURL);
 
     let plots = [{type: "genes", title: "Genes", source: `/genes/${selectedCoordinate}.arrow`, visible: false}, ...datafile.plots.map(d => {return {...d, source: `data/${file}/${d.source}`}})];
-    yield axios.all(plots.filter((d,i) => ["genome", "phylogeny"].includes(d.type)).map(d => axios.get(d.source))).then(axios.spread((...responses) => {
-      responses.forEach((d,i) => plots.filter((d,i) => ["genome", "phylogeny"].includes(d.type))[i].data = d.data);
+    yield axios.all(plots.filter((d,i) => ["genome", "phylogeny", "anatomy"].includes(d.type)).map(d => axios.get(d.source))).then(axios.spread((...responses) => {
+      responses.forEach((d,i) => plots.filter((d,i) => ["genome", "phylogeny", "anatomy"].includes(d.type))[i].data = d.data);
     })).catch(errors => {
       console.log("got errors on loading dependencies", errors)
     });

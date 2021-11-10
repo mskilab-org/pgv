@@ -59,7 +59,7 @@ class PhyloTree extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {newickString, strainsList, geography } = this.props;
+    const {newickString, strainsList, geography, height } = this.props;
     if (!newickString) {
       return;
     }
@@ -107,7 +107,7 @@ class PhyloTree extends Component {
     this.tree.zoomFactor = 1;
     this.tree.setNodeSize(3 * pixelRatio);
     this.tree.setTextSize(8 * pixelRatio);
-    this.tree.setSize((this.props.width - 2 * margins.padding) / pixelRatio, (this.tree.leaves.length * 12) / pixelRatio);
+    this.tree.setSize((this.props.width - 2 * margins.padding) / pixelRatio, ((height || this.tree.leaves.length * 12) / pixelRatio));
     
     this.tree.adjustForPixelRatio();
     this.tree.disableZoom = true;

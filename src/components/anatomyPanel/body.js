@@ -3,6 +3,12 @@ import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { Tooltip } from "react-svg-tooltip";
 
+const colors = {
+  selectedColour: "#79b321",
+  highlightColour: "#79b321",
+  normal: "#808080"
+}
+
 class Body extends Component {
   state = {
     highlightedIndex: null,
@@ -17,9 +23,10 @@ class Body extends Component {
   };
 
   render() {
-    const { locations, width, height } = this.props;
+    const { locations, width, height, nodes, highlightedNodes } = this.props;
     const { highlightedIndex } = this.state;
     const circleRefArray = locations.map((d, i) => React.createRef());
+    let markedNodes = nodes.filter(d => d.selected).map(d => d.id).concat(highlightedNodes);
     return (
       <svg
         version="1.1"
@@ -46,13 +53,13 @@ class Body extends Component {
                 ref={circleRefArray[i]}
                 cx={d.x}
                 cy={d.y}
-                r={10}
-                fill={highlightedIndex === i ? "#FF7F0E " : d3.rgb("steelblue")}
+                r={markedNodes.includes(d.sample) ? 14 : 10}
+                fill={highlightedIndex === i || markedNodes.includes(d.sample) ? colors.highlightColour : d3.rgb(colors.normal)}
                 fillOpacity={0.75}
                 stroke={
-                  highlightedIndex === i
-                    ? d3.rgb("#FF7F0E").darker()
-                    : d3.rgb("steelblue").darker()
+                  highlightedIndex === i || markedNodes.includes(d.sample)
+                    ? d3.rgb(colors.highlightColour).darker()
+                    : d3.rgb(colors.normal).darker()
                 }
                 strokeWidth={2}
                 strokeOpacity={0.75}
@@ -62,7 +69,7 @@ class Body extends Component {
               <Tooltip triggerRef={circleRefArray[i]}>
                 <rect
                   x={20}
-                  y={20}
+                  y={-20}
                   width={50}
                   height={40}
                   rx={5}
@@ -70,7 +77,7 @@ class Body extends Component {
                   fill="rgb(97, 97, 97)"
                   fillOpacity={0.97}
                 />
-                <text x={30} y={48} fontSize={24} fill="#FFF">
+                <text x={30} y={8} fontSize={24} fill="#FFF">
                   {d.sample}
                 </text>
               </Tooltip>

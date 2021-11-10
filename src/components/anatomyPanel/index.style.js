@@ -4,7 +4,7 @@ const Wrapper = styled.div`
   .ant-wrapper {
     background: white;
     padding: 0px;
-    ${props => !props.empty && "height: 400px"};
+    ${props => !props.empty && `height: ${props.minHeight}px`};
   }
 `;
 

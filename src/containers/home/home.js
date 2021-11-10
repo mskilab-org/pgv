@@ -18,6 +18,10 @@ import GenomePanel from "../../components/genomePanel";
 import AnatomyPanel from "../../components/anatomyPanel";
 import appActions from "../../redux/app/actions";
 
+const margins = {
+  minPanelHeight: 300
+};
+
 const { getDependencies, updateDomain } = appActions;
 
 class Home extends Component {
@@ -35,7 +39,41 @@ class Home extends Component {
       plots,
     } = this.props;
 
+    let phyloComponent = plots.find(e => e.type === "phylogeny");
+    let anatomyComponent = plots.find(e => e.type === "anatomy");
+    let phyloAnatomy = <Row className="">
+      {phyloComponent && phyloComponent.visible && <Col className="gutter-row" span={anatomyComponent && anatomyComponent.visible ? 18 : 24}>
+      {phyloComponent && <PhylogenyPanel
+          {...{
+            loading,
+            phylogeny: phyloComponent.data,
+            title: phyloComponent.title,
+            height: anatomyComponent && anatomyComponent.visible ? margins.minPanelHeight : null
+          }}
+        />}
+      </Col>}
+      {anatomyComponent && anatomyComponent.visible && <Col className="gutter-row" span={phyloComponent && phyloComponent.visible ? 6 : 24}>
+        <AnatomyPanel
+          {...{
+            loading,
+            anatomy: anatomyComponent.data,
+            title: anatomyComponent.title,
+            height: margins.minPanelHeight + 7
+          }}
+        />
+      </Col>}
+    </Row>
+    let plotPhyloAnatomyComponent = phylogenyPinned ? (
+      <Affix offsetTop={genesPinned ? (legendPinned ? 355 : 248) : (legendPinned ? 162 : 54)}>
+        {phyloAnatomy}
+      </Affix>
+    ) : (
+      phyloAnatomy
+    );
     let plotComponents = [];
+    if ((phyloComponent && phyloComponent.visible) || (anatomyComponent && anatomyComponent.visible)) {
+      plotComponents.push(plotPhyloAnatomyComponent);
+    }
     plots.forEach((d, i) => {
       let plotComponent = null;
       if (d.type === "genome") {
@@ -50,28 +88,8 @@ class Home extends Component {
             }}
           />
         );
-      } else if (d.type === "phylogeny") {
-        plotComponent = phylogenyPinned ? (
-          <Affix offsetTop={genesPinned ? (legendPinned ? 355 : 248) : (legendPinned ? 162 : 54)}>
-            <PhylogenyPanel
-              {...{
-                loading,
-                phylogeny: d.data,
-                title: d.title,
-                visible: d.visible,
-              }}
-            />
-          </Affix>
-        ) : (
-          <PhylogenyPanel
-            {...{
-              loading,
-              phylogeny: d.data,
-              title: d.title,
-              visible: d.visible,
-            }}
-          />
-        );
+      } else if (d.type === "phylogeny" || d.type === "anatomy") {
+        return;
       } else if (d.type === "genes") {
         plotComponent = genesPinned ? (
           <Affix offsetTop={legendPinned ? 162 : 54}>

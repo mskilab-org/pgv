@@ -10,10 +10,10 @@ import Wrapper from "./index.style";
 
 class AnatomyPanel extends Component {
   render() {
-    const { t, anatomy } = this.props;
+    const { t, title, height, anatomy, nodes, highlightedNodes } = this.props;
 
     return (
-      <Wrapper empty={anatomy.length < 1}>
+      <Wrapper empty={anatomy.length < 1} minHeight={height}>
         <Card
           size="small"
           title={
@@ -22,7 +22,7 @@ class AnatomyPanel extends Component {
                 <GiAnatomy />
               </span>
               <span className="ant-pro-menu-item-title">
-                {t("components.anatomy-panel.header")}
+                {title || t("components.anatomy-panel.header")}
               </span>
             </Space>
           }
@@ -38,7 +38,7 @@ class AnatomyPanel extends Component {
                 {({ width, height }) => {
                   return (
                     <Body
-                      {...{ width: width, height: height, locations: anatomy }}
+                      {...{ width: width, height: height, locations: anatomy, nodes, highlightedNodes }}
                     />
                   );
                 }}
@@ -58,7 +58,9 @@ AnatomyPanel.defaultProps = {
 };
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
-  anatomy: state.App.anatomy,
+  loading: state.App.loading,
+  nodes: state.App.nodes,
+  highlightedNodes: state.App.highlightedNodes
 });
 export default connect(
   mapStateToProps,

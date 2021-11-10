@@ -14,8 +14,7 @@ import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 
 const margins = {
-  padding: 0,
-  minHeight: 600
+  padding: 0
 };
 
 const { selectPhylogenyNodes } = appActions;
@@ -38,7 +37,7 @@ class PhylogenyPanel extends Component {
   };
 
   render() {
-    const { t, phylogeny, strainsList, geography, loading, title, selectPhylogenyNodes, nodes, highlightedNodes } = this.props;
+    const { t, phylogeny, height, strainsList, geography, loading, title, selectPhylogenyNodes, nodes, highlightedNodes } = this.props;
     if (!phylogeny) return null;
     return (
       <Wrapper>
@@ -70,8 +69,8 @@ class PhylogenyPanel extends Component {
         >
           {!phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
           {phylogeny && (<div ref={(elem) => (this.container = elem)}><ContainerDimensions>
-            {({ width, height }) => {
-              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: margins.minHeight, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick: selectPhylogenyNodes, nodes, highlightedNodes }} />;
+            {({ width, h }) => {
+              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: height, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick: selectPhylogenyNodes, nodes, highlightedNodes }} />;
             }}
           </ContainerDimensions></div>)}
         </Card>

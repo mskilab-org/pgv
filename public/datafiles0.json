@@ -4,6 +4,7 @@
     "reference": "hg19",
     "plots": [
       {"sample": null, "type": "phylogeny",  "source": "phylogeny.newick", "title": "Phylogenetic Information for DO233445", "visible": true },
+      {"sample": null, "type": "anatomy",  "source": "anatomy.json", "title": "Anatomy for DO233445", "visible": true },
       {"sample": "7E", "type": "genome", "source": "genome.json", "title": "Tumor sample 7E", "visible": true },
       {"sample": "7E", "type": "barplot", "source": "rpkm.arrow", "title": "RPKM Probability Distribution 7E", "visible": false },
       {"sample": "7E", "type": "scatterplot", "source": "coverage.arrow", "title": "Coverage Distribution 7E","visible": false },
