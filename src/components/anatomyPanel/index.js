@@ -7,10 +7,13 @@ import { withTranslation } from "react-i18next";
 import { GiAnatomy } from "react-icons/gi";
 import Body from "./body";
 import Wrapper from "./index.style";
+import appActions from "../../redux/app/actions";
+
+const { selectPhylogenyNodes } = appActions;
 
 class AnatomyPanel extends Component {
   render() {
-    const { t, title, height, anatomy, nodes, highlightedNodes } = this.props;
+    const { t, title, height, anatomy, figure, nodes, selectPhylogenyNodes, highlightedNodes } = this.props;
 
     return (
       <Wrapper empty={anatomy.length < 1} minHeight={height}>
@@ -38,7 +41,7 @@ class AnatomyPanel extends Component {
                 {({ width, height }) => {
                   return (
                     <Body
-                      {...{ width: width, height: height, locations: anatomy, nodes, highlightedNodes }}
+                      {...{ width: width, height: height, figure, locations: anatomy, nodes, highlightedNodes, onNodeClick: selectPhylogenyNodes }}
                     />
                   );
                 }}
@@ -56,7 +59,10 @@ AnatomyPanel.propTypes = {
 AnatomyPanel.defaultProps = {
   anatomy: [],
 };
-const mapDispatchToProps = (dispatch) => ({});
+const mapDispatchToProps = (dispatch) => ({
+  selectPhylogenyNodes: (nodes) =>
+    dispatch(selectPhylogenyNodes(nodes)),
+});
 const mapStateToProps = (state) => ({
   loading: state.App.loading,
   nodes: state.App.nodes,

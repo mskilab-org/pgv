@@ -58,7 +58,8 @@ class Home extends Component {
             loading,
             anatomy: anatomyComponent.data,
             title: anatomyComponent.title,
-            height: margins.minPanelHeight + 7
+            height: margins.minPanelHeight + 7,
+            figure: anatomyComponent.figure
           }}
         />
       </Col>}
