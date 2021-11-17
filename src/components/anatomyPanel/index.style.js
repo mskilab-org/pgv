@@ -5,6 +5,9 @@ const Wrapper = styled.div`
     background: white;
     padding: 0px;
     ${props => !props.empty && `height: ${props.minHeight}px`};
+    .location-highlight {
+      pointer-events: none;
+    }
   }
 `;
 

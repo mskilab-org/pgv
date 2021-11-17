@@ -32,7 +32,8 @@ class Body extends Component {
     const { locations, width, figure, height, nodes, highlightedNodes, onNodeClick } = this.props;
     const { highlightedIndex } = this.state;
     const circleRefArray = locations.map((d, i) => React.createRef());
-    let markedNodes = nodes.filter(d => d.selected).map(d => d.id).concat(highlightedNodes);
+    let markedNodes = nodes.filter(d => d.selected).map(d => d.id);
+    
     return (
       <svg
         {...Object.assign({}, figure.props, { width, height, onClick: this.onSVGClick })}>
@@ -44,11 +45,11 @@ class Body extends Component {
                 ref={circleRefArray[i]}
                 cx={d.x}
                 cy={d.y}
-                r={markedNodes.includes(d.sample) ? 14 : 10}
+                r={10}
                 fill={highlightedIndex === i || markedNodes.includes(d.sample) ? colors.highlightColour : d3.rgb(colors.normal)}
                 fillOpacity={0.75}
                 stroke={
-                  highlightedIndex === i || markedNodes.includes(d.sample)
+                  highlightedIndex === i
                     ? d3.rgb(colors.highlightColour).darker()
                     : d3.rgb(colors.normal).darker()
                 }
@@ -56,9 +57,32 @@ class Body extends Component {
                 strokeOpacity={0.75}
                 onMouseEnter={() => this.handleMouseEnter(i)}
                 onMouseLeave={() => this.handleMouseLeave(i)}
-                onClick={() => {
-                  onNodeClick(nodes.map(e => {return {id: e.id, selected: e.id === d.sample}}))
+                onClick={(e) => {
+                  let allNodes = nodes;
+                  if (nodes.length < 1) {
+                    allNodes = locations.map(k => {return {id: k.sample, selected: false}})
+                  }
+                  if (e.ctrlKey || e.metaKey) {
+                    onNodeClick(allNodes.map(k => {return {id: k.id, selected: k.selected || k.id === d.sample}}))
+                  } else {
+                    onNodeClick(allNodes.map(k => {return {id: k.id, selected: k.id === d.sample}}));
+                  }
+                  
                 }}
+              />
+              <circle
+                className="location-highlight"
+                cx={d.x}
+                cy={d.y}
+                r={highlightedNodes.includes(d.sample) ? 24 : 0}
+                fill={"transparent"}
+                stroke={
+                  highlightedNodes.includes(d.sample)
+                    ? d3.rgb(colors.highlightColour)
+                    : "transparent"
+                }
+                strokeWidth={8}
+                strokeOpacity={0.75}
               />
               <Tooltip triggerRef={circleRefArray[i]}>
                 <rect

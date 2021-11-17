@@ -44,14 +44,14 @@ class PhyloTree extends Component {
         fillStyle: "#808080",
         strokeStyle: "#808080",
         lineWidth: 1,
-        fontFamily: "Sans-serif",
-        fontSize: 16,
+        fontFamily: "Arial",
+        fontSize: 10,
         textBaseline: "bottom",
         textAlign: "center",
         digits: 2,
         position: {
-          bottom: 10,
-          right: 10,
+          bottom: 0,
+          right: 0,
         },
       },
     });
@@ -125,7 +125,8 @@ class PhyloTree extends Component {
       this.tree.tooltip = new PhyloTooltip(this.tree);
       this.tree.getSelectedNodeIds().toString() !== this.state.selectedNodes.toString() && this.setState({selectedNodes: this.tree.getSelectedNodeIds()}, () => {this.props.onNodeClick(this.tree.leaves.map(d => {return {id: d.id, selected: d.selected}}))});
     });
-    this.tree.draw();
+    this.tree.draw(true);
+    
   }
 
   render() {

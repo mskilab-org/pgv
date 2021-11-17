@@ -2,10 +2,10 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { withTranslation } from "react-i18next";
 import { connect } from "react-redux";
+import * as d3 from "d3"; 
 import {
   PageHeader,
   Space,
-  Tag,
   Button,
   Tooltip,
   message,
@@ -16,6 +16,7 @@ import {
   Divider,
   Menu,
   Dropdown,
+  InputNumber,
 } from "antd";
 import {
   AiOutlineDownload,
@@ -34,7 +35,10 @@ const {
   updatePhylogenyPin,
   updateRenderOutsideViewport,
   updateDomains,
+  updatePhylogenyPanelHeight
 } = appActions;
+
+const PHYLOGENY_PANEL_HEIGHT = {min: 50, max: 500, default: 200, step: 10};
 
 class HeaderPanel extends Component {
   state = { visible: false };
@@ -86,12 +90,17 @@ class HeaderPanel extends Component {
     this.props.updateRenderOutsideViewport(checked);
   };
 
+  onPhylogenyPanelHeightChanged = (value) => {
+    let val = d3.max([value, PHYLOGENY_PANEL_HEIGHT.min]);
+    val = d3.min([val, PHYLOGENY_PANEL_HEIGHT.max]);
+    this.props.updatePhylogenyPanelHeight(val);
+  };
+
   render() {
     const {
       t,
       description,
       file,
-      strainsList,
       tags,
       plots,
       legendPinned,
@@ -101,6 +110,7 @@ class HeaderPanel extends Component {
       nodes,
       selectedConnectionsRange,
       selectedConnectionIds,
+      phylogenyPanelHeight
     } = this.props;
     return (
       <Wrapper>
@@ -112,10 +122,6 @@ class HeaderPanel extends Component {
               {description.map((d) => (
                 <span key={d}>{d}</span>
               ))}
-              <span>
-                <b>{strainsList.length}</b>{" "}
-                {t("containers.home.strain", { count: strainsList.length })}
-              </span>
               <Dropdown
                 overlay={
                   <Menu>
@@ -233,6 +239,12 @@ class HeaderPanel extends Component {
                 </Space>
               </Col>
               <Col span={24}>
+                <Space>
+                  <InputNumber style={{width: 55}} size="small" min={PHYLOGENY_PANEL_HEIGHT.min} max={PHYLOGENY_PANEL_HEIGHT.max} value={phylogenyPanelHeight} step={PHYLOGENY_PANEL_HEIGHT.step} defaultValue={PHYLOGENY_PANEL_HEIGHT.default} bordered={false} onChange={(value) => this.onPhylogenyPanelHeightChanged(value)}/>
+                  {t("components.settings-panel.phylogeny-panel-height")}
+                </Space>
+              </Col>
+              <Col span={24}>
                 <Divider>
                   {t("components.settings-panel.plot-visibility")}
                 </Divider>
@@ -279,11 +291,9 @@ class HeaderPanel extends Component {
 HeaderPanel.propTypes = {
   description: PropTypes.array,
   file: PropTypes.string,
-  strainsList: PropTypes.array,
   tags: PropTypes.array,
 };
 HeaderPanel.defaultProps = {
-  strainsList: [],
   description: [],
   tags: [],
 };
@@ -295,6 +305,7 @@ const mapDispatchToProps = (dispatch) => ({
   updateRenderOutsideViewport: (renderOutsideViewPort) =>
     dispatch(updateRenderOutsideViewport(renderOutsideViewPort)),
   updateDomains: (domains) => dispatch(updateDomains(domains)),
+  updatePhylogenyPanelHeight: (value) => dispatch(updatePhylogenyPanelHeight(value)),
 });
 const mapStateToProps = (state) => ({
   plots: state.App.plots,
@@ -305,6 +316,7 @@ const mapStateToProps = (state) => ({
   nodes: state.App.nodes,
   selectedConnectionIds: state.App.selectedConnectionIds,
   selectedConnectionsRange: state.App.selectedConnectionsRange,
+  phylogenyPanelHeight: state.App.phylogenyPanelHeight
 });
 export default connect(
   mapStateToProps,

@@ -18,10 +18,6 @@ import GenomePanel from "../../components/genomePanel";
 import AnatomyPanel from "../../components/anatomyPanel";
 import appActions from "../../redux/app/actions";
 
-const margins = {
-  minPanelHeight: 300
-};
-
 const { getDependencies, updateDomain } = appActions;
 
 class Home extends Component {
@@ -36,6 +32,7 @@ class Home extends Component {
       legendPinned,
       genesPinned,
       phylogenyPinned,
+      phylogenyPanelHeight,
       plots,
     } = this.props;
 
@@ -48,7 +45,7 @@ class Home extends Component {
             loading,
             phylogeny: phyloComponent.data,
             title: phyloComponent.title,
-            height: anatomyComponent && anatomyComponent.visible ? margins.minPanelHeight : null
+            height: anatomyComponent && anatomyComponent.visible ? phylogenyPanelHeight : null
           }}
         />}
       </Col>}
@@ -58,7 +55,7 @@ class Home extends Component {
             loading,
             anatomy: anatomyComponent.data,
             title: anatomyComponent.title,
-            height: margins.minPanelHeight + 7,
+            height: phylogenyPanelHeight + 7,
             figure: anatomyComponent.figure
           }}
         />
@@ -196,6 +193,7 @@ const mapStateToProps = (state) => ({
   legendPinned: state.App.legendPinned,
   genesPinned: state.App.genesPinned,
   phylogenyPinned: state.App.phylogenyPinned,
+  phylogenyPanelHeight: state.App.phylogenyPanelHeight,
   loading: state.App.loading,
 });
 export default connect(

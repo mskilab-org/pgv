@@ -17,6 +17,7 @@ const initState = {
   tags: [],
   plots: [],
   nodes: [],
+  phylogenyPanelHeight: 200,
   selectedConnectionIds: [],
   connectionsAssociations: [],
   selectedConnectionsRange: [],
@@ -64,6 +65,8 @@ export default function appReducer(state = initState, action) {
       return { ...state, renderOutsideViewPort: action.renderOutsideViewPort };
     case actions.PHYLOGENY_NODES_HIGHLIGHTED:
       return { ...state, highlightedNodes: action.nodes };
+    case actions.PHYLOGENY_PANEL_HEIGHT_UPDATED:
+      return { ...state, phylogenyPanelHeight: action.phylogenyPanelHeight };
     case actions.PHYLOGENY_NODES_SELECTED:
       let matchedConnectionIds = action.nodes
         .filter((node) => node.selected)

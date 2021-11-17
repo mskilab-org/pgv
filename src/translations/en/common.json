@@ -131,6 +131,7 @@
       "legend-pinned": "Reference Panel pinned",
       "genes-pinned": "Genes Panel pinned",
       "phylogeny-pinned": "Phylogeny Panel pinned",
+      "phylogeny-panel-height": "Phylogeny Height (px)",
       "panels": {
         "label": "Visible Panels"
       }

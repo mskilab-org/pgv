@@ -12,6 +12,7 @@ const actions = {
   RENDER_OUTSIDE_VIEWPORT_UPDATED: "RENDER_OUTSIDE_VIEWPORT_UPDATED",
   PHYLOGENY_NODES_SELECTED: "PHYLOGENY_NODES_SELECTED",
   PHYLOGENY_NODES_HIGHLIGHTED: "PHYLOGENY_NODES_HIGHLIGHTED",
+  PHYLOGENY_PANEL_HEIGHT_UPDATED: "PHYLOGENY_PANEL_HEIGHT_UPDATED",
   launchApp: () => ({
     type: actions.LAUNCH_APP,
   }),
@@ -50,7 +51,12 @@ const actions = {
   highlightPhylogenyNodes: (nodes) => ({
     type: actions.PHYLOGENY_NODES_HIGHLIGHTED,
     nodes
+  }),
+  updatePhylogenyPanelHeight: (phylogenyPanelHeight) => ({
+    type: actions.PHYLOGENY_PANEL_HEIGHT_UPDATED,
+    phylogenyPanelHeight
   })
+  
 };
 
 export default actions;
