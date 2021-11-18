@@ -61,5 +61,4 @@ yarn-debug.log*
 yarn-error.log*
 public/datafiles.json
 public/data/*
-!public/data/0124
-!public/data/DO234435
+!public/data/DEMO
