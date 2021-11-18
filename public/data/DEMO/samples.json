@@ -1,0 +1,51 @@
+[
+  {
+    "sample": "7A",
+    "Site": "Liver",
+    "Some arbitrary field": "Best value ever!!"
+  },
+  {
+    "sample": "7B",
+    "Site": "Prostate"
+  },
+  {
+    "sample": "7C",
+    "Site": "Lymph Node"
+  },
+  {
+    "sample": "7D",
+    "Site": "Colon"
+  },
+  {
+    "sample": "7L",
+    "Site": "Prostate"
+  },
+  {
+    "sample": "7E",
+    "Site": "Colon"
+  },
+  {
+    "sample": "7F",
+    "Site": "Colon"
+  },
+  {
+    "sample": "7G",
+    "Site": "Colon"
+  },
+  {
+    "sample": "7H",
+    "Site": "Other Tissue Type"
+  },
+  {
+    "sample": "7I",
+    "Site": "Other Tissue Type"
+  },
+  {
+    "sample": "7J",
+    "Site": "Other Tissue Type"
+  },
+  {
+    "sample": "7K",
+    "Site": "Lung"
+  }
+]
