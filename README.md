@@ -12,31 +12,54 @@ In order to use PGV you need to have the following:
 2. [Node.js](https://nodejs.org/en/)
 3. [yarn](https://yarnpkg.com/)
 
-### Installing PGV
+### Installing PGV (the detailed recipe)
 
-Clone the repository:
+Once you have all dependencies then setting up PGV takes just the following steps:
+
+1. Cloning the repository
+2. Running "yarn install"
+3. Setting up reference files
+
+To clone the repository run:
 
 ```
 git clone https://github.com/mskilab/pgv.git
 ```
 
-Pull files using `git lfs`:
+Before you get started, you need to run:
 
 ```
 cd pgv
-git lfs install
-git lfs pull
-```
-
-Before you get started, in the project directory, you need to run:
-
-```
 yarn install
 ```
 
-Make sure you add your own list of sample files at the location /public/datafiles.json
+To download the reference files you can run the following commands (you can run all if you want all reference files, or just the one the fits the reference that you are using for your data):
 
-You may find an example datafiles.json file at /public/datafiles0.json (if you want to use the example data then make sure to change the name of the file from datafiles0.json to datafiles.json)
+```
+# hg19 reference gene file
+wget -P public/genes https://mskilab.s3.amazonaws.com/pgv/hg19.arrow
+# hg19 (with "chr" prefix in sequence names) reference gene file
+wget -P public/genes https://mskilab.s3.amazonaws.com/pgv/hg19_chr.arrow
+# hg38 reference gene file
+wget -P public/genes https://mskilab.s3.amazonaws.com/pgv/hg38.arrow
+# hg38 (with "chr" prefix in sequence names) reference gene file
+wget -P public/genes https://mskilab.s3.amazonaws.com/pgv/hg38_chr.arrow
+```
+
+Make sure you add your own list of sample files at the location `public/datafiles.json`
+
+You may find an example datafiles.json file at `public/datafiles0.json` (if you want to use the example data then make sure to change the name of the file from `datafiles0.json` to `datafiles.json`)
+
+### Installing PGV (For the impatient)
+
+If you just want to install pgv and test it using the provided demo, then run the following code:
+
+```
+git clone https://github.com/mskilab/pgv.git
+cd pgv
+mv public/datafiles0.json public/datafiles.json
+./start.sh # this command will run yarn install, download the reference files and yarn start
+```
 
 ## Starting the PGV interface
 
