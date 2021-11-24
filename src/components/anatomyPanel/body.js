@@ -43,8 +43,8 @@ class Body extends Component {
               <circle
                 className="location"
                 ref={circleRefArray[i]}
-                cx={d.x}
-                cy={d.y}
+                cx={+figure.props.width.replaceAll('px', '') * d.x}
+                cy={+figure.props.height.replaceAll('px', '') * d.y}
                 r={10}
                 fill={highlightedIndex === i || markedNodes.includes(d.sample) ? colors.highlightColour : d3.rgb(colors.normal)}
                 fillOpacity={0.75}
@@ -72,8 +72,8 @@ class Body extends Component {
               />
               <circle
                 className="location-highlight"
-                cx={d.x}
-                cy={d.y}
+                cx={+figure.props.width.replaceAll('px', '') * d.x}
+                cy={+figure.props.height.replaceAll('px', '') * d.y}
                 r={highlightedNodes.includes(d.sample) ? 24 : 0}
                 fill={"transparent"}
                 stroke={

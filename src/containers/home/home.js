@@ -76,15 +76,15 @@ class Home extends Component {
     ) : (
       phyloAnatomy
     );
-    let genesPlotComponent = genesPinned ? (
-      <Affix offsetTop={legendPinned ? 121 : 54} style={{position: this.state.legendAffixed ? "absolute" : "relative", top: 0, left: 0, right: 0, zIndex: 900}} onChange={affixed => this.onPanelAffixChanged("genesAffixed", affixed)}>
-        <GenesPanel {...{ genes: genesComponent.data, chromoBins, visible: false }} />
-      </Affix>
-    ) : (
-      <GenesPanel {...{ genes: genesComponent.data, chromoBins, visible: false }} />
-    );
     let plotComponents = [];
-    if (genesComponent && genesComponent.visible) {
+    if (genesComponent && genesComponent.data && genesComponent.visible) {
+      let genesPlotComponent = genesPinned ? (
+        <Affix offsetTop={legendPinned ? 121 : 54} style={{position: this.state.legendAffixed ? "absolute" : "relative", top: 0, left: 0, right: 0, zIndex: 900}} onChange={affixed => this.onPanelAffixChanged("genesAffixed", affixed)}>
+          <GenesPanel {...{ genes: genesComponent.data, chromoBins, visible: false }} />
+        </Affix>
+      ) : (
+        <GenesPanel {...{ genes: genesComponent.data, chromoBins, visible: false }} />
+      );
       plotComponents.push(genesPlotComponent);
     }
     if ((phyloComponent && phyloComponent.visible) || (anatomyComponent && anatomyComponent.visible)) {
