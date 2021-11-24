@@ -18,6 +18,8 @@ const margins = {
   padding: 10
 };
 
+const pixelRatio = window.devicePixelRatio || 2.0;
+
 class PhyloTree extends Component {
   container = null;
   tree = null;
@@ -45,7 +47,7 @@ class PhyloTree extends Component {
         strokeStyle: "#808080",
         lineWidth: 1,
         fontFamily: "Arial",
-        fontSize: 10,
+        fontSize: 8 * pixelRatio,
         textBaseline: "bottom",
         textAlign: "center",
         digits: 2,
@@ -70,7 +72,7 @@ class PhyloTree extends Component {
       this.setState({selectedNodes});
     }
 
-    const pixelRatio = window.devicePixelRatio || 2.0;
+    
     const geographyHash = {};
     geography.forEach((d, i) => (geographyHash[d.id] = d));
 
@@ -99,6 +101,8 @@ class PhyloTree extends Component {
     this.tree.fillCanvas = true;
     this.tree.showInternalNodeLabels = true;
     this.tree.branchColour = "#808080";
+    this.tree.internalLabelStyle.textSize = 8 * pixelRatio;
+    this.tree.internalLabelStyle.font = "Arial";
     this.tree.selectedColour = "#79b321";
     this.tree.setTreeType("rectangular");
     this.tree.highlightColour = "#79b321";
