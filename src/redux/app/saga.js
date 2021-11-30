@@ -128,6 +128,12 @@ function* launchApplication() {
       .catch((error) => ({ error }));
     let connectionsAssociations = (response && response.data) || [];
 
+    const { responseSamples } = yield axios
+    .get(`/data/${file}/samples.json`)
+    .then((responseSamples) => ({ responseSamples }))
+    .catch((error) => ({ error }));
+    let samples = (responseSamples && responseSamples.data) || [];
+
     let anatomyPlot = plots.find((d) => d.type === "anatomy");
     if (anatomyPlot) {
       const { res } = yield axios
@@ -149,6 +155,7 @@ function* launchApplication() {
       chromoBins,
       plots,
       connectionsAssociations,
+      samples
     };
     yield put({ type: actions.LAUNCH_APP_SUCCESS, properties });
   } else {

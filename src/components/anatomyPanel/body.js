@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { Tooltip } from "react-svg-tooltip";
+import { humanize, measureText } from "../../helpers/utility";
 
 const colors = {
   selectedColour: "#79b321",
@@ -29,7 +30,7 @@ class Body extends Component {
   }
 
   render() {
-    const { locations, width, figure, height, nodes, highlightedNodes, onNodeClick } = this.props;
+    const { locations, width, figure, height, nodes, samples, highlightedNodes, onNodeClick } = this.props;
     const { highlightedIndex } = this.state;
     const circleRefArray = locations.map((d, i) => React.createRef());
     let markedNodes = nodes.filter(d => d.selected).map(d => d.id);
@@ -86,18 +87,20 @@ class Body extends Component {
               />
               <Tooltip triggerRef={circleRefArray[i]}>
                 <rect
-                  x={20}
+                  x={40}
                   y={-20}
-                  width={50}
-                  height={40}
+                  width={50 + d3.max(Object.keys(samples[d.sample]), (e) => measureText(`${humanize(e)}: ${samples[d.sample][e]}`, 24))}
+                  height={40 + Object.keys(samples[d.sample]).length * 24}
                   rx={5}
                   ry={5}
                   fill="rgb(97, 97, 97)"
                   fillOpacity={0.97}
                 />
-                <text x={30} y={8} fontSize={24} fill="#FFF">
-                  {d.sample}
-                </text>
+                {Object.keys(samples[d.sample]).map((e,i) => 
+                  <text x={50} y={i * 24 + 20} fontSize={24} fill="#FFF">
+                    {humanize(e)}: {samples[d.sample][e]}
+                  </text>
+                )}
               </Tooltip>
             </g>
           ))}

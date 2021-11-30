@@ -27,6 +27,7 @@ const initState = {
   genesPinned: false,
   phylogenyPinned: false,
   renderOutsideViewPort: false,
+  samples: {}
 };
 
 export default function appReducer(state = initState, action) {

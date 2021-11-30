@@ -45,6 +45,7 @@ class AnatomyPanel extends Component {
       nodes,
       selectPhylogenyNodes,
       highlightedNodes,
+      samples
     } = this.props;
 
     return (
@@ -92,6 +93,7 @@ class AnatomyPanel extends Component {
                         figure,
                         locations: anatomy,
                         nodes,
+                        samples,
                         highlightedNodes,
                         onNodeClick: selectPhylogenyNodes,
                       }}
@@ -119,6 +121,7 @@ const mapStateToProps = (state) => ({
   loading: state.App.loading,
   nodes: state.App.nodes,
   highlightedNodes: state.App.highlightedNodes,
+  samples: state.App.samples
 });
 export default connect(
   mapStateToProps,

@@ -8,7 +8,6 @@ import { connect } from "react-redux";
 import Wrapper from "./index.style";
 import GenomeRangePanel from "./genomeRangePanel";
 import LegendMultiBrush from "./legend-multi-brush";
-const { Meta } = Card;
 const margins = {
   padding: 12
 };

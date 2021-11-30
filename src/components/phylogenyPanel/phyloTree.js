@@ -61,7 +61,7 @@ class PhyloTree extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {newickString, strainsList, geography, height } = this.props;
+    const {newickString, samples, height } = this.props;
     if (!newickString) {
       return;
     }
@@ -72,28 +72,16 @@ class PhyloTree extends Component {
       this.setState({selectedNodes});
     }
 
-    
-    const geographyHash = {};
-    geography.forEach((d, i) => (geographyHash[d.id] = d));
-
     this.tree.load(newickString);
     this.tree.on("beforeFirstDraw", () => {
       this.tree.leaves.forEach((leaf, i) => {
-        leaf.data = strainsList.find((d,i) => +d.sid === +leaf.id);
-        if (leaf.data && leaf.data.strain) {
-          leaf.label = leaf.data.strain;
+        leaf.data = samples[leaf.id];
+        if (leaf.data && leaf.data.sample) {
+          leaf.label = leaf.data.sample;
         }
         leaf.highlighted = this.props.highlightedNodes.includes(leaf.id);
         leaf.data = leaf.data || {};
-        leaf.data.geography = geographyHash[leaf.data && leaf.data.gid] || {};
         leaf.selected = this.state.selectedNodes.includes(leaf.id); 
-        leaf.setDisplay({
-          leafStyle: {
-            strokeStyle: geographyHash[leaf.data.gid] ? d3.rgb(geographyHash[leaf.data && leaf.data.gid].fill).darker() : "#808080",
-            fillStyle: geographyHash[leaf.data.gid] ? geographyHash[leaf.data && leaf.data.gid].fill : "#808080",
-            lineWidth: 2,
-          }
-        });
       });
     });
 
@@ -145,12 +133,10 @@ class PhyloTree extends Component {
 PhyloTree.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
-  strainsList: PropTypes.array,
-  geography: PropTypes.array,
+  samples: PropTypes.object,
   onNodeClick: PropTypes.func
 };
 PhyloTree.defaultProps = {
-  strainsList: [],
-  geography: []
+  samples: {}
 };
 export default withTranslation("common")(PhyloTree);

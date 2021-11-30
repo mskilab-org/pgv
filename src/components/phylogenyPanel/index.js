@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Empty, Tooltip, Switch, Button, message } from "antd";
+import { Card, Space, Empty, Tooltip, Button, message } from "antd";
 import { AiOutlineDownload } from "react-icons/ai";
 import * as htmlToImage from "html-to-image";
 import { downloadCanvasAsPng } from "../../helpers/utility";
@@ -37,7 +37,7 @@ class PhylogenyPanel extends Component {
   };
 
   render() {
-    const { t, phylogeny, height, strainsList, geography, loading, title, selectPhylogenyNodes, nodes, highlightedNodes } = this.props;
+    const { t, phylogeny, height, samples, loading, title, selectPhylogenyNodes, nodes, highlightedNodes } = this.props;
     if (!phylogeny) return null;
     return (
       <Wrapper>
@@ -70,7 +70,7 @@ class PhylogenyPanel extends Component {
           {!phylogeny && <Empty description={t("components.phylogeny-panel.no-data-message")}/>}
           {phylogeny && (<div ref={(elem) => (this.container = elem)}><ContainerDimensions>
             {({ width, h }) => {
-              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: height, newickString: phylogeny, strainsList: strainsList, geography: geography, onNodeClick: selectPhylogenyNodes, nodes, highlightedNodes }} />;
+              return <PhyloTree {...{ width: (width - 2 * margins.padding), height: height, newickString: phylogeny, samples, onNodeClick: selectPhylogenyNodes, nodes, highlightedNodes }} />;
             }}
           </ContainerDimensions></div>)}
         </Card>
@@ -81,8 +81,7 @@ class PhylogenyPanel extends Component {
 PhylogenyPanel.propTypes = {};
 PhylogenyPanel.defaultProps = {
   phylogeny: null,
-  strainsList: [],
-  geography: []
+  samples: {}
 };
 const mapDispatchToProps = (dispatch) => ({
   selectPhylogenyNodes: (nodes) =>
@@ -91,7 +90,8 @@ const mapDispatchToProps = (dispatch) => ({
 const mapStateToProps = (state) => ({
   loading: state.App.loading,
   nodes: state.App.nodes,
-  highlightedNodes: state.App.highlightedNodes
+  highlightedNodes: state.App.highlightedNodes,
+  samples: state.App.samples
 });
 export default connect(
   mapStateToProps,

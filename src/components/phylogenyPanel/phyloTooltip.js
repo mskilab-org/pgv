@@ -1,5 +1,6 @@
 import { Tooltip } from "phylocanvas";
 import * as d3 from "d3";
+import { humanize } from "../../helpers/utility";
 import i18n from "../../i18n";
 
 class PhyloTooltip extends Tooltip {
@@ -23,17 +24,13 @@ class PhyloTooltip extends Tooltip {
 
     box.append("p")
       .attr("class", "header")
-      .text(node.data.strain);
+      .text(node.id);
 
     let fieldValues = [
-      [i18n.t("common:components.phylogeny-panel.tooltip.id"), node.id],
       [i18n.t("common:components.phylogeny-panel.tooltip.branch-length"), d3.format(".2s")(node.branchLength)],
-      [i18n.t("common:components.phylogeny-panel.tooltip.total-branch-length"), d3.format(".2s")(node.totalBranchLength)],
-      [i18n.t("common:components.phylogeny-panel.tooltip.strain"), node.data.strain || "N/A"],
-      [i18n.t("common:components.phylogeny-panel.tooltip.clade"), node.data.clade || "N/A"],
-      [i18n.t("common:components.phylogeny-panel.tooltip.location"), (node.data.geography && node.data.geography.title) || "N/A"],
-      [i18n.t("common:components.phylogeny-panel.tooltip.country"), (node.data.geography && node.data.geography.code) || "N/A"],
+      [i18n.t("common:components.phylogeny-panel.tooltip.total-branch-length"), d3.format(".2s")(node.totalBranchLength)]
     ];
+    fieldValues = fieldValues.concat(Object.keys(node.data).map(d => [humanize(d), node.data[d]]));
     box.append("table").attr("class", "content").append("tbody");
 
     let tableData = d3.select(this.element).select("tbody")

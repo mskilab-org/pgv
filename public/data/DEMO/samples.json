@@ -1,51 +1,51 @@
-[
-  {
+{
+  "7A": {
     "sample": "7A",
-    "Site": "Liver",
-    "Some arbitrary field": "Best value ever!!"
+    "site": "Liver",
+    "gender": "male"
   },
-  {
+  "7B": {
     "sample": "7B",
-    "Site": "Prostate"
+    "site": "Prostate"
   },
-  {
+  "7C": {
     "sample": "7C",
-    "Site": "Lymph Node"
+    "site": "Lymph Node"
   },
-  {
+  "7D": {
     "sample": "7D",
-    "Site": "Colon"
+    "site": "Colon"
   },
-  {
+  "7L": {
     "sample": "7L",
-    "Site": "Prostate"
+    "site": "Prostate"
   },
-  {
+  "7E": {
     "sample": "7E",
-    "Site": "Colon"
+    "site": "Colon"
   },
-  {
+  "7F": {
     "sample": "7F",
-    "Site": "Colon"
+    "site": "Colon"
   },
-  {
+  "7G": {
     "sample": "7G",
-    "Site": "Colon"
+    "site": "Colon"
   },
-  {
+  "7H": {
     "sample": "7H",
-    "Site": "Other Tissue Type"
+    "site": "Other Tissue Type"
   },
-  {
+  "7I": {
     "sample": "7I",
-    "Site": "Other Tissue Type"
+    "site": "Other Tissue Type"
   },
-  {
+  "7J": {
     "sample": "7J",
-    "Site": "Other Tissue Type"
+    "site": "Other Tissue Type"
   },
-  {
+  "7K": {
     "sample": "7K",
-    "Site": "Lung"
+    "site": "Lung"
   }
-]
+}

@@ -263,10 +263,8 @@ class LegendMultiBrush extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return (
-      (nextProps &&
-        nextProps.domains.toString() !== this.props.domains.toString())
-    );
+    return nextProps.domains.toString() !== this.props.domains.toString()
+        || nextProps.width !== this.props.width;
   }
 
   componentDidUpdate() {

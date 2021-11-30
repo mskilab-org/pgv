@@ -176,7 +176,9 @@ class GenomePlot extends Component {
     return (nextProps.domains.toString() !== this.props.domains.toString()) 
     || (nextState.tooltip.shapeId !== this.state.tooltip.shapeId) 
     || (nextProps.selectedConnectionIds.toString() !== this.props.selectedConnectionIds.toString())
-    || (nextProps.annotation !== this.props.annotation);
+    || (nextProps.annotation !== this.props.annotation)
+    || (nextProps.width !== this.props.width)
+    || (nextProps.height !== this.props.height);
   }
 
   componentDidMount() {
