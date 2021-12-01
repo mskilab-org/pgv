@@ -14,7 +14,7 @@ const margins = {
 
 class LegendPanel extends Component {
   render() {
-    const { t } = this.props;
+    const { t, selectedCoordinate } = this.props;
     return (
       <Wrapper>
         <Card
@@ -24,8 +24,8 @@ class LegendPanel extends Component {
               <span role="img" className="anticon anticon-dashboard">
                 <AiFillBoxPlot />
               </span>
-              <span className="ant-pro-menu-item-title">
-                {t("components.legend-panel.header")}
+              <span>
+                {selectedCoordinate}
               </span>
             </Space>
           }
@@ -47,5 +47,6 @@ LegendPanel.defaultProps = {
 };
 const mapDispatchToProps = {};
 const mapStateToProps = (state) => ({
+  selectedCoordinate: state.App.selectedCoordinate
 });
 export default connect(mapStateToProps, mapDispatchToProps)(withTranslation("common")(LegendPanel));

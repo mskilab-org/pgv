@@ -24,12 +24,9 @@ class GenomePlot extends Component {
     this.zoom = null;
     this.container = null;
     this.grid = null;
-    const { width, height, defaultDomain, chromoBins, genome } = this.props;
+    const { defaultDomain, chromoBins, genome } = this.props;
 
-    let stageWidth = width - 2 * margins.gap;
-    let stageHeight = height - 3 * margins.gap;
     let currentTransform = null;
-    let genomeScale = d3.scaleLinear().domain(defaultDomain).range([0, stageWidth]);
     let intervals = [];
     let intervalBins = {};
     genome.intervals.forEach((d, i) => {
@@ -48,7 +45,6 @@ class GenomePlot extends Component {
     let frameConnections = genome.connections.map((d,i) => {
       let connection = new Connection(d);
       connection.pinpoint(intervalBins);
-      //connection.yScale = this.yScale;
       connection.arc = d3.arc()
         .innerRadius(0)
         .outerRadius(margins.bar / 2)
@@ -57,11 +53,8 @@ class GenomePlot extends Component {
       return connection;
     });
     this.state = {
-      stageWidth,
-      stageHeight,
       intervals,
       defaultDomain,
-      genomeScale,
       currentTransform,
       intervalBins,
       frameConnections,
@@ -77,8 +70,10 @@ class GenomePlot extends Component {
   }
 
   updatePanels() {
-    const { stageWidth, stageHeight, intervals, defaultDomain, frameConnections } = this.state;
-    let { domains } = this.props;
+    const { intervals, defaultDomain, frameConnections } = this.state;
+    let { domains, width, height } = this.props;
+    let stageWidth = width - 2 * margins.gap;
+    let stageHeight = height - 3 * margins.gap;
     let panelWidth = (stageWidth - (domains.length - 1) * margins.gap) / domains.length;
     let panelHeight = stageHeight;
     this.connections = [];

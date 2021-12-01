@@ -1,5 +1,6 @@
 import { all, takeEvery, put, call } from "redux-saga/effects";
 import axios from "axios";
+import StringToReact from "string-to-react";
 import actions from "./actions";
 import * as d3 from "d3";
 import {
@@ -8,19 +9,6 @@ import {
   domainsToLocation,
   locationToDomains,
 } from "../../helpers/utility";
-import StringToReact from "string-to-react";
-
-function* fetchGeography({ file }) {
-  const { response } = yield axios
-    .get(`/data/${file}/geography.json`)
-    .then((response) => ({ response }))
-    .catch((error) => ({ error }));
-  yield put({
-    type: actions.GEOGRAPHY_RECEIVED,
-    file: file,
-    geography: response && response.data,
-  });
-}
 
 function* fetchArrowData(plot) {
   yield loadArrowTable(plot.source)
@@ -165,7 +153,6 @@ function* launchApplication() {
 
 function* actionWatcher() {
   yield takeEvery(actions.LAUNCH_APP, launchApplication);
-  yield takeEvery(actions.GET_GEOGRAPHY, fetchGeography);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

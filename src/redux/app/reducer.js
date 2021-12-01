@@ -5,15 +5,12 @@ import { domainsToLocation, cluster } from "../../helpers/utility";
 const initState = {
   loading: false,
   selectedCoordinate: null,
-  defaultGeography: [],
   genomeLength: 0,
   defaultDomain: [],
   domains: [],
   datafile: { filename: "", file: "", tags: [], plots: [], reference: "" },
-  strainsList: [],
   chromoBins: {},
   coordinates: [],
-  geography: [],
   tags: [],
   plots: [],
   nodes: [],
@@ -22,7 +19,6 @@ const initState = {
   connectionsAssociations: [],
   selectedConnectionsRange: [],
   highlightedNodes: [],
-  geographyHash: {},
   legendPinned: true,
   genesPinned: false,
   phylogenyPinned: false,
@@ -31,7 +27,6 @@ const initState = {
 };
 
 export default function appReducer(state = initState, action) {
-  let { geographyHash, geography } = state;
   switch (action.type) {
     case actions.LAUNCH_APP:
       return { ...state, loading: true };
@@ -39,19 +34,6 @@ export default function appReducer(state = initState, action) {
       return { ...state, ...action.properties, loading: false };
     case actions.LAUNCH_APP_FAILED:
       return { ...state, missingDataFiles: true, loading: false };
-    case actions.GET_GEOGRAPHY:
-      return { ...state, loading: true };
-    case actions.GEOGRAPHY_RECEIVED:
-      geography = action.geography || state.defaultGeography;
-      geographyHash = {};
-      geography.forEach((d, i) => (geographyHash[d.id] = d));
-      return {
-        ...state,
-        geography,
-        file: action.file,
-        geographyHash,
-        loading: false,
-      };
     case actions.PLOTS_UPDATED:
       let genesPinnedState = action.plots.find(d => d.type === "genes").visible ? state.genesPinned : false;
       let phylogenyPinnedState = action.plots.find(d => d.type === "phylogeny").visible ? state.phylogenyPinned : false;

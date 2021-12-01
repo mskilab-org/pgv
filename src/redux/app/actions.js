@@ -1,6 +1,4 @@
 const actions = {
-  GET_GEOGRAPHY: "GET_GEOGRAPHY",
-  GEOGRAPHY_RECEIVED: "GEOGRAPHY_RECEIVED",
   DOMAINS_UPDATED: "DOMAINS_UPDATED",
   LAUNCH_APP: "LAUNCH_APP",
   LAUNCH_APP_SUCCESS: "LAUNCH_APP_SUCCESS",
@@ -15,10 +13,6 @@ const actions = {
   PHYLOGENY_PANEL_HEIGHT_UPDATED: "PHYLOGENY_PANEL_HEIGHT_UPDATED",
   launchApp: () => ({
     type: actions.LAUNCH_APP,
-  }),
-  getGeography: (file) => ({
-    type: actions.GET_GEOGRAPHY,
-    file: file
   }),
   updateDomains: (domains) => ({
     type: actions.DOMAINS_UPDATED,
