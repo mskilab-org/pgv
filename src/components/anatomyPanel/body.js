@@ -143,14 +143,17 @@ class Body extends Component {
                           )
                         )
                       }
-                      height={20 + Object.keys(samples[d.sample]).length * 12}
+                      height={20 + (Object.keys(samples[d.sample]).length + 1) * 12}
                       rx={5}
                       ry={5}
                       fill="rgb(97, 97, 97)"
                       fillOpacity={0.97}
                     />
+                    <text x={30} y={10} fontSize={12} fill="#FFF" style={{fontWeight: "bold"}}>
+                        {d.sample}
+                    </text>
                     {Object.keys(samples[d.sample]).map((e, i) => (
-                      <text x={30} y={i * 12 + 10} fontSize={12} fill="#FFF">
+                      <text x={30} y={(i + 1) * 12 + 10} fontSize={12} fill="#FFF">
                         {humanize(e)}: {samples[d.sample][e]}
                       </text>
                     ))}
