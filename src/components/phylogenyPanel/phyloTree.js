@@ -15,7 +15,7 @@ Phylocanvas.plugin(scalebarPlugin);
 Phylocanvas.plugin(contextMenuPlugin);
 
 const margins = {
-  padding: 10
+  padding: 2
 };
 
 const pixelRatio = window.devicePixelRatio || 2.0;
@@ -31,6 +31,7 @@ class PhyloTree extends Component {
 
   componentDidMount() {
     this.tree = Phylocanvas.createTree(this.container, {
+      textSize: 12,
       contextMenu: {
         menuItems: DEFAULT_MENU_ITEMS,
         branchMenuItems: DEFAULT_BRANCH_MENU_ITEMS,
@@ -61,7 +62,7 @@ class PhyloTree extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {newickString, samples, height } = this.props;
+    const {newickString, samples, width, height } = this.props;
     if (!newickString) {
       return;
     }
@@ -98,10 +99,9 @@ class PhyloTree extends Component {
     this.tree.padding = margins.padding;
     this.tree.zoomFactor = 1;
     this.tree.setNodeSize(3 * pixelRatio);
-    this.tree.setTextSize(8 * pixelRatio);
-    this.tree.setSize((this.props.width - 2 * margins.padding) / pixelRatio, ((height || this.tree.leaves.length * 12) / pixelRatio));
+    this.tree.setTextSize(18 * pixelRatio);
+    this.tree.setSize((width - 2 * margins.padding), ((height || this.tree.leaves.length * 12)));
     
-    this.tree.adjustForPixelRatio();
     this.tree.disableZoom = true;
     this.tree.on("mousemove", (e) => {
       var node = this.tree.getNodeAtMousePosition(e);
