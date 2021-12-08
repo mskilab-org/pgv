@@ -9285,16 +9285,6 @@ performance-now@^2.1.0:
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
   integrity sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=
 
-phylocanvas-plugin-context-menu@^3.11.0:
-  version "3.11.0"
-  resolved "https://registry.yarnpkg.com/phylocanvas-plugin-context-menu/-/phylocanvas-plugin-context-menu-3.11.0.tgz#a1ed5f6d062ac91ceec686e1f05a9b3e74553adc"
-  integrity sha512-mVsZRD6YCGx/RutPmy5NCgUOJhRxwF3A6eVbCCCQygQq4eEv83kWdLRhZnNn48kG8CMqfQDT0Vyn6dwvcdbKCw==
-
-phylocanvas-plugin-scalebar@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/phylocanvas-plugin-scalebar/-/phylocanvas-plugin-scalebar-1.1.1.tgz#e3d9c4c573b593bb387e77f459d02ad6d9c66f38"
-  integrity sha1-49nExXO1k7s4fnf0WdAq1tnGbzg=
-
 phylocanvas@^2.8.1:
   version "2.8.1"
   resolved "https://registry.yarnpkg.com/phylocanvas/-/phylocanvas-2.8.1.tgz#8314d6b9b6a1b0cbd6c593a96f069354f80ec56d"

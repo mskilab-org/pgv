@@ -51,7 +51,7 @@ class Home extends Component {
             loading,
             phylogeny: phyloComponent.data,
             title: phyloComponent.title,
-            height: anatomyComponent && anatomyComponent.visible ? phylogenyPanelHeight / window.devicePixelRatio : null
+            height: phylogenyPanelHeight
           }}
         />}
       </Col>}
@@ -61,7 +61,7 @@ class Home extends Component {
             loading,
             anatomy: anatomyComponent.data,
             title: anatomyComponent.title,
-            height: (phylogenyPanelHeight + 7) / window.devicePixelRatio,
+            height: (phylogenyPanelHeight + 7),
             figure: anatomyComponent.figure
           }}
         />

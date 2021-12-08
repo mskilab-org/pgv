@@ -11,6 +11,7 @@ class PhyloTooltip extends Tooltip {
     this.element.style.cursor = "pointer";
     this.element.style.padding = "8px";
     this.element.style.marginTop = "16px";
+    this.element.style.marginLeft = "-100px";
     this.element.style.borderRadius = "2px";
     this.element.style.textAlign = "left";
     this.element.style.fontFamily = this.tree.font || "sans-serif";

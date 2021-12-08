@@ -4,21 +4,10 @@ import { withTranslation } from "react-i18next";
 import * as d3 from "d3";
 import Phylocanvas, { Tooltip } from "phylocanvas";
 import PhyloTooltip from "./phyloTooltip";
-import scalebarPlugin from "phylocanvas-plugin-scalebar";
-import contextMenuPlugin, {
-  DEFAULT_MENU_ITEMS,
-  DEFAULT_BRANCH_MENU_ITEMS,
-  DEFAULT_FILENAMES,
-} from "phylocanvas-plugin-context-menu";
-
-Phylocanvas.plugin(scalebarPlugin);
-Phylocanvas.plugin(contextMenuPlugin);
 
 const margins = {
   padding: 2
 };
-
-const pixelRatio = window.devicePixelRatio || 2.0;
 
 class PhyloTree extends Component {
   container = null;
@@ -31,38 +20,13 @@ class PhyloTree extends Component {
 
   componentDidMount() {
     this.tree = Phylocanvas.createTree(this.container, {
-      textSize: 12,
-      contextMenu: {
-        menuItems: DEFAULT_MENU_ITEMS,
-        branchMenuItems: DEFAULT_BRANCH_MENU_ITEMS,
-        unstyled: false,
-        className: "",
-        parent: this.container,
-        filenames: DEFAULT_FILENAMES,
-      },
-      scalebar: {
-        active: true,
-        width: 100,
-        height: 20,
-        fillStyle: "#808080",
-        strokeStyle: "#808080",
-        lineWidth: 1,
-        fontFamily: "Arial",
-        fontSize: 8 * pixelRatio,
-        textBaseline: "bottom",
-        textAlign: "center",
-        digits: 2,
-        position: {
-          bottom: 0,
-          right: 0,
-        },
-      },
     });
     this.tree.tooltip = new PhyloTooltip(this.tree);
   }
 
   componentDidUpdate(prevProps, prevState) {
     const {newickString, samples, width, height } = this.props;
+    let pixelRatio = window.devicePixelRatio || 2.0;
     if (!newickString) {
       return;
     }
@@ -98,10 +62,10 @@ class PhyloTree extends Component {
     this.tree.highlightWidth = 2;
     this.tree.padding = margins.padding;
     this.tree.zoomFactor = 1;
-    this.tree.setNodeSize(3 * pixelRatio);
-    this.tree.setTextSize(18 * pixelRatio);
-    this.tree.setSize((width - 2 * margins.padding), ((height || this.tree.leaves.length * 12)));
-    
+    this.tree.shiftKeyDrag = true;
+    this.tree.setNodeSize(4 * pixelRatio);
+    this.tree.setTextSize(8 * pixelRatio);
+  
     this.tree.disableZoom = true;
     this.tree.on("mousemove", (e) => {
       var node = this.tree.getNodeAtMousePosition(e);
@@ -117,8 +81,32 @@ class PhyloTree extends Component {
       this.tree.tooltip = new PhyloTooltip(this.tree);
       this.tree.getSelectedNodeIds().toString() !== this.state.selectedNodes.toString() && this.setState({selectedNodes: this.tree.getSelectedNodeIds()}, () => {this.props.onNodeClick(this.tree.leaves.map(d => {return {id: d.id, selected: d.selected}}))});
     });
-    this.tree.draw(true);
+
+    this.tree.canvas.canvas.style.height = height + 'px';
+    this.tree.canvas.canvas.style.width = (width - margins.padding) + 'px';
     
+    this.tree.canvas.canvas.width = (width - margins.padding) * window.devicePixelRatio;
+    this.tree.canvas.canvas.height = height * window.devicePixelRatio;
+   
+    this.tree.highlighters.length = 0;
+    if (this.tree.maxBranchLength === 0) {
+      this.tree.loadError(new Error('All branches in the tree are identical.'));
+      return;
+    }
+    this.tree.canvas.clearRect(0, 0, this.tree.canvas.canvas.width, this.tree.canvas.canvas.height);
+    this.tree.canvas.lineCap = 'round';
+    this.tree.canvas.lineJoin = 'round';
+    this.tree.canvas.strokeStyle = this.tree.branchColour;
+    this.tree.canvas.save();
+    this.tree.prerenderer.run(this.tree);
+    
+    this.tree.canvas.lineWidth = this.tree.lineWidth / this.tree.zoom;
+    this.tree.canvas.translate(this.tree.offsetx * pixelRatio, this.tree.offsety * pixelRatio);
+    this.tree.canvas.scale(this.tree.zoom, this.tree.zoom);
+    this.tree.branchRenderer.render(this.tree, this.tree.root);
+    this.tree.highlighters.forEach(render => this.tree.render());
+    this.tree.drawn = true;
+    this.tree.canvas.restore();
   }
 
   render() {
