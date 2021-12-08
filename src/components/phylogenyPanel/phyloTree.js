@@ -104,7 +104,7 @@ class PhyloTree extends Component {
     this.tree.canvas.translate(this.tree.offsetx * pixelRatio, this.tree.offsety * pixelRatio);
     this.tree.canvas.scale(this.tree.zoom, this.tree.zoom);
     this.tree.branchRenderer.render(this.tree, this.tree.root);
-    this.tree.highlighters.forEach(render => this.tree.render());
+    this.tree.highlighters.forEach(render => render());
     this.tree.drawn = true;
     this.tree.canvas.restore();
   }
