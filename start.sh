@@ -18,4 +18,10 @@ if [ ! -s public/genes/hg38_chr.arrow ]; then
     wget -P public/genes https://mskilab.s3.amazonaws.com/pgv/hg38_chr.arrow
 fi
 
+if [ ! -s public/datafiles.json ]; then
+    echo 'No datafiles.json was found so using the DEMO data'
+    echo "To use your own data do't forget to update datafiles.json"
+    cp public/datafiles0.json public/datafiles.json
+fi
+
 yarn start
