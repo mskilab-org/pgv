@@ -6,7 +6,7 @@ import Phylocanvas, { Tooltip } from "phylocanvas";
 import PhyloTooltip from "./phyloTooltip";
 
 const margins = {
-  padding: 2
+  padding: 2,
 };
 
 class PhyloTree extends Component {
@@ -15,26 +15,34 @@ class PhyloTree extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { selectedNodes: []};
+    this.state = { selectedNodes: [] };
   }
 
   componentDidMount() {
-    this.tree = Phylocanvas.createTree(this.container, {
-    });
+    this.tree = Phylocanvas.createTree(this.container, {});
     this.tree.tooltip = new PhyloTooltip(this.tree);
+    this.setState({
+      selectedNodes: this.props.nodes
+        .filter((d) => d.selected)
+        .map((d) => d.id),
+    });
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {newickString, samples, width, height } = this.props;
+    const { newickString, samples, width, height } = this.props;
     let pixelRatio = window.devicePixelRatio || 2.0;
     if (!newickString) {
       return;
     }
 
-    let selectedNodes = this.props.nodes.filter(d => d.selected).map(d => d.id);
-    let previousSelectedNodes = prevProps.nodes.filter(d => d.selected).map(d => d.id);
+    let selectedNodes = this.props.nodes
+      .filter((d) => d.selected)
+      .map((d) => d.id);
+    let previousSelectedNodes = prevProps.nodes
+      .filter((d) => d.selected)
+      .map((d) => d.id);
     if (previousSelectedNodes.toString() !== selectedNodes.toString()) {
-      this.setState({selectedNodes});
+      this.setState({ selectedNodes });
     }
 
     this.tree.load(newickString);
@@ -46,7 +54,7 @@ class PhyloTree extends Component {
         }
         leaf.highlighted = this.props.highlightedNodes.includes(leaf.id);
         leaf.data = leaf.data || {};
-        leaf.selected = this.state.selectedNodes.includes(leaf.id); 
+        leaf.selected = this.state.selectedNodes.includes(leaf.id);
       });
     });
 
@@ -65,7 +73,7 @@ class PhyloTree extends Component {
     this.tree.shiftKeyDrag = true;
     this.tree.setNodeSize(4 * pixelRatio);
     this.tree.setTextSize(8 * pixelRatio);
-  
+
     this.tree.disableZoom = true;
     this.tree.on("mousemove", (e) => {
       var node = this.tree.getNodeAtMousePosition(e);
@@ -77,34 +85,53 @@ class PhyloTree extends Component {
     });
     this.tree.on("click", (e) => {
       this.tree.tooltip.close();
-      d3.select(this.container).selectAll(".phylocanvas-tooltip .tooltip-box").remove();
+      d3.select(this.container)
+        .selectAll(".phylocanvas-tooltip .tooltip-box")
+        .remove();
       this.tree.tooltip = new PhyloTooltip(this.tree);
-      this.tree.getSelectedNodeIds().toString() !== this.state.selectedNodes.toString() && this.setState({selectedNodes: this.tree.getSelectedNodeIds()}, () => {this.props.onNodeClick(this.tree.leaves.map(d => {return {id: d.id, selected: d.selected}}))});
+      this.tree.getSelectedNodeIds().toString() !==
+        this.state.selectedNodes.toString() &&
+        this.setState({ selectedNodes: this.tree.getSelectedNodeIds() }, () => {
+          this.props.onNodeClick(
+            this.tree.leaves.map((d) => {
+              return { id: d.id, selected: d.selected };
+            })
+          );
+        });
     });
 
-    this.tree.canvas.canvas.style.height = height + 'px';
-    this.tree.canvas.canvas.style.width = (width - margins.padding) + 'px';
-    
-    this.tree.canvas.canvas.width = (width - margins.padding) * window.devicePixelRatio;
+    this.tree.canvas.canvas.style.height = height + "px";
+    this.tree.canvas.canvas.style.width = width - margins.padding + "px";
+
+    this.tree.canvas.canvas.width =
+      (width - margins.padding) * window.devicePixelRatio;
     this.tree.canvas.canvas.height = height * window.devicePixelRatio;
-   
+
     this.tree.highlighters.length = 0;
     if (this.tree.maxBranchLength === 0) {
-      this.tree.loadError(new Error('All branches in the tree are identical.'));
+      this.tree.loadError(new Error("All branches in the tree are identical."));
       return;
     }
-    this.tree.canvas.clearRect(0, 0, this.tree.canvas.canvas.width, this.tree.canvas.canvas.height);
-    this.tree.canvas.lineCap = 'round';
-    this.tree.canvas.lineJoin = 'round';
+    this.tree.canvas.clearRect(
+      0,
+      0,
+      this.tree.canvas.canvas.width,
+      this.tree.canvas.canvas.height
+    );
+    this.tree.canvas.lineCap = "round";
+    this.tree.canvas.lineJoin = "round";
     this.tree.canvas.strokeStyle = this.tree.branchColour;
     this.tree.canvas.save();
     this.tree.prerenderer.run(this.tree);
-    
+
     this.tree.canvas.lineWidth = this.tree.lineWidth / this.tree.zoom;
-    this.tree.canvas.translate(this.tree.offsetx * pixelRatio, this.tree.offsety * pixelRatio);
+    this.tree.canvas.translate(
+      this.tree.offsetx * pixelRatio,
+      this.tree.offsety * pixelRatio
+    );
     this.tree.canvas.scale(this.tree.zoom, this.tree.zoom);
     this.tree.branchRenderer.render(this.tree, this.tree.root);
-    this.tree.highlighters.forEach(render => render());
+    this.tree.highlighters.forEach((render) => render());
     this.tree.drawn = true;
     this.tree.canvas.restore();
   }
@@ -122,9 +149,9 @@ PhyloTree.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   samples: PropTypes.object,
-  onNodeClick: PropTypes.func
+  onNodeClick: PropTypes.func,
 };
 PhyloTree.defaultProps = {
-  samples: {}
+  samples: {},
 };
 export default withTranslation("common")(PhyloTree);
