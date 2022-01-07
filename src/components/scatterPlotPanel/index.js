@@ -36,7 +36,15 @@ class ScatterPlotPanel extends Component {
   };
 
   render() {
-    const { t, loading, data, title, domains, inViewport, renderOutsideViewPort } = this.props;
+    const {
+      t,
+      loading,
+      data,
+      title,
+      domains,
+      inViewport,
+      renderOutsideViewPort,
+    } = this.props;
     if (!data) {
       return null;
     }
@@ -78,7 +86,7 @@ class ScatterPlotPanel extends Component {
             </Space>
           }
         >
-          {(
+          {
             <div
               className="ant-wrapper"
               ref={(elem) => (this.container = elem)}
@@ -88,27 +96,23 @@ class ScatterPlotPanel extends Component {
                   return (
                     (inViewport || renderOutsideViewPort) && (
                       <Row style={{ width }} gutter={[margins.gap, 0]}>
-                        {domains.map((domain, i) => (
-                          <Col key={i} flex={1}>
-                            <ScatterPlot
-                              {...{
-                                width:
-                                  (width - (domains.length - 1) * margins.gap) /
-                                  domains.length,
-                                xDomain: domain,
-                                height: height,
-                                results: data,
-                              }}
-                            />
-                          </Col>
-                        ))}
+                        <Col flex={1}>
+                          <ScatterPlot
+                            {...{
+                              width,
+                              height,
+                              data,
+                              domains,
+                            }}
+                          />
+                        </Col>
                       </Row>
                     )
                   );
                 }}
               </ContainerDimensions>
             </div>
-          )}
+          }
         </Card>
       </Wrapper>
     );
@@ -119,7 +123,7 @@ ScatterPlotPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   domains: state.App.domains,
-  renderOutsideViewPort: state.App.renderOutsideViewPort
+  renderOutsideViewPort: state.App.renderOutsideViewPort,
 });
 export default connect(
   mapStateToProps,

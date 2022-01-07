@@ -22,17 +22,18 @@ class ScatterPlot extends Component {
 
   constructor(props) {
     super(props);
-    let { results } = this.props;
-    this.dataPointsY = results.getColumn("y").toArray();
+    let { data } = this.props;
+    this.dataPointsY = data.getColumn("y").toArray();
     this.maxDataPointsY = d3.max(this.dataPointsY);
-    this.dataPointsX = results.getColumn("x").toArray();
+    this.dataPointsX = data.getColumn("x").toArray();
+    this.dataPointsColor = data.getColumn("color").toArray();
   }
 
   componentDidMount() {
-    const regl = require("regl")({
+    this.regl = require("regl")({
       extensions: ["ANGLE_instanced_arrays"],
       container: this.container,
-      pixelRatio: window.devicePixelRatio || 1.5,
+      pixelRatio: 2.0,
       attributes: {
         antialias: true,
         depth: false,
@@ -41,100 +42,80 @@ class ScatterPlot extends Component {
       },
     });
 
-    regl.cache = {};
-    this.regl = regl;
-
-    this.regl.clear({
-      color: [0, 0, 0, 0.0],
-      stencil: true,
+    this.regl.on("lost", () => {
+      console.log("lost webgl context");
     });
-    this.points = new Points(this.regl);
+
+    this.regl.on("restore", () => {
+      console.log("webgl context restored");
+    });
+
+    this.points = new Points(this.regl, margins.gapX, 0);
     this.updateStage();
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { xDomain } = this.props;
-    this.regl.clear({
-      color: [0, 0, 0, 0.0],
-      depth: false,
-    });
+    const { domains } = this.props;
 
-    this.regl.poll();
-
-    let matched = [];
-    this.dataPointsX.forEach((d,i) => {
-      if ((d >= xDomain[0]) && (d <= xDomain[1])) {
-        matched.push(this.dataPointsY[i]);
-      }
-    });
-    
-    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
-    let yExtent = [0, points[Math.floor(0.1 * points.length)] || this.maxDataPointsY];
     if (prevProps.width !== this.props.width) {
       this.regl.destroy();
       this.componentDidMount();
     } else {
-      this.points.rescaleXY(this.props.xDomain, yExtent);
+      this.points.rescaleXY(domains);
     }
   }
 
   componentWillUnmount() {
-    if (this.regl) {
-      this.regl.destroy();
-    }
+    this.regl && this.regl.destroy();
   }
 
   updateStage() {
-    let { results, xDomain, width, height } = this.props;
+    let { domains, width, height } = this.props;
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
-   
-    this.regl.poll();
-    let xExtent = xDomain;
-
-    let matched = [];
-    this.dataPointsX.forEach((d,i) => {
-      if ((d >= xDomain[0]) && (d <= xDomain[1])) {
-        matched.push(this.dataPointsY[i]);
-      }
-    });
-
-    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
-    let yExtent = [0, points[Math.floor(0.1 * points.length)] || this.maxDataPointsY];
-    let dataPointsColor = results.getColumn("color").toArray();
 
     this.points.load(
       stageWidth,
       stageHeight,
-      5,
       this.dataPointsX,
       this.dataPointsY,
-      dataPointsColor,
-      xExtent,
-      yExtent
+      this.dataPointsColor,
+      domains
     );
     this.points.render();
   }
 
   render() {
-    const { width, height, xDomain, chromoBins, title } = this.props;
+    const { width, height, domains, chromoBins } = this.props;
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
+    let windowWidth =
+      (stageWidth - (domains.length - 1) * margins.gapX) / domains.length;
+    let windowHeight = stageHeight;
 
-    let matched = [];
-    this.dataPointsX.forEach((d,i) => {
-      if ((d >= xDomain[0]) && (d <= xDomain[1])) {
-        matched.push(this.dataPointsY[i]);
-      }
+    let windowScales = [];
+    domains.forEach((xDomain, i) => {
+      let matched = [];
+      this.dataPointsX.forEach((d, i) => {
+        if (d >= xDomain[0] && d <= xDomain[1]) {
+          matched.push(this.dataPointsY[i]);
+        }
+      });
+
+      let points = [
+        ...new Set(matched.map((e, j) => Math.round(e * 10) / 10)),
+      ].sort((a, b) => d3.descending(a, b));
+      let yExtent = [
+        0,
+        points[Math.floor(0.1 * points.length)] || this.maxDataPointsY,
+      ];
+
+      let yScale = d3.scaleLinear().domain(yExtent).range([windowHeight, 0]);
+      let xScale = d3.scaleLinear().domain(xDomain).range([0, windowWidth]);
+      let yTicks = yScale.ticks(margins.yTicksCount);
+      yTicks[yTicks.length - 1] = yScale.domain()[1];
+      windowScales.push({ xScale, yScale, yTicks });
     });
-
-    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
-    let yExtent = [0, points[Math.floor(0.1 * points.length)] || this.maxDataPointsY];
-    
-    const yScale = d3.scaleLinear().domain(yExtent).range([stageHeight, 0]);
-    const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
-    let yTicks = yScale.ticks(margins.yTicksCount);
-    yTicks[yTicks.length - 1] = yScale.domain()[1];
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div
@@ -143,50 +124,23 @@ class ScatterPlot extends Component {
           ref={(elem) => (this.container = elem)}
         />
         <svg width={width} height={height} className="plot-container">
-          <clipPath id="clipping">
-            <rect x={0} y={0} width={stageWidth} height={stageHeight} />
-          </clipPath>
-          <text
-            transform={`translate(${[width / 2, margins.gapY]})`}
-            textAnchor="middle"
-            fontSize={14}
-            dy="-4"
-          >
-            {title}
-          </text>
-          <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
-            {
+          {windowScales.map((d, i) => (
+            <g
+              transform={`translate(${[
+                i * (margins.gapX + windowWidth),
+                margins.gapY,
+              ]})`}
+            >
               <Grid
-                scaleX={xScale}
-                scaleY={yScale}
-                axisWidth={stageWidth}
-                axisHeight={stageHeight}
+                gap={margins.gapX}
+                scaleX={d.xScale}
+                scaleY={d.yScale}
+                axisWidth={windowWidth}
+                axisHeight={windowHeight}
                 chromoBins={chromoBins}
               />
-            }
-          </g>
-          <g
-            transform={`translate(${[margins.gapX, stageHeight + margins.gapY]})`}
-          >
-            {Object.keys(chromoBins).map((d, i) => (
-              <g
-                key={d}
-                transform={`translate(${[
-                  xScale(chromoBins[d].startPlace),
-                  0,
-                ]})`}
-              >
-                <line
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2={-stageHeight}
-                  stroke="rgb(128, 128, 128)"
-                  strokeDasharray="4"
-                />
-              </g>
-            ))}
-          </g>
+            </g>
+          ))}
         </svg>
       </Wrapper>
     );
@@ -195,14 +149,10 @@ class ScatterPlot extends Component {
 ScatterPlot.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
-  xDomain: PropTypes.array,
-  results: PropTypes.object,
-  title: PropTypes.string,
+  data: PropTypes.object,
   chromoBins: PropTypes.object,
 };
-ScatterPlot.defaultProps = {
-  xDomain: [],
-};
+ScatterPlot.defaultProps = {};
 
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
