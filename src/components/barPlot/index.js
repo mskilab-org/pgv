@@ -19,44 +19,27 @@ const { updateDomain } = appActions;
 class BarPlot extends Component {
   regl = null;
   container = null;
+  barsY = null;
+  maxBarsY = null;
+  barsStartPoint = null;
+  barsEndPoint = null;
+  barsFill = null;
 
   constructor(props) {
     super(props);
-    this.zoom = null;
-    this.container = null;
-    this.plotContainer = null;
-    this.grid = null;
-    let { results, xDomain } = this.props;
-
-    let barsStruct = {
-      barsY: results.getColumn("y").toArray(),
-      barsStartPoint: results.getColumn("startPoint").toArray(),
-      barsEndPoint: results.getColumn("endPoint").toArray(),
-      barsFill: results.getColumn("color").toArray(),
-      domainX: xDomain,
-    };
-    let globalMaxY = d3.max(barsStruct.barsY);
-    let matched = Array.prototype.slice.call(
-      barsStruct.barsY.slice(
-        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[0]),
-        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[1])
-      )
-    );
-
-    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
-    barsStruct.domainY = [0, points[Math.floor(0.01 * points.length)] || globalMaxY];
-
-    this.state = {
-      barsStruct,
-      globalMaxY,
-    };
+    let { data } = props;
+    this.barsY = data.getColumn("y").toArray();
+    this.maxBarsY = d3.max(this.barsY);
+    this.barsStartPoint = data.getColumn("startPoint").toArray();
+    this.barsEndPoint = data.getColumn("endPoint").toArray();
+    this.barsFill = data.getColumn("color").toArray();
   }
 
   componentDidMount() {
-    const regl = require("regl")({
+    this.regl = require("regl")({
       extensions: ["ANGLE_instanced_arrays"],
       container: this.container,
-      pixelRatio: window.devicePixelRatio || 1.5,
+      pixelRatio: 2.0,
       attributes: {
         antialias: true,
         depth: false,
@@ -65,73 +48,84 @@ class BarPlot extends Component {
       },
     });
 
-    regl.cache = {};
-    this.regl = regl;
-
-    this.regl.clear({
-      color: [0, 0, 0, 0.0],
-      stencil: true,
+    this.regl.on("lost", () => {
+      console.log("lost webgl context");
     });
-    this.bars = new Bars(this.regl);
-    let { barsStruct } = this.state;
-    let stageWidth = this.props.width - 2 * margins.gapX;
-    let stageHeight = this.props.height - 3 * margins.gapY;
-    this.bars.load(stageWidth, stageHeight, barsStruct);
-    this.bars.render();
+
+    this.regl.on("restore", () => {
+      console.log("webgl context restored");
+    });
+
+    this.bars = new Bars(this.regl, margins.gapX, 0);
+    this.updateStage();
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { xDomain } = this.props;
-    let { barsStruct, globalMaxY } = this.state;
-    this.regl.clear({
-      color: [0, 0, 0, 0.0],
-      depth: false,
-    });
-
-    this.regl.poll();
-    let matched = Array.prototype.slice.call(
-      barsStruct.barsY.slice(
-        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[0]),
-        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[1])
-      )
-    );
-
-    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
-    barsStruct.domainY = [0, points[Math.floor(0.01 * points.length)] || globalMaxY];
+    const { domains } = this.props;
 
     if (prevProps.width !== this.props.width) {
       this.regl.destroy();
       this.componentDidMount();
     } else {
-      this.bars.rescaleXY(this.props.xDomain, barsStruct.domainY);
+      this.bars.rescaleXY(domains);
     }
   }
 
   componentWillUnmount() {
-    if (this.regl) {
-      this.regl.destroy();
-    }
+    this.regl && this.regl.destroy();
   }
 
-  render() {
-    const { width, height, xDomain, chromoBins, title } = this.props;
-    let { barsStruct, globalMaxY } = this.state;
-    
+  updateStage() {
+    let { domains, width, height } = this.props;
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
 
-    let matched = Array.prototype.slice.call(
-      barsStruct.barsY.slice(
-        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[0]),
-        barsStruct.barsStartPoint.findIndex((d) => d >= xDomain[1])
-      )
+    this.bars.load(
+      stageWidth,
+      stageHeight,
+      this.barsStartPoint,
+      this.barsEndPoint,
+      this.barsY,
+      this.barsFill,
+      domains
     );
+    this.bars.render();
+  }
 
-    let points = [...new Set(matched.map((e,j) => Math.round(e * 10) / 10))].sort((a,b) => d3.descending(a,b));
-    let yExtent = [0, points[Math.floor(0.01 * points.length)] || globalMaxY];
+  render() {
+    const { width, height, domains, chromoBins } = this.props;
 
-    const yScale = d3.scaleLinear().domain(yExtent).range([stageHeight, 0]);
-    const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
+    let stageWidth = width - 2 * margins.gapX;
+    let stageHeight = height - 3 * margins.gapY;
+
+    let windowWidth =
+      (stageWidth - (domains.length - 1) * margins.gapX) / domains.length;
+    let windowHeight = stageHeight;
+
+    let windowScales = [];
+    domains.forEach((xDomain, i) => {
+      let matched = [];
+      this.barsStartPoint.forEach((startPoint, i) => {
+        let endPoint = this.barsEndPoint[i];
+        if (!(startPoint > xDomain[1] || endPoint < xDomain[0])) {
+          matched.push(this.barsY[i]);
+        }
+      });
+
+      let points = [
+        ...new Set(matched.map((e, j) => Math.round(e * 10) / 10)),
+      ].sort((a, b) => d3.descending(a, b));
+      let yExtent = [
+        0,
+        points[Math.floor(0.1 * points.length)] || this.maxBarsY,
+      ];
+
+      let yScale = d3.scaleLinear().domain(yExtent).range([windowHeight, 0]);
+      let xScale = d3.scaleLinear().domain(xDomain).range([0, windowWidth]);
+      let yTicks = yScale.ticks(margins.yTicksCount);
+      yTicks[yTicks.length - 1] = yScale.domain()[1];
+      windowScales.push({ xScale, yScale, yTicks });
+    });
 
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
@@ -141,28 +135,23 @@ class BarPlot extends Component {
           ref={(elem) => (this.container = elem)}
         />
         <svg width={width} height={height} className="plot-container">
-          <clipPath id="clipping">
-            <rect x={0} y={0} width={stageWidth} height={stageHeight} />
-          </clipPath>
-          <text
-            transform={`translate(${[width / 2, margins.gapY]})`}
-            textAnchor="middle"
-            fontSize={14}
-            dy="-4"
-          >
-            {title}
-          </text>
-          <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
-            {
+          {windowScales.map((d, i) => (
+            <g
+              transform={`translate(${[
+                i * (margins.gapX + windowWidth),
+                margins.gapY,
+              ]})`}
+            >
               <Grid
-                scaleX={xScale}
-                scaleY={yScale}
-                axisWidth={stageWidth}
-                axisHeight={stageHeight}
+                gap={margins.gapX}
+                scaleX={d.xScale}
+                scaleY={d.yScale}
+                axisWidth={windowWidth}
+                axisHeight={windowHeight}
                 chromoBins={chromoBins}
               />
-            }
-          </g>
+            </g>
+          ))}
         </svg>
       </Wrapper>
     );
@@ -171,22 +160,12 @@ class BarPlot extends Component {
 BarPlot.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
-  xDomain: PropTypes.array,
-  results: PropTypes.object,
-  title: PropTypes.string,
+  data: PropTypes.object,
   chromoBins: PropTypes.object,
-  updateDomain: PropTypes.func,
 };
-BarPlot.defaultProps = {
-  xDomain: [],
-  defaultDomain: [],
-};
-const mapDispatchToProps = (dispatch) => ({
-  updateDomain: (from, to, eventSource) =>
-    dispatch(updateDomain(from, to, eventSource)),
-});
+BarPlot.defaultProps = {};
+const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
-  defaultDomain: state.App.defaultDomain,
   chromoBins: state.App.chromoBins,
 });
 export default connect(

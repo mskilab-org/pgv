@@ -58,7 +58,7 @@ class Points {
 
           vec2 v = normalizeCoords(vec2(vecX + offsetX,vecY - offsetY));
 
-          v.y = clamp(v.y, -0.95, 0.95); 
+          v.y = clamp(v.y, -1.0, 0.95); 
 
           gl_PointSize = pointSize;
           gl_Position = vec4(v, 0, 1);

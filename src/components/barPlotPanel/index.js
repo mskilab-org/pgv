@@ -15,7 +15,7 @@ import BarPlot from "../barPlot";
 
 const margins = {
   padding: 0,
-  gap: 0
+  gap: 0,
 };
 
 class BarPlotPanel extends Component {
@@ -36,7 +36,15 @@ class BarPlotPanel extends Component {
   };
 
   render() {
-    const { t, loading, data, domains, title, inViewport, renderOutsideViewPort } = this.props;
+    const {
+      t,
+      loading,
+      data,
+      domains,
+      title,
+      inViewport,
+      renderOutsideViewPort,
+    } = this.props;
     if (!data) {
       return null;
     }
@@ -72,7 +80,7 @@ class BarPlotPanel extends Component {
             </Space>
           }
         >
-          {(
+          {
             <div
               className="ant-wrapper"
               ref={(elem) => (this.container = elem)}
@@ -82,27 +90,23 @@ class BarPlotPanel extends Component {
                   return (
                     (inViewport || renderOutsideViewPort) && (
                       <Row style={{ width }} gutter={[margins.gap, 0]}>
-                        {domains.map((domain, i) => (
-                          <Col key={i} flex={1}>
-                            <BarPlot
-                              {...{
-                                width:
-                                  (width - (domains.length - 1) * margins.gap) /
-                                  domains.length,
-                                xDomain: domain,
-                                height: height,
-                                results: data,
-                              }}
-                            />
-                          </Col>
-                        ))}
+                        <Col flex={1}>
+                          <BarPlot
+                            {...{
+                              width,
+                              height,
+                              domains,
+                              data,
+                            }}
+                          />
+                        </Col>
                       </Row>
                     )
                   );
                 }}
               </ContainerDimensions>
             </div>
-          )}
+          }
         </Card>
       </Wrapper>
     );
@@ -113,7 +117,7 @@ BarPlotPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   domains: state.App.domains,
-  renderOutsideViewPort: state.App.renderOutsideViewPort
+  renderOutsideViewPort: state.App.renderOutsideViewPort,
 });
 export default connect(
   mapStateToProps,
