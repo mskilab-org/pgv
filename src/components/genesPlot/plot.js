@@ -1,18 +1,30 @@
+import * as d3 from "d3";
+
 class Plot {
-  constructor(regl, rectangleHeight = 10.0) {
+  constructor(regl, gapX, gapY) {
     this.regl = regl;
-    this.positions = [[1.0, 0.0], [0.0, 0.5], [1.0,0.5], [1.0, -0.5], [0.0, -0.5],[0.0, 0.5]];
-    this.rectangleHeight = rectangleHeight;
-    this.strokeWidth = 0.66;
+    this.gap = gapX;
+    this.offsetY = gapY;
+    this.domainY = [-3, 3];
+    this.positions = [
+      [1.0, 0.0],
+      [0.0, 0.5],
+      [1.0, 0.5],
+      [1.0, -0.5],
+      [0.0, -0.5],
+      [0.0, 0.5],
+    ];
+    this.rectangleHeight = 10.0;
     this.commonSpecIntervals = {
       frag: `
       precision highp float;
       varying vec4 vColor;
       varying vec2 vPos;
       varying float diff;
+      uniform float windowWidth;
 
       void main() {
-        if (abs(vPos.x) > 1.0 || abs(vPos.y) > 1.0 || abs(diff) < 0.5) {
+        if (vPos.x < 0.0 || vPos.x > windowWidth || abs(diff) < 0.5) {
           discard;
         }
         gl_FragColor = vColor;
@@ -26,8 +38,10 @@ class Plot {
       varying vec4 vColor;
       varying vec2 vPos;
       varying float diff;
-
-      uniform float stageWidth, stageHeight, rectangleHeight, offset;
+      uniform float rectangleHeight;
+      uniform float stageWidth, stageHeight;
+      uniform float windowWidth, windowHeight;
+      uniform float offsetX, offsetY;
 
       vec2 normalizeCoords(vec2 position) {
         // read in the positions into x and y vars
@@ -40,21 +54,26 @@ class Plot {
       }
 
       void main() {
-        float kx = stageWidth / (domainX.y - domainX.x);
-        float ky = -stageHeight / (domainY.y - domainY.x);
+        float kx = windowWidth / (domainX.y - domainX.x);
+        float ky = -windowHeight / (domainY.y - domainY.x);
 
         float pos1X = kx * (startPoint - domainX.x);
         float pos2X = kx * (endPoint - domainX.x);
-        float posY = stageHeight + ky * (valY - domainY.x);
+        float posY = windowHeight + ky * (valY - domainY.x);
 
         diff = max(pos2X - pos1X, 0.5);
 
         float vecX = diff * position.x + pos1X;
         float vecY = rectangleHeight * position.y + posY;
 
-        vPos = normalizeCoords(vec2(vecX,vecY));
+        vPos = vec2(vecX,vecY);
 
-        gl_Position = vec4(vPos, 0, 1);
+        vec2 v = normalizeCoords(vec2(vecX + offsetX,vecY - offsetY));
+
+        v.y = clamp(v.y, -1.0, 1.0); 
+
+        gl_Position = vec4(v, 0, 1);
+
         float red = floor(color / 65536.0);
         float green = floor((color - red * 65536.0) / 256.0);
         float blue = color - red * 65536.0 - green * 256.0;
@@ -92,11 +111,15 @@ class Plot {
       },
 
       uniforms: {
-        stageWidth: regl.prop("stageWidth"),
-        stageHeight: regl.prop("stageHeight"),
-        rectangleHeight: this.rectangleHeight,
+        stageWidth: regl.prop("width"),
+        stageHeight: regl.prop("height"),
+        windowWidth: regl.prop("windowWidth"),
+        windowHeight: regl.prop("windowHeight"),
+        rectangleHeight: regl.prop("rectangleHeight"),
         domainX: regl.prop("domainX"),
         domainY: regl.prop("domainY"),
+        offsetX: regl.prop("offsetX"),
+        offsetY: regl.prop("offsetY"),
       },
 
       count: this.positions.length,
@@ -108,43 +131,141 @@ class Plot {
   load(
     width,
     height,
-    geneStruct
+    genesStartPoint,
+    genesEndPoint,
+    genesY,
+    genesColor,
+    domains
   ) {
-    const {genesStartPoint, genesEndPoint, genesY, genesStroke, domainX, domainY} = geneStruct;
-    const startPoint = this.regl.buffer(genesStartPoint);
-    const endPoint = this.regl.buffer(genesEndPoint);
-    const stroke = this.regl.buffer(genesStroke);
-    const valY = this.regl.buffer(genesY);
-    const instances = genesStartPoint.length;
-    const stageWidth =  Math.floor(width);
-    const stageHeight =  Math.floor(height);
-    let color = stroke;
-    this.dataBufferStroke = {stageWidth, stageHeight, startPoint, endPoint, color, valY, domainX, domainY, instances};
-    color = this.regl.buffer(genesStroke.map((d,i) => i + 3000));
-    this.fboIntervals = this.regl.framebuffer({
-      width: stageWidth,
-      height: stageHeight,
-      colorFormat: 'rgba',
+    this.genesStartPoint = genesStartPoint;
+    this.genesEndPoint = genesEndPoint;
+    this.genesY = genesY;
+    this.genesColor = genesColor;
+    this.startPoint = this.regl.buffer(genesStartPoint);
+    this.endPoint = this.regl.buffer(genesEndPoint);
+    this.color = this.regl.buffer(genesColor);
+    this.valY = this.regl.buffer(genesY);
+    this.instances = genesStartPoint.length;
+    this.width = width;
+    this.height = height;
+    let windowWidth =
+      (this.width - (domains.length - 1) * this.gap) / domains.length;
+    let windowHeight = this.height;
+    this.instances = genesStartPoint.length;
+    this.dataBufferList = domains.map((domainX, i) => {
+      return {
+        startPoint: this.startPoint,
+        endPoint: this.endPoint,
+        valY: this.valY,
+        color: this.color,
+        domainX,
+        domainY: this.domainY,
+        instances: this.instances,
+        rectangleHeight: this.rectangleHeight,
+        width: this.width,
+        height: this.height,
+        windowWidth,
+        windowHeight,
+        offsetX: i * (this.gap + windowWidth),
+        offsetY: this.offsetY,
+      };
     });
-    this.drawFboIntervals = this.regl({...this.commonSpecIntervals, framebuffer: this.fboIntervals});
-    this.dataBufferFboIntervals = {stageWidth, stageHeight, startPoint, endPoint, color, valY, domainX, domainY, instances};
+    let colorFbo = this.regl.buffer(genesColor.map((d, i) => i + 3000));
+    this.fboIntervals = this.regl.framebuffer({
+      width,
+      height,
+      colorFormat: "rgba",
+    });
+    this.drawFboIntervals = this.regl({
+      ...this.commonSpecIntervals,
+      framebuffer: this.fboIntervals,
+    });
+    this.dataBufferFboList = domains.map((domainX, i) => {
+      return {
+        startPoint: this.startPoint,
+        endPoint: this.endPoint,
+        valY: this.valY,
+        color: colorFbo,
+        domainX,
+        domainY: this.domainY,
+        instances: this.instances,
+        rectangleHeight: this.rectangleHeight,
+        width: this.width,
+        height: this.height,
+        windowWidth,
+        windowHeight,
+        offsetX: i * (this.gap + windowWidth),
+        offsetY: this.offsetY,
+      };
+    });
   }
 
-  rescaleX(stageWidth, stageHeight, domainX) {
-    this.dataBufferStroke.domainX = domainX;
-    this.fboIntervals = this.regl.framebuffer({
-      width:  Math.floor(stageWidth),
-      height:  Math.floor(stageHeight),
-      colorFormat: 'rgba',
+  rescaleX(domains) {
+    let windowWidth =
+      (this.width - (domains.length - 1) * this.gap) / domains.length;
+    let windowHeight = this.height;
+
+    this.dataBufferList = domains.map((domainX, i) => {
+      return {
+        startPoint: this.startPoint,
+        endPoint: this.endPoint,
+        valY: this.valY,
+        color: this.color,
+        domainX,
+        domainY: this.domainY,
+        instances: this.instances,
+        rectangleHeight: this.rectangleHeight,
+        width: this.width,
+        height: this.height,
+        windowWidth,
+        windowHeight,
+        offsetX: i * (this.gap + windowWidth),
+        offsetY: this.offsetY,
+      };
     });
-    this.drawFboIntervals = this.regl({...this.commonSpecIntervals, framebuffer: this.fboIntervals});
-    this.dataBufferFboIntervals.domainX = domainX;
+    let colorFbo = this.regl.buffer(this.genesColor.map((d, i) => i + 3000));
+    this.fboIntervals = this.regl.framebuffer({
+      width: this.width,
+      height: this.height,
+      colorFormat: "rgba",
+    });
+    this.drawFboIntervals = this.regl({
+      ...this.commonSpecIntervals,
+      framebuffer: this.fboIntervals,
+    });
+    this.dataBufferFboList = domains.map((domainX, i) => {
+      return {
+        startPoint: this.startPoint,
+        endPoint: this.endPoint,
+        valY: this.valY,
+        color: colorFbo,
+        domainX,
+        domainY: this.domainY,
+        instances: this.instances,
+        rectangleHeight: this.rectangleHeight,
+        width: this.width,
+        height: this.height,
+        windowWidth,
+        windowHeight,
+        offsetX: i * (this.gap + windowWidth),
+        offsetY: this.offsetY,
+      };
+    });
     this.render();
   }
 
   render() {
-    this.draw(this.dataBufferStroke);
-    this.drawFboIntervals(this.dataBufferFboIntervals);
+    this.regl.cache = {};
+
+    this.regl.clear({
+      color: [0, 0, 0, 0.0],
+      stencil: true,
+      depth: false,
+    });
+
+    this.regl.poll();
+    this.draw(this.dataBufferList);
+    this.drawFboIntervals(this.dataBufferFboList);
   }
 }
 

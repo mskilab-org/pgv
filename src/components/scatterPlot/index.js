@@ -110,7 +110,11 @@ class ScatterPlot extends Component {
         points[Math.floor(0.1 * points.length)] || this.maxDataPointsY,
       ];
 
-      let yScale = d3.scaleLinear().domain(yExtent).range([windowHeight, 0]);
+      let yScale = d3
+        .scaleLinear()
+        .domain(yExtent)
+        .range([windowHeight, 0])
+        .nice();
       let xScale = d3.scaleLinear().domain(xDomain).range([0, windowWidth]);
       let yTicks = yScale.ticks(margins.yTicksCount);
       yTicks[yTicks.length - 1] = yScale.domain()[1];

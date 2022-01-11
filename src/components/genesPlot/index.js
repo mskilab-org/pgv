@@ -9,37 +9,38 @@ import Plot from "./plot";
 import Grid from "../grid/index";
 
 const margins = {
-  gapX: 12,
+  gapX: 24,
   gapY: 0,
   bGap: 0,
   rectangleHeight: 10,
 };
 
 class GenesPlot extends Component {
+  regl = null;
+  container = null;
+  genesY = null;
+  domainY = [-3, 3];
+  geneTypes = null;
+  geneTitles = null;
+  genesStartPoint = null;
+  genesEndPoint = null;
+  genesColor = null;
+  genesStrand = null;
+  genesWeight = null;
+
   constructor(props) {
     super(props);
-    this.zoom = null;
-    this.container = null;
-    this.plotContainer = null;
-    this.grid = null;
-    let { genesStructure, xDomain } = this.props;
-
-    let geneStruct = {
-      geneTypes: genesStructure.geneTypes,
-      geneTitles: genesStructure.geneTitles,
-      genesStartPoint: genesStructure.genesStartPoint,
-      genesEndPoint: genesStructure.genesEndPoint,
-      genesY: genesStructure.genesY,
-      genesStroke: genesStructure.genesStroke,
-      genesStrand: genesStructure.genesStrand,
-      genesWeight: genesStructure.genesWeight,
-      domainX: xDomain,
-      domainY: [-3, 3],
-    };
+    let { genes } = this.props;
+    this.geneTypes = genes.getColumn("type").toArray();
+    this.geneTitles = genes.getColumn("title").toArray();
+    this.genesStartPoint = genes.getColumn("startPlace").toArray();
+    this.genesEndPoint = genes.getColumn("endPlace").toArray();
+    this.genesY = genes.getColumn("y").toArray();
+    this.genesColor = genes.getColumn("color").toArray();
+    this.genesStrand = genes.getColumn("strand").toArray();
+    this.genesWeight = genes.getColumn("weight").toArray();
 
     this.state = {
-      xDomain,
-      geneStruct,
       tooltip: {
         shape: null,
         visible: false,
@@ -52,13 +53,10 @@ class GenesPlot extends Component {
   }
 
   componentDidMount() {
-    let { width, height } = this.props;
-    const { geneStruct } = this.state;
-
-    const regl = require("regl")({
+    this.regl = require("regl")({
       extensions: ["ANGLE_instanced_arrays"],
       container: this.container,
-      pixelRatio: window.devicePixelRatio || 1.5,
+      pixelRatio: 2.0,
       attributes: {
         antialias: true,
         depth: false,
@@ -67,51 +65,52 @@ class GenesPlot extends Component {
       },
     });
 
-    regl.cache = {};
-    this.regl = regl;
-
-    this.regl.clear({
-      color: [0, 0, 0, 0.0],
-      depth: false,
-      stencil: false,
+    this.regl.on("lost", () => {
+      console.log("lost webgl context");
     });
-    let stageWidth = width - 2 * margins.gapX;
-    let stageHeight = height - 3 * margins.gapY;
 
-    this.plot = new Plot(this.regl, margins.rectangleHeight);
-    this.plot.load(stageWidth, stageHeight, geneStruct);
-    this.plot.render();
+    this.regl.on("restore", () => {
+      console.log("webgl context restored");
+    });
+
+    this.plot = new Plot(this.regl, margins.gapX, 0);
+    this.updateStage();
   }
 
   componentDidUpdate(prevProps, prevState) {
-    let { width, height, xDomain } = this.props;
-
-    this.regl.cache = {};
-    this.regl.clear({
-      color: [0, 0, 0, 0.0],
-      depth: false,
-      stencil: true,
-    });
-
-    this.regl.poll();
-    let stageWidth = width - 2 * margins.gapX;
-    let stageHeight = height - 3 * margins.gapY;
+    const { domains } = this.props;
 
     if (prevProps.width !== this.props.width) {
       this.regl.destroy();
       this.componentDidMount();
     } else {
-      this.plot.rescaleX(stageWidth, stageHeight, xDomain);
+      this.plot.rescaleX(domains);
     }
   }
 
   componentWillUnmount() {
-    if (this.regl) {
-      this.regl.destroy();
-    }
+    this.regl && this.regl.destroy();
+  }
+
+  updateStage() {
+    let { domains, width, height } = this.props;
+    let stageWidth = width - 2 * margins.gapX;
+    let stageHeight = height - 3 * margins.gapY;
+
+    this.plot.load(
+      stageWidth,
+      stageHeight,
+      this.genesStartPoint,
+      this.genesEndPoint,
+      this.genesY,
+      this.genesColor,
+      domains
+    );
+    this.plot.render();
   }
 
   handleMouseMove = (event) => {
+    console.log(event);
     const { genes, width, height } = this.props;
 
     let stageWidth = width - 2 * margins.gapX;
@@ -215,7 +214,6 @@ class GenesPlot extends Component {
       { label: "title", value: interval.title },
       { label: "type", value: interval.type },
       { label: "Chromosome", value: interval.chromosome },
-      { label: "Y", value: interval.y },
       { label: "Start Point", value: d3.format(",")(interval.startPoint) },
       { label: "End Point", value: d3.format(",")(interval.endPoint) },
     ];
@@ -234,104 +232,134 @@ class GenesPlot extends Component {
   }
 
   render() {
-    const { width, height, chromoBins, genes, title, xDomain } = this.props;
-    const { geneStruct, tooltip } = this.state;
-    const {
-      geneTypes,
-      genesStartPoint,
-      geneTitles,
-      genesY,
-      genesStrand,
-      genesWeight,
-    } = geneStruct;
+    const { width, height, genes, domains } = this.props;
+    const { tooltip } = this.state;
 
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
 
-    const xScale = d3.scaleLinear().domain(xDomain).range([0, stageWidth]);
-    const yScale = d3.scaleLinear().domain([-3, 3]).range([stageHeight, 0]);
-    let texts = [];
-    let positiveStrandTexts = [];
-    let negativeStrandTexts = [];
+    let windowWidth =
+      (stageWidth - (domains.length - 1) * margins.gapX) / domains.length;
+    let windowHeight = stageHeight;
+    let yScale = d3.scaleLinear().domain(this.domainY).range([windowHeight, 0]);
+    let windowScales = [];
+    domains.forEach((xDomain, j) => {
+      let xScale = d3.scaleLinear().domain(xDomain).range([0, windowWidth]);
 
-    let startPosNext = { "+": -1, "-": -1 };
-    for (let i = 0; i < genes.count(); i++) {
-      if (
-        genesStartPoint[i] <= xDomain[1] &&
-        genesStartPoint[i] >= xDomain[0] &&
-        geneTypes[i] === "gene"
-      ) {
-        let isGene = geneTypes[i] === "gene";
-        let xPos = xScale(genesStartPoint[i]);
-        let textLength = measureText(geneTitles[i], 10);
-        let yPos = yScale(genesY[i]);
-        if (isGene && xPos > 0 && xPos < stageWidth) {
-          let d = genes.get(i).toJSON();
-          let textBlock = (
-            <text
-              key={d.iid}
-              x={xPos}
-              y={yPos}
-              endPos={xPos + textLength}
-              strand={genesStrand[i]}
-              dy={-10}
-              fontFamily="Arial"
-              fontSize={10}
-              textAnchor="start"
-              className={genesWeight[i] > 1 ? "weighted" : ""}
-            >
-              {d.title}
-            </text>
-          );
-          startPosNext[d.strand] = xPos + textLength;
-          genesStrand[i] === "+" && positiveStrandTexts.push(textBlock);
-          genesStrand[i] === "-" && negativeStrandTexts.push(textBlock);
+      let texts = [];
+      let positiveStrandTexts = [];
+      let negativeStrandTexts = [];
+
+      let startPosNext = { "+": -1, "-": -1 };
+      for (let i = 0; i < genes.count(); i++) {
+        if (
+          this.genesStartPoint[i] <= xDomain[1] &&
+          this.genesStartPoint[i] >= xDomain[0] &&
+          this.geneTypes[i] === "gene"
+        ) {
+          let isGene = this.geneTypes[i] === "gene";
+          let xPos = xScale(this.genesStartPoint[i]);
+          let textLength = measureText(this.geneTitles[i], 10);
+          let yPos = yScale(this.genesY[i]);
+          if (isGene && xPos > 0 && xPos < stageWidth) {
+            let d = genes.get(i).toJSON();
+            let textBlock = (
+              <text
+                key={d.iid}
+                x={xPos}
+                y={yPos}
+                endPos={xPos + textLength}
+                strand={this.genesStrand[i]}
+                dy={-10}
+                fontFamily="Arial"
+                fontSize={10}
+                textAnchor="start"
+                className={this.genesWeight[i] > 1 ? "weighted" : ""}
+                clipPath="url(#clipping)"
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  window
+                    .open(
+                      `https://www.genecards.org/cgi-bin/carddisp.pl?gene=${
+                        genes.get(i).toJSON().title
+                      }`,
+                      "_blank"
+                    )
+                    .focus();
+                }}
+              >
+                {d.title}
+              </text>
+            );
+            startPosNext[d.strand] = xPos + textLength;
+            this.genesStrand[i] === "+" && positiveStrandTexts.push(textBlock);
+            this.genesStrand[i] === "-" && negativeStrandTexts.push(textBlock);
+          }
         }
       }
-    }
 
-    positiveStrandTexts = positiveStrandTexts.sort((a, b) =>
-      d3.ascending(a.props.x, b.props.x)
-    );
-    let pTexts = [];
-    let sPos = -1;
-    let previousTextType = null;
-    positiveStrandTexts.forEach((d, i) => {
-      if (d.props.className === "weighted" && previousTextType !== "weighted") {
-        pTexts.pop();
-        pTexts.push(d);
-        sPos = d.props.endPos;
-        previousTextType = d.props.className;
-      } else {
-        if (d.props.x > sPos) {
+      positiveStrandTexts = positiveStrandTexts.sort((a, b) =>
+        d3.ascending(a.props.x, b.props.x)
+      );
+      let pTexts = [];
+      let sPos = -1;
+      let previousTextType = null;
+      positiveStrandTexts.forEach((d, i) => {
+        if (
+          d.props.className === "weighted" &&
+          previousTextType !== "weighted"
+        ) {
+          pTexts.pop();
           pTexts.push(d);
           sPos = d.props.endPos;
           previousTextType = d.props.className;
+        } else {
+          if (d.props.x > sPos) {
+            pTexts.push(d);
+            sPos = d.props.endPos;
+            previousTextType = d.props.className;
+          }
         }
-      }
-    });
-    negativeStrandTexts = negativeStrandTexts.sort((a, b) =>
-      d3.ascending(a.props.x, b.props.x)
-    );
-    let nTexts = [];
-    sPos = -1;
-    previousTextType = null;
-    negativeStrandTexts.forEach((d, i) => {
-      if (d.props.className === "weighted" && previousTextType !== "weighted") {
-        nTexts.pop();
-        nTexts.push(d);
-        sPos = d.props.endPos;
-        previousTextType = d.props.className;
-      } else {
-        if (d.props.x > sPos) {
+      });
+      negativeStrandTexts = negativeStrandTexts.sort((a, b) =>
+        d3.ascending(a.props.x, b.props.x)
+      );
+      let nTexts = [];
+      sPos = -1;
+      previousTextType = null;
+      negativeStrandTexts.forEach((d, i) => {
+        if (
+          d.props.className === "weighted" &&
+          previousTextType !== "weighted"
+        ) {
+          nTexts.pop();
           nTexts.push(d);
           sPos = d.props.endPos;
           previousTextType = d.props.className;
+        } else {
+          if (d.props.x > sPos) {
+            nTexts.push(d);
+            sPos = d.props.endPos;
+            previousTextType = d.props.className;
+          }
         }
-      }
-    });
+      });
 
-    texts = nTexts.concat(pTexts);
+      texts = nTexts.concat(pTexts);
+      windowScales.push({ xScale, yScale, texts });
+    });
+    let tooltipDomainIndex = -1,
+      tooltipScale = null;
+    if (tooltip.visible) {
+      tooltipDomainIndex = domains.findIndex(
+        (xDomain) =>
+          !(
+            tooltip.shape.endPlace < xDomain[0] ||
+            tooltip.shape.startPlace > xDomain[1]
+          )
+      );
+      tooltipScale = windowScales[tooltipDomainIndex];
+    }
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div
@@ -341,111 +369,105 @@ class GenesPlot extends Component {
           onMouseMove={(e) => this.handleMouseMove(e)}
           onClick={(e) => this.handleClick(e)}
         />
-        {
-          <svg
-            width={width}
-            height={height + margins.bGap}
-            className="plot-container"
-            ref={(elem) => (this.plotContainer = elem)}
+        <svg
+          width={width}
+          height={height}
+          className="plot-container"
+          ref={(elem) => (this.plotContainer = elem)}
+        >
+          <clipPath id="clipping">
+            <rect x={0} y={0} width={windowWidth} height={windowHeight} />
+          </clipPath>
+          <g
+            className="labels-container"
+            transform={`translate(${[0, margins.gapY]})`}
           >
-            <clipPath id="clipping">
-              <rect x={0} y={0} width={stageWidth} height={stageHeight} />
-            </clipPath>
             <text
-              transform={`translate(${[width / 2, margins.gapY]})`}
+              transform={`translate(${[0, yScale(0.75)]})rotate(90)`}
               textAnchor="middle"
               fontSize={16}
               dy="-4"
             >
-              {title}
+              &#8212;
             </text>
-            <g
-              className="labels-container"
-              transform={`translate(${[0, margins.gapY]})`}
+            <text
+              transform={`translate(${[0, yScale(-1.25)]})rotate(90)`}
+              textAnchor="middle"
+              fontSize={16}
+              dy="-4"
             >
-              <text
-                transform={`translate(${[0, yScale(1)]})rotate(90)`}
-                textAnchor="middle"
-                fontSize={16}
-                dy="-4"
+              &#x2b;
+            </text>
+          </g>
+          <g
+            className="texts-container"
+            transform={`translate(${[margins.gapX, margins.gapY]})`}
+          >
+            {windowScales.map((d, i) => (
+              <g
+                transform={`translate(${[
+                  i * (margins.gapX + windowWidth),
+                  0,
+                ]})`}
               >
-                {"-"}
-              </text>
-              <text
-                transform={`translate(${[0, yScale(-1)]})rotate(90)`}
-                textAnchor="middle"
-                fontSize={16}
-                dy="-4"
-              >
-                {"+"}
-              </text>
-            </g>
-            <g
-              clipPath="url(#clipping)"
-              className="labels-container"
-              transform={`translate(${[margins.gapX, margins.gapY]})`}
-            >
-              {texts}
-            </g>
-            {false && (
-              <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
-                {
-                  <Grid
-                    showY={false}
-                    scaleX={xScale}
-                    scaleY={yScale}
-                    axisWidth={stageWidth}
-                    axisHeight={stageHeight}
-                    chromoBins={chromoBins}
-                  />
-                }
+                {d.texts}
               </g>
-            )}
-            {tooltip.visible && (
-              <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
+            ))}
+          </g>
+          {tooltip.visible && (
+            <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
+              <g
+                transform={`translate(${[
+                  tooltipDomainIndex * (margins.gapX + windowWidth),
+                  0,
+                ]})`}
+              >
                 <rect
-                  x={xScale(tooltip.shape.startPlace)}
-                  y={yScale(tooltip.shape.y) - margins.rectangleHeight / 2}
+                  x={tooltipScale.xScale(tooltip.shape.startPlace)}
+                  y={
+                    tooltipScale.yScale(tooltip.shape.y) -
+                    margins.rectangleHeight / 2
+                  }
                   width={
-                    xScale(tooltip.shape.endPlace) -
-                    xScale(tooltip.shape.startPlace)
+                    tooltipScale.xScale(tooltip.shape.endPlace) -
+                    tooltipScale.xScale(tooltip.shape.startPlace)
                   }
                   height={margins.rectangleHeight}
                   stroke={d3.rgb("#FF7F0E").darker()}
                   fill="#FF7F0E"
                 />
               </g>
-            )}
-            {tooltip.visible && (
-              <g
-                className="tooltip"
-                transform={`translate(${[tooltip.x + 30, tooltip.y]})`}
-                pointerEvents="none"
-              >
-                <rect
-                  x="0"
-                  y="0"
-                  width={d3.max(
-                    tooltip.text,
-                    (d) => measureText(`${d.label}: ${d.value}`, 12) + 30
-                  )}
-                  height={tooltip.text.length * 16 + 12}
-                  rx="5"
-                  ry="5"
-                  fill="rgb(97, 97, 97)"
-                  fillOpacity="0.97"
-                />
-                <text x="10" y="28" fontSize="12" fill="#FFF">
-                  {tooltip.text.map((d, i) => (
-                    <tspan key={i} x={10} y={18 + i * 16}>
-                      <tspan fontWeight="bold">{d.label}</tspan>: {d.value}
-                    </tspan>
-                  ))}
-                </text>
-              </g>
-            )}
-          </svg>
-        }
+            </g>
+          )}
+          {tooltip.visible && (
+            <g
+              className="tooltip"
+              transform={`translate(${[tooltip.x + 30, tooltip.y]})`}
+              pointerEvents="none"
+            >
+              <rect
+                x="0"
+                y="0"
+                width={d3.max(
+                  tooltip.text,
+                  (d) => measureText(`${d.label}: ${d.value}`, 12) + 30
+                )}
+                height={tooltip.text.length * 16 + 12}
+                rx="5"
+                ry="5"
+                fill="rgb(97, 97, 97)"
+                fillOpacity="0.97"
+              />
+              <text x="10" y="28" fontSize="12" fill="#FFF">
+                {tooltip.text.map((d, i) => (
+                  <tspan key={i} x={10} y={18 + i * 16}>
+                    <tspan fontWeight="bold">{d.label}</tspan>: {d.value}
+                  </tspan>
+                ))}
+              </text>
+            </g>
+          )}
+        </svg>
       </Wrapper>
     );
   }
@@ -453,19 +475,11 @@ class GenesPlot extends Component {
 GenesPlot.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
-  xDomain: PropTypes.array,
   genes: PropTypes.object,
-  title: PropTypes.string,
-  chromoBins: PropTypes.object,
 };
-GenesPlot.defaultProps = {
-  xDomain: [],
-};
+GenesPlot.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
-const mapStateToProps = (state) => ({
-  chromoBins: state.App.chromoBins,
-  defaultDomain: state.App.defaultDomain,
-});
+const mapStateToProps = (state) => ({});
 export default connect(
   mapStateToProps,
   mapDispatchToProps

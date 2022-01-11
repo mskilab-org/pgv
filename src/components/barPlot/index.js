@@ -6,15 +6,12 @@ import { withTranslation } from "react-i18next";
 import Grid from "../grid/index";
 import Bars from "./bars";
 import Wrapper from "./index.style";
-import appActions from "../../redux/app/actions";
 
 const margins = {
   gapX: 24,
   gapY: 24,
   yTicksCount: 10,
 };
-
-const { updateDomain } = appActions;
 
 class BarPlot extends Component {
   regl = null;
@@ -120,7 +117,11 @@ class BarPlot extends Component {
         points[Math.floor(0.1 * points.length)] || this.maxBarsY,
       ];
 
-      let yScale = d3.scaleLinear().domain(yExtent).range([windowHeight, 0]);
+      let yScale = d3
+        .scaleLinear()
+        .domain(yExtent)
+        .range([windowHeight, 0])
+        .nice();
       let xScale = d3.scaleLinear().domain(xDomain).range([0, windowWidth]);
       let yTicks = yScale.ticks(margins.yTicksCount);
       yTicks[yTicks.length - 1] = yScale.domain()[1];

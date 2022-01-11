@@ -28,7 +28,10 @@ class GenesPanel extends Component {
       .then((canvas) => {
         downloadCanvasAsPng(
           canvas,
-          `${this.props.t("components.genes-panel.header").replace(/\s+/g, "_").toLowerCase()}.png`
+          `${this.props
+            .t("components.genes-panel.header")
+            .replace(/\s+/g, "_")
+            .toLowerCase()}.png`
         );
       })
       .catch((error) => {
@@ -39,86 +42,82 @@ class GenesPanel extends Component {
   render() {
     const { t, genes, domains } = this.props;
     if (!genes) return null;
-    if (!this.genesStructure) {
-      this.genesStructure = {
-        geneTypes: genes.getColumn("type").toArray(),
-        geneTitles: genes.getColumn("title").toArray(),
-        genesStartPoint: genes.getColumn("startPlace").toArray(),
-        genesEndPoint: genes.getColumn("endPlace").toArray(),
-        genesY: genes.getColumn("y").toArray(),
-        genesStroke: genes.getColumn("color").toArray(),
-        genesStrand: genes.getColumn("strand").toArray(),
-        genesWeight: genes.getColumn("weight").toArray()
-      }
-    }
     return (
       <Wrapper>
-        {<Card
-          size="small"
-          title={
-            <Space>
-              <span role="img" className="anticon anticon-dashboard">
-                <CgArrowsBreakeH />
-              </span>
-              <span className="ant-pro-menu-item-title">
-                {t("components.genes-panel.header")}
-              </span>
-              <span><b>{d3.format(",")((genes.count()))}</b> {t("components.genes-panel.gene", {count: genes.count()})}</span>
-            </Space>
-          }
-          extra={
-            <Space>
-            <Tooltip title={t("components.download-as-png-tooltip")}>
-              <Button
-                type="default"
-                shape="circle"
-                icon={<AiOutlineDownload />}
-                size="small"
-                onClick={() => this.onDownloadButtonClicked()}
-              />
-            </Tooltip>
-          </Space>}
-        >
-          {(<div className="ant-wrapper" ref={(elem) => (this.container = elem)}>
-              <ContainerDimensions>
-                {({ width, height }) => {
-                  return (
-                    (
+        {
+          <Card
+            size="small"
+            title={
+              <Space>
+                <span role="img" className="anticon anticon-dashboard">
+                  <CgArrowsBreakeH />
+                </span>
+                <span className="ant-pro-menu-item-title">
+                  {t("components.genes-panel.header")}
+                </span>
+                <span>
+                  <b>{d3.format(",")(genes.count())}</b>{" "}
+                  {t("components.genes-panel.gene", { count: genes.count() })}
+                </span>
+              </Space>
+            }
+            extra={
+              <Space>
+                <Tooltip title={t("components.download-as-png-tooltip")}>
+                  <Button
+                    type="default"
+                    shape="circle"
+                    icon={<AiOutlineDownload />}
+                    size="small"
+                    onClick={() => this.onDownloadButtonClicked()}
+                  />
+                </Tooltip>
+              </Space>
+            }
+          >
+            {
+              <div
+                className="ant-wrapper"
+                ref={(elem) => (this.container = elem)}
+              >
+                <ContainerDimensions>
+                  {({ width, height }) => {
+                    return (
                       <Row style={{ width }} gutter={[margins.gap, 0]}>
-                        {domains.map((domain, i) => (
-                          <Col key={i} flex={1}>
-                            <GenesPlot
+                        <Col flex={1}>
+                          <GenesPlot
                             {...{
-                              width:
-                              (width - (domains.length - 1) * margins.gap) /
-                              domains.length,
-                              height: height,
-                              xDomain: domain,
-                              genes: genes,
-                              genesStructure: this.genesStructure
-                            }}/>
-                          </Col>
-                        ))}
+                              width,
+                              height,
+                              domains,
+                              genes,
+                            }}
+                          />
+                        </Col>
                       </Row>
-                    )
-                  );
-                }}
-              </ContainerDimensions>
-          </div>)}
-        </Card>}
+                    );
+                  }}
+                </ContainerDimensions>
+              </div>
+            }
+          </Card>
+        }
       </Wrapper>
     );
   }
 }
-GenesPanel.propTypes = {
-};
+GenesPanel.propTypes = {};
 GenesPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   domains: state.App.domains,
-  renderOutsideViewPort: state.App.renderOutsideViewPort
+  renderOutsideViewPort: state.App.renderOutsideViewPort,
 });
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withTranslation("common")(handleViewport(GenesPanel, { rootMargin: '-1.0px' })));
+)(
+  withTranslation("common")(
+    handleViewport(GenesPanel, { rootMargin: "-1.0px" })
+  )
+);

@@ -6,8 +6,10 @@ const Wrapper = styled.div`
     padding: 0px;
   }
   div.genome-plot canvas {
-    margin: ${props => props.margins.gapY}px ${props => props.margins.gapX}px !important;
+    margin: ${(props) => props.margins.gapY}px
+      ${(props) => props.margins.gapX}px !important;
     padding: 0px !important;
+    pointer-events: all;
   }
   svg.plot-container {
     position: absolute;
@@ -23,7 +25,7 @@ const Wrapper = styled.div`
       }
     }
     .weighted {
-      fill: #CF2908;
+      fill: #cf2908;
     }
   }
 `;
