@@ -146,8 +146,8 @@ class Plot {
     this.color = this.regl.buffer(genesColor);
     this.valY = this.regl.buffer(genesY);
     this.instances = genesStartPoint.length;
-    this.width = width;
-    this.height = height;
+    this.width = Math.floor(width);
+    this.height = Math.floor(height);
     let windowWidth =
       (this.width - (domains.length - 1) * this.gap) / domains.length;
     let windowHeight = this.height;
@@ -172,8 +172,8 @@ class Plot {
     });
     let colorFbo = this.regl.buffer(genesColor.map((d, i) => i + 3000));
     this.fboIntervals = this.regl.framebuffer({
-      width,
-      height,
+      width: this.width,
+      height: this.height,
       colorFormat: "rgba",
     });
     this.drawFboIntervals = this.regl({

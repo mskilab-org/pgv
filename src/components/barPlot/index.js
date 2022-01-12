@@ -61,7 +61,7 @@ class BarPlot extends Component {
     const { domains } = this.props;
 
     if (prevProps.width !== this.props.width) {
-      this.regl.destroy();
+      this.componentWillUnmount();
       this.componentDidMount();
     } else {
       this.bars.rescaleXY(domains);

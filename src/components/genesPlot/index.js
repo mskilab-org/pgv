@@ -81,7 +81,7 @@ class GenesPlot extends Component {
     const { domains } = this.props;
 
     if (prevProps.width !== this.props.width) {
-      this.regl.destroy();
+      this.componentWillUnmount();
       this.componentDidMount();
     } else {
       this.plot.rescaleX(domains);
