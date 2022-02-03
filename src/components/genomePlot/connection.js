@@ -47,7 +47,7 @@ class Connection {
       .x((d) => d[0])
       .y((d) => d[1]);
     this.color = connectionsStyleMap[con.type].color;
-    this.fill = 'none';
+    this.fill = "none";
     this.strokeWidth = connectionsStyleMap[con.type].strokeWidth;
     this.dash = connectionsStyleMap[con.type].dash;
     this.opacity = connectionsStyleMap[con.type].opacity;
@@ -250,11 +250,11 @@ class Connection {
       [this.touchScale(this.touchPlaceX), this.yScale(this.touchPlaceY)],
       [
         this.touchScale(this.touchPlaceX) + this.touchPlaceSign * 15,
-        this.yScale(this.touchPlaceY + (this.touchPlaceY < 10 ? 0.25 : 5)),
+        this.yScale(this.touchPlaceY) - 5,
       ],
       [
         this.touchScale(this.touchPlaceX) + this.touchPlaceSign * 5,
-        this.yScale(this.touchPlaceY + (this.touchPlaceY < 10 ? 0.75 : 5)),
+        this.yScale(this.touchPlaceY) - 15,
       ],
     ];
   }
