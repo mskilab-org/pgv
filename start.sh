@@ -24,4 +24,4 @@ if [ ! -s public/datafiles.json ]; then
     cp public/datafiles0.json public/datafiles.json
 fi
 
-yarn start
+echo PORT=$(($RANDOM)) yarn start | bash -

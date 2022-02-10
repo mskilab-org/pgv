@@ -28,7 +28,11 @@ rm -rf ./build
 
 yarn build
 
-open http://localhost:5000
+yarn global add serve
 
-serve -s build
+PORT=$(($RANDOM))
+
+open "http://localhost:$PORT"
+
+serve -s build -l $PORT
 
