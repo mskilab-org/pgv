@@ -37,13 +37,19 @@ const TopbarWrapper = styled.div`
               vertical-align: middle;
             }
             h1 {
-              color: rgba(0,0,0,.85);
+              color: rgba(0, 0, 0, 0.85);
               display: inline-block;
               margin: 0 0 0 12px;
               font-weight: 400;
               font-size: 16px;
               vertical-align: top;
             }
+          }
+          .tags-select {
+            min-width: 500px;
+          }
+          .files-select {
+            min-width: 100px;
           }
         }
         .ant-pro-top-nav-header-menu {
@@ -65,7 +71,7 @@ const TopbarWrapper = styled.div`
             .ant-pro-option-container {
               margin-top: 3px;
               padding: 0 12px;
-              color: rgba(0,0,0,.75);
+              color: rgba(0, 0, 0, 0.75);
               font-size: 16px;
               cursor: pointer;
             }

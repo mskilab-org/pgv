@@ -16,7 +16,8 @@ function* fetchArrowData(plot) {
     .catch((error) => (plot.data = []));
 }
 
-function* launchApplication() {
+function* launchApplication(action) {
+  console.log(action);
   const { responseSettings, responseDatafiles } = yield axios
     .all([axios.get("/settings.json"), axios.get("/datafiles.json")])
     .then(
@@ -30,16 +31,18 @@ function* launchApplication() {
   if (responseSettings && responseDatafiles) {
     let settings = responseSettings.data;
     let datafiles = responseDatafiles.data;
-    let files = Object.keys(datafiles).map((key, i) => {
-      let d = datafiles[key];
-      return {
-        filename: key,
-        file: key.replace(".json", ""),
-        tags: d.description,
-        plots: d.plots,
-        reference: d.reference,
-      };
-    });
+    let files = Object.keys(datafiles)
+      .map((key, i) => {
+        let d = datafiles[key];
+        return {
+          filename: key,
+          file: key.replace(".json", ""),
+          tags: d.description,
+          plots: d.plots,
+          reference: d.reference,
+        };
+      })
+      .sort((a, b) => d3.ascending(a.file, b.file));
     let tagsAll = files.map((d) => d.tags).flat();
     let tags = [
       ...d3.rollup(
@@ -48,8 +51,43 @@ function* launchApplication() {
         (d) => d
       ),
     ].sort((a, b) => d3.descending(a[1], b[1]));
+
+    let filteredFiles = [];
+    if (action.selectedTags && action.selectedTags.length > 0) {
+      filteredFiles = files
+        .filter(
+          (d) =>
+            d.tags.filter((e) => action.selectedTags.includes(e)).length ===
+            action.selectedTags.length
+        )
+        .sort((a, b) => d3.ascending(a.file, b.file));
+    }
+
+    let filteredAllTags = [];
     let searchParams = new URL(decodeURI(document.location)).searchParams;
-    let file = searchParams.get("file") || files[0].file;
+    let file = searchParams.get("file");
+    if (filteredFiles.length > 0) {
+      file = filteredFiles[0].file;
+      filteredAllTags = filteredFiles.map((d) => d.tags).flat();
+    } else {
+      filteredFiles = [...files];
+      filteredAllTags = tagsAll;
+    }
+
+    let filteredTags = [
+      ...d3.rollup(
+        filteredAllTags,
+        (g) => g.length,
+        (d) => d
+      ),
+    ].sort((a, b) => d3.descending(a[1], b[1]));
+
+    if (action.file) {
+      file = action.file;
+    }
+
+    file = files.some((d) => d.file === file) ? file : files[0].file;
+
     const datafile = files.find((d) => d.file === file);
     let selectedCoordinate = datafile.reference;
     let { genomeLength, chromoBins } = updateChromoBins(
@@ -117,9 +155,9 @@ function* launchApplication() {
     let connectionsAssociations = (response && response.data) || [];
 
     const { responseSamples } = yield axios
-    .get(`/data/${file}/samples.json`)
-    .then((responseSamples) => ({ responseSamples }))
-    .catch((error) => ({ error }));
+      .get(`/data/${file}/samples.json`)
+      .then((responseSamples) => ({ responseSamples }))
+      .catch((error) => ({ error }));
     let samples = (responseSamples && responseSamples.data) || [];
 
     let anatomyPlot = plots.find((d) => d.type === "anatomy");
@@ -136,6 +174,8 @@ function* launchApplication() {
       defaultDomain,
       genomeLength,
       datafiles: files,
+      filteredFiles,
+      filteredTags,
       selectedCoordinate,
       tags,
       file,
@@ -143,7 +183,7 @@ function* launchApplication() {
       chromoBins,
       plots,
       connectionsAssociations,
-      samples
+      samples,
     };
     yield put({ type: actions.LAUNCH_APP_SUCCESS, properties });
   } else {

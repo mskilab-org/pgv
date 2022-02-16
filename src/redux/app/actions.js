@@ -11,46 +11,47 @@ const actions = {
   PHYLOGENY_NODES_SELECTED: "PHYLOGENY_NODES_SELECTED",
   PHYLOGENY_NODES_HIGHLIGHTED: "PHYLOGENY_NODES_HIGHLIGHTED",
   PHYLOGENY_PANEL_HEIGHT_UPDATED: "PHYLOGENY_PANEL_HEIGHT_UPDATED",
-  launchApp: () => ({
+  launchApp: (file, selectedTags) => ({
     type: actions.LAUNCH_APP,
+    file,
+    selectedTags,
   }),
   updateDomains: (domains) => ({
     type: actions.DOMAINS_UPDATED,
-    domains
+    domains,
   }),
   updatePlots: (plots) => ({
     type: actions.PLOTS_UPDATED,
-    plots
+    plots,
   }),
   updateLegendPin: (legendPinned) => ({
     type: actions.LEGEND_PIN_UPDATED,
-    legendPinned
+    legendPinned,
   }),
   updateGenesPin: (genesPinned) => ({
     type: actions.GENES_PIN_UPDATED,
-    genesPinned
+    genesPinned,
   }),
   updatePhylogenyPin: (phylogenyPinned) => ({
     type: actions.PHYLOGENY_PIN_UPDATED,
-    phylogenyPinned
+    phylogenyPinned,
   }),
   updateRenderOutsideViewport: (renderOutsideViewPort) => ({
     type: actions.RENDER_OUTSIDE_VIEWPORT_UPDATED,
-    renderOutsideViewPort
+    renderOutsideViewPort,
   }),
   selectPhylogenyNodes: (nodes) => ({
     type: actions.PHYLOGENY_NODES_SELECTED,
-    nodes
+    nodes,
   }),
   highlightPhylogenyNodes: (nodes) => ({
     type: actions.PHYLOGENY_NODES_HIGHLIGHTED,
-    nodes
+    nodes,
   }),
   updatePhylogenyPanelHeight: (phylogenyPanelHeight) => ({
     type: actions.PHYLOGENY_PANEL_HEIGHT_UPDATED,
-    phylogenyPanelHeight
-  })
-  
+    phylogenyPanelHeight,
+  }),
 };
 
 export default actions;

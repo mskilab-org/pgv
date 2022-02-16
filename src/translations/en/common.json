@@ -1,6 +1,11 @@
 {
   "general": {
-    "error": "Oops! Operation failed with error: {{error}}"
+    "error": "Oops! Operation failed with error: {{error}}",
+    "page-not-found": "Sorry, the page you visited does not exist.",
+    "back-to-home": "Back Home"
+  },
+  "topbar": {
+    "browse-title": "Listing <strong>{{count}}</strong> out of <strong>{{total}}</strong> samples"
   },
   "menu": {
     "home": {

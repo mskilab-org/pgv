@@ -3,10 +3,12 @@ import * as d3 from "d3";
 import { domainsToLocation, cluster } from "../../helpers/utility";
 
 const initState = {
+  datafiles: [],
+  selectedTags: [],
+  filteredTags: [],
+  filteredFiles: [],
   loading: false,
-  selectedCoordinate: null,
   genomeLength: 0,
-  defaultDomain: [],
   domains: [],
   datafile: { filename: "", file: "", tags: [], plots: [], reference: "" },
   chromoBins: {},
@@ -23,23 +25,36 @@ const initState = {
   genesPinned: false,
   phylogenyPinned: false,
   renderOutsideViewPort: false,
-  samples: {}
+  samples: {},
+  file: null,
 };
 
 export default function appReducer(state = initState, action) {
   switch (action.type) {
     case actions.LAUNCH_APP:
-      return { ...state, loading: true };
+      return {
+        ...state,
+        loading: true,
+        file: action.file,
+        selectedTags: action.selectedTags,
+      };
     case actions.LAUNCH_APP_SUCCESS:
       return { ...state, ...action.properties, loading: false };
     case actions.LAUNCH_APP_FAILED:
       return { ...state, missingDataFiles: true, loading: false };
     case actions.PLOTS_UPDATED:
-      let genesPlot = action.plots.find(d => d.type === "genes");
-      let phylogenyPlot = action.plots.find(d => d.type === "phylogeny");
-      let genesPinnedState = genesPlot && genesPlot.visible ? state.genesPinned : false;
-      let phylogenyPinnedState = phylogenyPlot && phylogenyPlot.visible ? state.phylogenyPinned : false;
-      return { ...state, plots: action.plots, genesPinned: genesPinnedState, phylogenyPinned: phylogenyPinnedState};
+      let genesPlot = action.plots.find((d) => d.type === "genes");
+      let phylogenyPlot = action.plots.find((d) => d.type === "phylogeny");
+      let genesPinnedState =
+        genesPlot && genesPlot.visible ? state.genesPinned : false;
+      let phylogenyPinnedState =
+        phylogenyPlot && phylogenyPlot.visible ? state.phylogenyPinned : false;
+      return {
+        ...state,
+        plots: action.plots,
+        genesPinned: genesPinnedState,
+        phylogenyPinned: phylogenyPinnedState,
+      };
     case actions.LEGEND_PIN_UPDATED:
       return { ...state, legendPinned: action.legendPinned };
     case actions.GENES_PIN_UPDATED:

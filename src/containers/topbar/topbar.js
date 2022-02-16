@@ -1,101 +1,137 @@
 import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
-import { Link } from "react-router-dom";
 import { withTranslation } from "react-i18next";
-import { Layout, Menu, Space, Spin } from "antd";
-import {
-  AiOutlineDashboard,
-  AiOutlineTable
-} from "react-icons/ai";
+import { Layout, Space, Spin, Select } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import TopbarWrapper from "./topbar.style";
 import { siteConfig } from "../../settings";
-import { domainsToLocation } from "../../helpers/utility";
 import logo from "../../assets/images/logo.png";
+import appActions from "../../redux/app/actions";
 
 const { Header } = Layout;
+const { Option } = Select;
 
-const navigationMap = { 
-  "/": "dashboard",
-  "/data-selection/": "data-selection"
-}
+const { launchApp } = appActions;
 
 class Topbar extends Component {
-  state = {
-    currentPage: "",
-    visible: false
+  handleTagsChange = (selectedTags) => {
+    this.props.launchApp(null, selectedTags);
   };
 
-  handleClick = (e) => {
-    this.setState({ currentPage: e.key });
+  handleFileChange = (file) => {
+    this.props.launchApp(file, this.props.selectedTags);
   };
-
-  componentWillReceiveProps(nextProps) {
-    // to update the navigation when page refresh
-    let pathname = new URL(decodeURI(document.location)).pathname;
-    this.setState({ currentPage: navigationMap[pathname] });
-  }
 
   render() {
-    const { currentPage } = this.state;
-    const { t, file, domains, chromoBins, loading } = this.props;
-    let params = file && `?file=${file}&location=${domainsToLocation(chromoBins, domains)}`;
-
+    const {
+      t,
+      file,
+      loading,
+      missingDataFiles,
+      selectedCategories,
+      filteredFiles,
+      filteredTags,
+      datafiles,
+    } = this.props;
     return (
       <TopbarWrapper>
         <Header className="ant-pro-top-menu">
           <div className="ant-pro-top-nav-header light">
             <div className="ant-pro-top-nav-header-main ">
               <div className="ant-pro-top-nav-header-main-left">
-                <div
-                  className="ant-pro-top-nav-header-logo"
-                  id="logo"
-                  onClick={() => this.handleClick({ key: "dashboard" })}
-                >
-                  <Link to={`/${params}`}>
+                <Space>
+                  <div className="ant-pro-top-nav-header-logo" id="logo">
                     <img src={logo} alt="logo" />
                     <h1>{siteConfig.siteName}</h1>
-                  </Link>
-                </div>
+                  </div>
+                  {!missingDataFiles && (
+                    <Select
+                      mode="multiple"
+                      value={selectedCategories}
+                      className="tags-select"
+                      allowClear={true}
+                      loading={loading}
+                      showArrow={true}
+                      optionLabelProp="value"
+                      maxTagCount={3}
+                      placeholder={t(
+                        "components.filters-panel.tags-section.placeholder"
+                      )}
+                      dropdownMatchSelectWidth={false}
+                      onChange={this.handleTagsChange}
+                    >
+                      {filteredTags.map((d) => (
+                        <Option key={d[0]}>
+                          {d[0]} (
+                          {t("components.filters-panel.tags-section.sample", {
+                            count: +d[1],
+                          })}
+                          )
+                        </Option>
+                      ))}
+                    </Select>
+                  )}
+                  {!missingDataFiles && (
+                    <Select
+                      showSearch={true}
+                      value={file}
+                      className="files-select"
+                      allowClear={false}
+                      loading={loading}
+                      showArrow={true}
+                      optionLabelProp="value"
+                      dropdownMatchSelectWidth={false}
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        option.children
+                          .toLowerCase()
+                          .indexOf(input.toLowerCase()) >= 0
+                      }
+                      filterSort={(optionA, optionB) =>
+                        optionA.children
+                          .toLowerCase()
+                          .localeCompare(optionB.children.toLowerCase())
+                      }
+                      onChange={this.handleFileChange}
+                    >
+                      {filteredFiles.map((d) => (
+                        <Option key={d.file} value={d.file}>
+                          {d.file}
+                        </Option>
+                      ))}
+                    </Select>
+                  )}
+                  {loading ? (
+                    <Spin
+                      indicator={
+                        <LoadingOutlined style={{ fontSize: 16 }} spin />
+                      }
+                    />
+                  ) : (
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: t("topbar.browse-title", {
+                          count: filteredFiles.length,
+                          total: datafiles.length,
+                        }),
+                      }}
+                    />
+                  )}
+                </Space>
               </div>
-              <div className="ant-pro-top-nav-header-menu">
-                <Menu
-                  mode="horizontal"
-                  onClick={this.handleClick}
-                  selectedKeys={[currentPage]}
-                >
-                  <Menu.Item key="data-selection">
-                    <Link to={`/data-selection/${params}`}>
-                      <span role="img" className="anticon anticon-dashboard">
-                        <AiOutlineTable />
-                      </span>
-                      <span className="ant-pro-menu-item-title">
-                        {t("menu.data-selection.title")}
-                      </span>
-                    </Link>
-                  </Menu.Item>
-                  <Menu.Item key="dashboard">
-                    <Link to={`/${params}`}>
-                      <span role="img" className="anticon anticon-dashboard">
-                        <AiOutlineDashboard />
-                      </span>
-                      <span className="ant-pro-menu-item-title">
-                        {t("menu.home.title")}
-                      </span>
-                    </Link>
-                  </Menu.Item>
-                </Menu>
-              </div>
+              <div className="ant-pro-top-nav-header-menu"></div>
               <div className="ant-pro-top-nav-header-main-right">
                 <div className="ant-pro-top-nav-header-main-right-container">
                   <Space align="center">
                     <div className="ant-pro-loader-container">
-                      {loading && <Spin
-                        indicator={
-                          <LoadingOutlined style={{ fontSize: 16 }} spin />
-                        }
-                      />}
+                      {loading && (
+                        <Spin
+                          indicator={
+                            <LoadingOutlined style={{ fontSize: 16 }} spin />
+                          }
+                        />
+                      )}
                     </div>
                   </Space>
                 </div>
@@ -111,15 +147,22 @@ Topbar.propTypes = {
   file: PropTypes.string,
 };
 Topbar.defaultProps = {
-  currentPage: ""
+  currentPage: "",
 };
 const mapDispatchToProps = (dispatch) => ({
+  launchApp: (file, selectedTags) => dispatch(launchApp(file, selectedTags)),
 });
 const mapStateToProps = (state) => ({
   file: state.App.file,
   domains: state.App.domains,
   chromoBins: state.App.chromoBins,
-  loading: state.App.loading
+  missingDataFiles: state.App.missingDataFiles,
+  datafiles: state.App.datafiles,
+  tags: state.App.tags,
+  loading: state.App.loading,
+  selectedTags: state.App.selectedTags,
+  filteredFiles: state.App.filteredFiles,
+  filteredTags: state.App.filteredTags,
 });
 export default connect(
   mapStateToProps,
