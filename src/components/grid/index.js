@@ -23,6 +23,9 @@ class Grid extends Component {
 
   renderYAxis() {
     let { scaleY, axisWidth } = this.props;
+    if (!scaleY) {
+      return;
+    }
     let yAxisContainer = d3.select(this.container).select(".y-axis-container");
     let yAxis = d3.axisLeft(scaleY).tickSize(-axisWidth);
     yAxisContainer.call(yAxis);
@@ -315,6 +318,7 @@ Grid.propTypes = {
   axisHeight: PropTypes.number.isRequired,
   axisWidth: PropTypes.number.isRequired,
   chromoBins: PropTypes.object.isRequired,
+  showY: PropTypes.bool,
 };
 Grid.defaultProps = {
   gap: 0,

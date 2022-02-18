@@ -13,22 +13,21 @@ import ScatterPlotPanel from "../../components/scatterPlotPanel";
 import BarPlotPanel from "../../components/barPlotPanel";
 import GenesPanel from "../../components/genesPanel";
 import GenomePanel from "../../components/genomePanel";
+import WalkPanel from "../../components/walkPanel";
 import AnatomyPanel from "../../components/anatomyPanel";
 import appActions from "../../redux/app/actions";
 
 const { getDependencies, updateDomain } = appActions;
 
 class Home extends Component {
-
-  state = { legendAffixed: false, genesAffixed: false, phyloAffixed: false}
+  state = { legendAffixed: false, genesAffixed: false, phyloAffixed: false };
 
   onPanelAffixChanged = (panel, affixed) => {
-    this.setState({panel: affixed});
-  }
+    this.setState({ panel: affixed });
+  };
 
   render() {
     const {
-      t,
       datafile,
       strainsList,
       loading,
@@ -41,34 +40,62 @@ class Home extends Component {
       plots,
     } = this.props;
 
-    let phyloComponent = plots.find(e => e.type === "phylogeny");
-    let anatomyComponent = plots.find(e => e.type === "anatomy");
-    let genesComponent = plots.find(e => e.type === "genes");
-    let phyloAnatomy = <Row className="">
-      {phyloComponent && phyloComponent.visible && <Col className="gutter-row" span={anatomyComponent && anatomyComponent.visible ? 18 : 24}>
-      {phyloComponent && <PhylogenyPanel
-          {...{
-            loading,
-            phylogeny: phyloComponent.data,
-            title: phyloComponent.title,
-            height: phylogenyPanelHeight
-          }}
-        />}
-      </Col>}
-      {anatomyComponent && anatomyComponent.visible && <Col className="gutter-row" span={phyloComponent && phyloComponent.visible ? 6 : 24}>
-        <AnatomyPanel
-          {...{
-            loading,
-            anatomy: anatomyComponent.data,
-            title: anatomyComponent.title,
-            height: (phylogenyPanelHeight + 7),
-            figure: anatomyComponent.figure
-          }}
-        />
-      </Col>}
-    </Row>
+    let phyloComponent = plots.find((e) => e.type === "phylogeny");
+    let anatomyComponent = plots.find((e) => e.type === "anatomy");
+    let genesComponent = plots.find((e) => e.type === "genes");
+    let phyloAnatomy = (
+      <Row className="">
+        {phyloComponent && phyloComponent.visible && (
+          <Col
+            className="gutter-row"
+            span={anatomyComponent && anatomyComponent.visible ? 18 : 24}
+          >
+            {phyloComponent && (
+              <PhylogenyPanel
+                {...{
+                  loading,
+                  phylogeny: phyloComponent.data,
+                  title: phyloComponent.title,
+                  height: phylogenyPanelHeight,
+                }}
+              />
+            )}
+          </Col>
+        )}
+        {anatomyComponent && anatomyComponent.visible && (
+          <Col
+            className="gutter-row"
+            span={phyloComponent && phyloComponent.visible ? 6 : 24}
+          >
+            <AnatomyPanel
+              {...{
+                loading,
+                anatomy: anatomyComponent.data,
+                title: anatomyComponent.title,
+                height: phylogenyPanelHeight + 7,
+                figure: anatomyComponent.figure,
+              }}
+            />
+          </Col>
+        )}
+      </Row>
+    );
     let plotPhyloAnatomyComponent = phylogenyPinned ? (
-      <Affix offsetTop={genesPinned ? (legendPinned ? 283 : 207) : (legendPinned ? 121 : 54)} style={{position: this.state.legendAffixed ? "absolute" : "relative", top: 0, left: 0, right: 0, zIndex: 700}} onChange={affixed => this.onPanelAffixChanged("phyloAffixed", affixed)}>
+      <Affix
+        offsetTop={
+          genesPinned ? (legendPinned ? 283 : 207) : legendPinned ? 121 : 54
+        }
+        style={{
+          position: this.state.legendAffixed ? "absolute" : "relative",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 700,
+        }}
+        onChange={(affixed) =>
+          this.onPanelAffixChanged("phyloAffixed", affixed)
+        }
+      >
         {phyloAnatomy}
       </Affix>
     ) : (
@@ -77,15 +104,34 @@ class Home extends Component {
     let plotComponents = [];
     if (genesComponent && genesComponent.data && genesComponent.visible) {
       let genesPlotComponent = genesPinned ? (
-        <Affix offsetTop={legendPinned ? 121 : 54} style={{position: this.state.legendAffixed ? "absolute" : "relative", top: 0, left: 0, right: 0, zIndex: 900}} onChange={affixed => this.onPanelAffixChanged("genesAffixed", affixed)}>
-          <GenesPanel {...{ genes: genesComponent.data, chromoBins, visible: false }} />
+        <Affix
+          offsetTop={legendPinned ? 121 : 54}
+          style={{
+            position: this.state.legendAffixed ? "absolute" : "relative",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 900,
+          }}
+          onChange={(affixed) =>
+            this.onPanelAffixChanged("genesAffixed", affixed)
+          }
+        >
+          <GenesPanel
+            {...{ genes: genesComponent.data, chromoBins, visible: false }}
+          />
         </Affix>
       ) : (
-        <GenesPanel {...{ genes: genesComponent.data, chromoBins, visible: false }} />
+        <GenesPanel
+          {...{ genes: genesComponent.data, chromoBins, visible: false }}
+        />
       );
       plotComponents.push(genesPlotComponent);
     }
-    if ((phyloComponent && phyloComponent.visible) || (anatomyComponent && anatomyComponent.visible)) {
+    if (
+      (phyloComponent && phyloComponent.visible) ||
+      (anatomyComponent && anatomyComponent.visible)
+    ) {
       plotComponents.push(plotPhyloAnatomyComponent);
     }
     plots.forEach((d, i) => {
@@ -96,6 +142,18 @@ class Home extends Component {
             {...{
               loading,
               genome: d.data,
+              title: d.title,
+              chromoBins: chromoBins,
+              visible: d.visible,
+            }}
+          />
+        );
+      } else if (d.type === "walk") {
+        plotComponent = (
+          <WalkPanel
+            {...{
+              loading,
+              walks: d.data.walks,
               title: d.title,
               chromoBins: chromoBins,
               visible: d.visible,
@@ -164,10 +222,24 @@ class Home extends Component {
             <Row className="ant-panel-container ant-home-legend-container">
               <Col className="gutter-row" span={24}>
                 {legendPinned ? (
-                  <Affix offsetTop={54} style={{position: this.state.legendAffixed ? "absolute" : "relative", top: 0, left: 0, right: 0, zIndex: 1000}} onChange={affixed => this.onPanelAffixChanged("legendAffixed", affixed)}>
+                  <Affix
+                    offsetTop={54}
+                    style={{
+                      position: this.state.legendAffixed
+                        ? "absolute"
+                        : "relative",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      zIndex: 1000,
+                    }}
+                    onChange={(affixed) =>
+                      this.onPanelAffixChanged("legendAffixed", affixed)
+                    }
+                  >
                     <LegendPanel
                       {...{
-                        selectedCoordinate
+                        selectedCoordinate,
                       }}
                     />
                   </Affix>

@@ -127,6 +127,11 @@
       "interval_plural": "intervals",
       "select-annotation-placeholder": "Select an annotation"
     },
+    "walk-panel": {
+      "header": "Walks Graph",
+      "walk": "walk",
+      "walk_plural": "walks"
+    },
     "settings-panel": {
       "coordinates": { "label": "Reference" },
       "pinning": "Pin to Viewport",

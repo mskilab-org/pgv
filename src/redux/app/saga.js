@@ -125,7 +125,9 @@ function* launchApplication(action) {
     yield axios
       .all(
         plots
-          .filter((d, i) => ["genome", "phylogeny", "anatomy"].includes(d.type))
+          .filter((d, i) =>
+            ["genome", "phylogeny", "anatomy", "walk"].includes(d.type)
+          )
           .map((d) => axios.get(d.source))
       )
       .then(
@@ -133,7 +135,7 @@ function* launchApplication(action) {
           responses.forEach(
             (d, i) =>
               (plots.filter((d, i) =>
-                ["genome", "phylogeny", "anatomy"].includes(d.type)
+                ["genome", "phylogeny", "anatomy", "walk"].includes(d.type)
               )[i].data = d.data)
           );
         })
