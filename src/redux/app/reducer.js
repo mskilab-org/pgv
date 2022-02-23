@@ -137,6 +137,10 @@ export default function appReducer(state = initState, action) {
       };
     case actions.DOMAINS_UPDATED:
       let doms = action.domains;
+      // eliminate domains that are smaller than 10 bases wide
+      if (doms.length > 1) {
+        doms = doms.filter((d) => d[1] - d[0] > 10);
+      }
       let url = new URL(decodeURI(document.location));
       let params = new URLSearchParams(url.search);
       let newURL = `${url.origin}/?file=${params.get(

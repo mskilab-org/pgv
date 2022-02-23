@@ -584,9 +584,8 @@ class WalkPlot extends Component {
                     d.primaryKey === tooltip.shapeId ? "highlighted" : ""
                   } ${
                     selectedConnectionIds.includes(d.cid)
-                      ? "cross-annotated"
-                      : selectedConnectionIds.includes(d.cid) &&
-                        "phylogeny-annotated"
+                      ? "phylogeny-annotated"
+                      : ""
                   }`}
                   d={d.render}
                   onClick={(event) => this.handleConnectionClick(event, d)}

@@ -6,5 +6,9 @@
   {
     "sample": "7G",
     "connections": [25, 464, 468]
+  },
+  {
+    "sample": "7K",
+    "connections": [98]
   }
 ]
