@@ -58,9 +58,34 @@ export default function appReducer(state = initState, action) {
     case actions.LEGEND_PIN_UPDATED:
       return { ...state, legendPinned: action.legendPinned };
     case actions.GENES_PIN_UPDATED:
-      return { ...state, genesPinned: action.genesPinned };
+      if (action.genesPinned) {
+        action.genesPinned &&
+          (state.plots.find((d) => d.type === "genes").visible =
+            action.genesPinned);
+        return {
+          ...state,
+          genesPinned: action.genesPinned,
+          plots: state.plots,
+        };
+      } else {
+        return { ...state, genesPinned: action.genesPinned };
+      }
     case actions.PHYLOGENY_PIN_UPDATED:
-      return { ...state, phylogenyPinned: action.phylogenyPinned };
+      if (action.phylogenyPinned) {
+        action.phylogenyPinned &&
+          (state.plots.find((d) => d.type === "phylogeny").visible =
+            action.phylogenyPinned);
+        return {
+          ...state,
+          phylogenyPinned: action.phylogenyPinned,
+          plots: state.plots,
+        };
+      } else {
+        return {
+          ...state,
+          phylogenyPinned: action.phylogenyPinned,
+        };
+      }
     case actions.RENDER_OUTSIDE_VIEWPORT_UPDATED:
       return { ...state, renderOutsideViewPort: action.renderOutsideViewPort };
     case actions.PHYLOGENY_NODES_HIGHLIGHTED:

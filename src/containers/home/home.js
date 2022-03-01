@@ -17,13 +17,19 @@ import WalkPanel from "../../components/walkPanel";
 import AnatomyPanel from "../../components/anatomyPanel";
 import appActions from "../../redux/app/actions";
 
-const { getDependencies, updateDomain } = appActions;
+const { updateDomain, updatePlots } = appActions;
 
 class Home extends Component {
   state = { legendAffixed: false, genesAffixed: false, phyloAffixed: false };
 
   onPanelAffixChanged = (panel, affixed) => {
     this.setState({ panel: affixed });
+  };
+
+  togglePlotVisibility = (checked, index) => {
+    let plots = [...this.props.plots];
+    plots[index].visible = checked;
+    this.props.updatePlots(plots);
   };
 
   render() {
@@ -134,7 +140,7 @@ class Home extends Component {
     ) {
       plotComponents.push(plotPhyloAnatomyComponent);
     }
-    plots.forEach((d, i) => {
+    plots.forEach((d, index) => {
       let plotComponent = null;
       if (d.type === "genome") {
         plotComponent = (
@@ -145,6 +151,8 @@ class Home extends Component {
               title: d.title,
               chromoBins: chromoBins,
               visible: d.visible,
+              index,
+              toggleVisibility: this.togglePlotVisibility,
             }}
           />
         );
@@ -157,6 +165,8 @@ class Home extends Component {
               title: d.title,
               chromoBins: chromoBins,
               visible: d.visible,
+              index,
+              toggleVisibility: this.togglePlotVisibility,
             }}
           />
         );
@@ -173,6 +183,8 @@ class Home extends Component {
               chromoBins,
               visible: d.visible,
               loading,
+              index,
+              toggleVisibility: this.togglePlotVisibility,
             }}
           />
         );
@@ -185,22 +197,23 @@ class Home extends Component {
               chromoBins,
               visible: d.visible,
               loading,
+              index,
+              toggleVisibility: this.togglePlotVisibility,
             }}
           />
         );
       }
-      d.visible &&
-        plotComponents.push(
-          <Row
-            key={i}
-            id={`${d.sample}-${d.type}`}
-            className="ant-panel-container ant-home-map-panel-container"
-          >
-            <Col className="gutter-row" span={24}>
-              {plotComponent}
-            </Col>
-          </Row>
-        );
+      plotComponents.push(
+        <Row
+          key={index}
+          id={`${d.sample}-${d.type}`}
+          className="ant-panel-container ant-home-map-panel-container"
+        >
+          <Col className="gutter-row" span={24}>
+            {plotComponent}
+          </Col>
+        </Row>
+      );
     });
 
     return (
@@ -262,7 +275,7 @@ class Home extends Component {
 Home.propTypes = {};
 Home.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
-  getDependencies: (file) => dispatch(getDependencies(file)),
+  updatePlots: (plots) => dispatch(updatePlots(plots)),
   updateDomain: (from, to) => dispatch(updateDomain(from, to)),
 });
 const mapStateToProps = (state) => ({

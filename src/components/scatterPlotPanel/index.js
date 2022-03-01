@@ -8,7 +8,11 @@ import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import { AiOutlineDotChart } from "react-icons/ai";
 import Wrapper from "./index.style";
-import { AiOutlineDownload } from "react-icons/ai";
+import {
+  AiOutlineDownload,
+  AiOutlineDown,
+  AiOutlineRight,
+} from "react-icons/ai";
 import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import ScatterPlot from "../scatterPlot";
@@ -44,12 +48,15 @@ class ScatterPlotPanel extends Component {
       domains,
       inViewport,
       renderOutsideViewPort,
+      visible,
+      index,
+      toggleVisibility,
     } = this.props;
     if (!data) {
       return null;
     }
     return (
-      <Wrapper>
+      <Wrapper visible={visible}>
         <Card
           style={transitionStyle(inViewport || renderOutsideViewPort)}
           loading={loading}
@@ -78,15 +85,34 @@ class ScatterPlotPanel extends Component {
                 <Button
                   type="default"
                   shape="circle"
-                  icon={<AiOutlineDownload />}
+                  disabled={!visible}
+                  icon={<AiOutlineDownload style={{ marginTop: 4 }} />}
                   size="small"
                   onClick={() => this.onDownloadButtonClicked()}
+                />
+              </Tooltip>
+              <Tooltip
+                title={
+                  visible ? t("components.collapse") : t("components.expand")
+                }
+              >
+                <Button
+                  type="text"
+                  icon={
+                    visible ? (
+                      <AiOutlineDown style={{ marginTop: 5 }} />
+                    ) : (
+                      <AiOutlineRight style={{ marginTop: 5 }} />
+                    )
+                  }
+                  size="small"
+                  onClick={() => toggleVisibility(!visible, index)}
                 />
               </Tooltip>
             </Space>
           }
         >
-          {
+          {visible && (
             <div
               className="ant-wrapper"
               ref={(elem) => (this.container = elem)}
@@ -112,7 +138,7 @@ class ScatterPlotPanel extends Component {
                 }}
               </ContainerDimensions>
             </div>
-          }
+          )}
         </Card>
       </Wrapper>
     );

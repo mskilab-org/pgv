@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { withTranslation } from "react-i18next";
 import { connect } from "react-redux";
-import * as d3 from "d3"; 
+import * as d3 from "d3";
 import {
   PageHeader,
   Space,
@@ -35,10 +35,10 @@ const {
   updatePhylogenyPin,
   updateRenderOutsideViewport,
   updateDomains,
-  updatePhylogenyPanelHeight
+  updatePhylogenyPanelHeight,
 } = appActions;
 
-const PHYLOGENY_PANEL_HEIGHT = {min: 50, max: 500, default: 200, step: 10};
+const PHYLOGENY_PANEL_HEIGHT = { min: 50, max: 500, default: 200, step: 10 };
 
 class HeaderPanel extends Component {
   state = { visible: false };
@@ -110,7 +110,7 @@ class HeaderPanel extends Component {
       nodes,
       selectedConnectionsRange,
       selectedConnectionIds,
-      phylogenyPanelHeight
+      phylogenyPanelHeight,
     } = this.props;
     return (
       <Wrapper>
@@ -219,7 +219,7 @@ class HeaderPanel extends Component {
               <Col span={24}>
                 <Space>
                   <Switch
-                    disabled={!(plots.find(d => d.type === "genes") && plots.find(d => d.type === "genes").visible)}
+                    disabled={!plots.find((d) => d.type === "genes")}
                     onChange={(checked) => this.onGenesPinChanged(checked)}
                     size="small"
                     checked={genesPinned}
@@ -230,7 +230,14 @@ class HeaderPanel extends Component {
               <Col span={24}>
                 <Space>
                   <Switch
-                    disabled={!((plots.find(d => d.type === "phylogeny") && plots.find(d => d.type === "phylogeny").visible) || ((plots.find(d => d.type === "anatomy") && plots.find(d => d.type === "anatomy").visible)))}
+                    disabled={
+                      !(
+                        (plots.find((d) => d.type === "phylogeny") &&
+                          plots.find((d) => d.type === "phylogeny").visible) ||
+                        (plots.find((d) => d.type === "anatomy") &&
+                          plots.find((d) => d.type === "anatomy").visible)
+                      )
+                    }
                     onChange={(checked) => this.onPhylogenyPinChanged(checked)}
                     size="small"
                     checked={phylogenyPinned}
@@ -240,7 +247,19 @@ class HeaderPanel extends Component {
               </Col>
               <Col span={24}>
                 <Space>
-                  <InputNumber style={{width: 55}} size="small" min={PHYLOGENY_PANEL_HEIGHT.min} max={PHYLOGENY_PANEL_HEIGHT.max} value={phylogenyPanelHeight} step={PHYLOGENY_PANEL_HEIGHT.step} defaultValue={PHYLOGENY_PANEL_HEIGHT.default} bordered={false} onChange={(value) => this.onPhylogenyPanelHeightChanged(value)}/>
+                  <InputNumber
+                    style={{ width: 55 }}
+                    size="small"
+                    min={PHYLOGENY_PANEL_HEIGHT.min}
+                    max={PHYLOGENY_PANEL_HEIGHT.max}
+                    value={phylogenyPanelHeight}
+                    step={PHYLOGENY_PANEL_HEIGHT.step}
+                    defaultValue={PHYLOGENY_PANEL_HEIGHT.default}
+                    bordered={false}
+                    onChange={(value) =>
+                      this.onPhylogenyPanelHeightChanged(value)
+                    }
+                  />
                   {t("components.settings-panel.phylogeny-panel-height")}
                 </Space>
               </Col>
@@ -301,11 +320,13 @@ const mapDispatchToProps = (dispatch) => ({
   updatePlots: (plots) => dispatch(updatePlots(plots)),
   updateLegendPin: (legendPinned) => dispatch(updateLegendPin(legendPinned)),
   updateGenesPin: (genesPinned) => dispatch(updateGenesPin(genesPinned)),
-  updatePhylogenyPin: (phylogenyPinned) => dispatch(updatePhylogenyPin(phylogenyPinned)),
+  updatePhylogenyPin: (phylogenyPinned) =>
+    dispatch(updatePhylogenyPin(phylogenyPinned)),
   updateRenderOutsideViewport: (renderOutsideViewPort) =>
     dispatch(updateRenderOutsideViewport(renderOutsideViewPort)),
   updateDomains: (domains) => dispatch(updateDomains(domains)),
-  updatePhylogenyPanelHeight: (value) => dispatch(updatePhylogenyPanelHeight(value)),
+  updatePhylogenyPanelHeight: (value) =>
+    dispatch(updatePhylogenyPanelHeight(value)),
 });
 const mapStateToProps = (state) => ({
   plots: state.App.plots,
@@ -316,7 +337,7 @@ const mapStateToProps = (state) => ({
   nodes: state.App.nodes,
   selectedConnectionIds: state.App.selectedConnectionIds,
   selectedConnectionsRange: state.App.selectedConnectionsRange,
-  phylogenyPanelHeight: state.App.phylogenyPanelHeight
+  phylogenyPanelHeight: state.App.phylogenyPanelHeight,
 });
 export default connect(
   mapStateToProps,

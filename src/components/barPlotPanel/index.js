@@ -3,11 +3,15 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Tooltip, Switch, Button, message, Row, Col } from "antd";
+import { Card, Space, Tooltip, Button, message, Row, Col } from "antd";
 import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
-import { AiOutlineBarChart } from "react-icons/ai";
-import { AiOutlineDownload } from "react-icons/ai";
+import {
+  AiOutlineBarChart,
+  AiOutlineDownload,
+  AiOutlineDown,
+  AiOutlineRight,
+} from "react-icons/ai";
 import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
@@ -44,12 +48,15 @@ class BarPlotPanel extends Component {
       title,
       inViewport,
       renderOutsideViewPort,
+      visible,
+      index,
+      toggleVisibility,
     } = this.props;
     if (!data) {
       return null;
     }
     return (
-      <Wrapper>
+      <Wrapper visible={visible}>
         <Card
           style={transitionStyle(inViewport || renderOutsideViewPort)}
           loading={loading}
@@ -72,15 +79,34 @@ class BarPlotPanel extends Component {
                 <Button
                   type="default"
                   shape="circle"
-                  icon={<AiOutlineDownload />}
+                  disabled={!visible}
+                  icon={<AiOutlineDownload style={{ marginTop: 4 }} />}
                   size="small"
                   onClick={() => this.onDownloadButtonClicked()}
+                />
+              </Tooltip>
+              <Tooltip
+                title={
+                  visible ? t("components.collapse") : t("components.expand")
+                }
+              >
+                <Button
+                  type="text"
+                  icon={
+                    visible ? (
+                      <AiOutlineDown style={{ marginTop: 5 }} />
+                    ) : (
+                      <AiOutlineRight style={{ marginTop: 5 }} />
+                    )
+                  }
+                  size="small"
+                  onClick={() => toggleVisibility(!visible, index)}
                 />
               </Tooltip>
             </Space>
           }
         >
-          {
+          {visible && (
             <div
               className="ant-wrapper"
               ref={(elem) => (this.container = elem)}
@@ -106,7 +132,7 @@ class BarPlotPanel extends Component {
                 }}
               </ContainerDimensions>
             </div>
-          }
+          )}
         </Card>
       </Wrapper>
     );

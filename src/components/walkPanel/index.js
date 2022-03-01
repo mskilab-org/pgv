@@ -8,7 +8,11 @@ import handleViewport from "react-in-viewport";
 import { Card, Space, Button, Tooltip, message } from "antd";
 import * as d3 from "d3";
 import { GiPathDistance } from "react-icons/gi";
-import { AiOutlineDownload } from "react-icons/ai";
+import {
+  AiOutlineDownload,
+  AiOutlineRight,
+  AiOutlineDown,
+} from "react-icons/ai";
 import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
@@ -35,10 +39,19 @@ class WalkPanel extends Component {
   };
 
   render() {
-    const { t, walks, title, inViewport, renderOutsideViewPort } = this.props;
+    const {
+      t,
+      walks,
+      title,
+      inViewport,
+      renderOutsideViewPort,
+      visible,
+      index,
+      toggleVisibility,
+    } = this.props;
 
     return (
-      <Wrapper>
+      <Wrapper visible={visible}>
         <Card
           style={transitionStyle(inViewport || renderOutsideViewPort)}
           size="small"
@@ -62,15 +75,34 @@ class WalkPanel extends Component {
                 <Button
                   type="default"
                   shape="circle"
-                  icon={<AiOutlineDownload />}
+                  disabled={!visible}
+                  icon={<AiOutlineDownload style={{ marginTop: 4 }} />}
                   size="small"
                   onClick={() => this.onDownloadButtonClicked()}
+                />
+              </Tooltip>
+              <Tooltip
+                title={
+                  visible ? t("components.collapse") : t("components.expand")
+                }
+              >
+                <Button
+                  type="text"
+                  icon={
+                    visible ? (
+                      <AiOutlineDown style={{ marginTop: 5 }} />
+                    ) : (
+                      <AiOutlineRight style={{ marginTop: 5 }} />
+                    )
+                  }
+                  size="small"
+                  onClick={() => toggleVisibility(!visible, index)}
                 />
               </Tooltip>
             </Space>
           }
         >
-          {
+          {visible && (
             <div
               className="ant-wrapper"
               ref={(elem) => (this.container = elem)}
@@ -91,7 +123,7 @@ class WalkPanel extends Component {
                 }}
               </ContainerDimensions>
             </div>
-          }
+          )}
         </Card>
       </Wrapper>
     );

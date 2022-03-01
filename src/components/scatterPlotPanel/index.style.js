@@ -6,6 +6,9 @@ const Wrapper = styled.div`
     padding: 0px;
     height: 240px;
   }
+  .ant-card-body {
+    display: ${(props) => (props.visible ? "block" : "none")};
+  }
 `;
 
 export default Wrapper;

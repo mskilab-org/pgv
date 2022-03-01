@@ -7,8 +7,17 @@ import handleViewport from "react-in-viewport";
 import { Card, Space, Button, Tooltip, message, Select } from "antd";
 import * as d3 from "d3";
 import { GiDna2 } from "react-icons/gi";
-import { AiOutlineDownload } from "react-icons/ai";
-import { downloadCanvasAsPng, transitionStyle, merge, cluster } from "../../helpers/utility";
+import {
+  AiOutlineDownload,
+  AiOutlineDown,
+  AiOutlineRight,
+} from "react-icons/ai";
+import {
+  downloadCanvasAsPng,
+  transitionStyle,
+  merge,
+  cluster,
+} from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
 import GenomePlot from "../genomePlot";
@@ -22,7 +31,7 @@ const { Option } = Select;
 
 const margins = {
   padding: 0,
-  annotations: {minDistance: 10000000, padding: 1000, maxClusters: 6}
+  annotations: { minDistance: 10000000, padding: 1000, maxClusters: 6 },
 };
 
 class GenomePanel extends Component {
@@ -35,9 +44,13 @@ class GenomePanel extends Component {
     let intervalBins = {};
     genome.intervals.forEach((d, i) => {
       let interval = new Interval(d);
-      interval.startPlace = chromoBins[`${interval.chromosome}`].startPlace + interval.startPoint;
-      interval.endPlace = chromoBins[`${interval.chromosome}`].startPlace + interval.endPoint;
-      interval.color = d3.rgb(chromoBins[`${interval.chromosome}`].color).toString();
+      interval.startPlace =
+        chromoBins[`${interval.chromosome}`].startPlace + interval.startPoint;
+      interval.endPlace =
+        chromoBins[`${interval.chromosome}`].startPlace + interval.endPoint;
+      interval.color = d3
+        .rgb(chromoBins[`${interval.chromosome}`].color)
+        .toString();
       interval.stroke = d3
         .rgb(chromoBins[`${interval.chromosome}`].color)
         .darker()
@@ -45,11 +58,12 @@ class GenomePanel extends Component {
       intervalBins[d.iid] = interval;
       intervals.push(interval);
     });
-    let frameConnections = genome.connections.map((d,i) => {
+    let frameConnections = genome.connections.map((d, i) => {
       let connection = new Connection(d);
       connection.pinpoint(intervalBins);
       //connection.yScale = this.yScale;
-      connection.arc = d3.arc()
+      connection.arc = d3
+        .arc()
         .innerRadius(0)
         .outerRadius(margins.bar / 2)
         .startAngle(0)
@@ -59,8 +73,8 @@ class GenomePanel extends Component {
     this.state = {
       activeAnnotation: null,
       intervals,
-      connections: frameConnections
-    }
+      connections: frameConnections,
+    };
   }
 
   onDownloadButtonClicked = () => {
@@ -78,19 +92,31 @@ class GenomePanel extends Component {
   };
 
   onAnnotationSelectChange = (value) => {
-    this.setState({activeAnnotation: value}, () => {
+    this.setState({ activeAnnotation: value }, () => {
       if (value !== undefined) {
         let clusters = this.changeAnnotationHandler(value);
         this.props.updateDomains(clusters);
       }
     });
-  }
+  };
 
   changeAnnotationHandler(value) {
-    let annotatedIntervals = this.state.intervals.filter(d => d.annotationArray.includes(value)).map((d,i) => { return {startPlace: d.startPlace, endPlace: d.endPlace} });
-    let annotatedConnections = this.state.connections.filter(d => d.source && d.sink && d.annotationArray.includes(value)).map((d,i) => [{startPlace: (d.source.place - 1e3), endPlace: (d.source.place + 1e3)}, {startPlace: (d.sink.place - 1e3), endPlace: (d.sink.place + 1e3)}]).flat();
+    let annotatedIntervals = this.state.intervals
+      .filter((d) => d.annotationArray.includes(value))
+      .map((d, i) => {
+        return { startPlace: d.startPlace, endPlace: d.endPlace };
+      });
+    let annotatedConnections = this.state.connections
+      .filter((d) => d.source && d.sink && d.annotationArray.includes(value))
+      .map((d, i) => [
+        { startPlace: d.source.place - 1e3, endPlace: d.source.place + 1e3 },
+        { startPlace: d.sink.place - 1e3, endPlace: d.sink.place + 1e3 },
+      ])
+      .flat();
     let annotated = annotatedIntervals.concat(annotatedConnections);
-    annotated = [...new Set(annotated)].sort((a,b) => d3.ascending(a.startPlace, b.startPlace));
+    annotated = [...new Set(annotated)].sort((a, b) =>
+      d3.ascending(a.startPlace, b.startPlace)
+    );
     annotated = merge(annotated);
 
     return cluster(annotated, this.props.genomeLength);
@@ -102,14 +128,21 @@ class GenomePanel extends Component {
       genome,
       title,
       inViewport,
-      renderOutsideViewPort
+      renderOutsideViewPort,
+      visible,
+      toggleVisibility,
+      index,
     } = this.props;
     let { activeAnnotation } = this.state;
     if (Object.keys(genome).length < 1) return null;
-    let intervalAnnotations = genome.intervals.map(d => new Interval(d).annotationArray).flat();
-    let annotationValues = [...new Set(intervalAnnotations)].sort((a,b) => d3.ascending(a,b));
+    let intervalAnnotations = genome.intervals
+      .map((d) => new Interval(d).annotationArray)
+      .flat();
+    let annotationValues = [...new Set(intervalAnnotations)].sort((a, b) =>
+      d3.ascending(a, b)
+    );
     return (
-      <Wrapper>
+      <Wrapper visible={visible}>
         <Card
           style={transitionStyle(inViewport || renderOutsideViewPort)}
           size="small"
@@ -130,10 +163,14 @@ class GenomePanel extends Component {
                   allowClear
                   onChange={(value) => this.onAnnotationSelectChange(value)}
                   style={{ width: 200 }}
-                  placeholder={t("components.genome-panel.select-annotation-placeholder")}
+                  placeholder={t(
+                    "components.genome-panel.select-annotation-placeholder"
+                  )}
                   optionFilterProp="children"
                 >
-                  {annotationValues.map(d => <Option value={d}>{d}</Option>)}
+                  {annotationValues.map((d) => (
+                    <Option value={d}>{d}</Option>
+                  ))}
                 </Select>
               </span>
             </Space>
@@ -144,27 +181,51 @@ class GenomePanel extends Component {
                 <Button
                   type="default"
                   shape="circle"
-                  icon={<AiOutlineDownload />}
+                  disabled={!visible}
+                  icon={<AiOutlineDownload style={{ marginTop: 4 }} />}
                   size="small"
                   onClick={() => this.onDownloadButtonClicked()}
+                />
+              </Tooltip>
+              <Tooltip
+                title={
+                  visible ? t("components.collapse") : t("components.expand")
+                }
+              >
+                <Button
+                  type="text"
+                  icon={
+                    visible ? (
+                      <AiOutlineDown style={{ marginTop: 5 }} />
+                    ) : (
+                      <AiOutlineRight style={{ marginTop: 5 }} />
+                    )
+                  }
+                  size="small"
+                  onClick={() => toggleVisibility(!visible, index)}
                 />
               </Tooltip>
             </Space>
           }
         >
-          {(
-            <div className="ant-wrapper" ref={(elem) => (this.container = elem)}>
+          {visible && (
+            <div
+              className="ant-wrapper"
+              ref={(elem) => (this.container = elem)}
+            >
               <ContainerDimensions>
                 {({ width, height }) => {
                   return (
-                    (inViewport || renderOutsideViewPort) && <GenomePlot
-                      {...{
-                        width: width - 2 * margins.padding,
-                        height,
-                        genome,
-                        annotation: activeAnnotation
-                      }}
-                    />
+                    (inViewport || renderOutsideViewPort) && (
+                      <GenomePlot
+                        {...{
+                          width: width - 2 * margins.padding,
+                          height,
+                          genome,
+                          annotation: activeAnnotation,
+                        }}
+                      />
+                    )
                   );
                 }}
               </ContainerDimensions>
@@ -178,15 +239,18 @@ class GenomePanel extends Component {
 GenomePanel.propTypes = {};
 GenomePanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
-  updateDomains: (domains) => dispatch(updateDomains(domains))
+  updateDomains: (domains) => dispatch(updateDomains(domains)),
 });
 const mapStateToProps = (state) => ({
   renderOutsideViewPort: state.App.renderOutsideViewPort,
   genomeLength: state.App.genomeLength,
-  domains: state.App.domains
+  domains: state.App.domains,
 });
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withTranslation("common")(handleViewport(GenomePanel, { rootMargin: '-1.0px' })));
-
+)(
+  withTranslation("common")(
+    handleViewport(GenomePanel, { rootMargin: "-1.0px" })
+  )
+);

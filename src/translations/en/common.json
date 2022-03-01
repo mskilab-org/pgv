@@ -40,6 +40,8 @@
   "components": {
     "visibility-switch-tooltip": "Toggle visibility",
     "download-as-png-tooltip": "Download as PNG",
+    "expand": "Expand",
+    "collapse": "Collapse",
     "settings": {
       "tooltip": "Settings",
       "title": "Settings Panel"
