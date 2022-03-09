@@ -49,6 +49,13 @@ export default function appReducer(state = initState, action) {
         genesPlot && genesPlot.visible ? state.genesPinned : false;
       let phylogenyPinnedState =
         phylogenyPlot && phylogenyPlot.visible ? state.phylogenyPinned : false;
+      let url = new URL(decodeURI(document.location));
+      url.searchParams.set("genes", genesPlot.visible ? 1 : 0);
+      window.history.replaceState(
+        unescape(url.toString()),
+        "Pan Genome Viewer",
+        unescape(url.toString())
+      );
       return {
         ...state,
         plots: action.plots,
@@ -58,18 +65,31 @@ export default function appReducer(state = initState, action) {
     case actions.LEGEND_PIN_UPDATED:
       return { ...state, legendPinned: action.legendPinned };
     case actions.GENES_PIN_UPDATED:
+      let url1 = new URL(decodeURI(document.location));
+      url1.searchParams.set("genesPinned", action.genesPinned ? 1 : 0);
+      let newState = {};
       if (action.genesPinned) {
         action.genesPinned &&
           (state.plots.find((d) => d.type === "genes").visible =
             action.genesPinned);
-        return {
+        newState = {
           ...state,
           genesPinned: action.genesPinned,
           plots: state.plots,
         };
       } else {
-        return { ...state, genesPinned: action.genesPinned };
+        newState = { ...state, genesPinned: action.genesPinned };
       }
+      url1.searchParams.set(
+        "genes",
+        state.plots.find((d) => d.type === "genes").visible ? 1 : 0
+      );
+      window.history.replaceState(
+        unescape(url1.toString()),
+        "Pan Genome Viewer",
+        unescape(url1.toString())
+      );
+      return newState;
     case actions.PHYLOGENY_PIN_UPDATED:
       if (action.phylogenyPinned) {
         action.phylogenyPinned &&
@@ -166,12 +186,16 @@ export default function appReducer(state = initState, action) {
       if (doms.length > 1) {
         doms = doms.filter((d) => d[1] - d[0] > 10);
       }
-      let url = new URL(decodeURI(document.location));
-      let params = new URLSearchParams(url.search);
-      let newURL = `${url.origin}/?file=${params.get(
-        "file"
-      )}&location=${domainsToLocation(state.chromoBins, doms)}`;
-      window.history.replaceState(newURL, "Pan Genome Viewer", newURL);
+      let url0 = new URL(decodeURI(document.location));
+      url0.searchParams.set(
+        "location",
+        domainsToLocation(state.chromoBins, doms)
+      );
+      window.history.replaceState(
+        unescape(url0.toString()),
+        "Pan Genome Viewer",
+        unescape(url0.toString())
+      );
       return { ...state, domains: doms };
     default:
       return state;

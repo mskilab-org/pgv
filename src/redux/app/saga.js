@@ -17,7 +17,6 @@ function* fetchArrowData(plot) {
 }
 
 function* launchApplication(action) {
-  console.log(action);
   const { responseSettings, responseDatafiles } = yield axios
     .all([axios.get("/settings.json"), axios.get("/datafiles.json")])
     .then(
@@ -104,19 +103,20 @@ function* launchApplication(action) {
       domains = [[+defaultChromosome.startPlace, +defaultChromosome.endPlace]];
     }
     let url = new URL(decodeURI(document.location));
-    let params = new URLSearchParams(url.search);
-    params.set("file", file);
-    let newURL = `${url.origin}/?file=${params.get(
-      "file"
-    )}&location=${domainsToLocation(chromoBins, domains)}`;
-    window.history.replaceState(newURL, "Pan Genome Viewer", newURL);
+    url.searchParams.set("location", domainsToLocation(chromoBins, domains));
 
+    url.searchParams.set("file", file);
+    window.history.replaceState(
+      unescape(url.toString()),
+      "Pan Genome Viewer",
+      unescape(url.toString())
+    );
     let plots = [
       {
         type: "genes",
         title: "Genes",
         source: `/genes/${selectedCoordinate}.arrow`,
-        visible: false,
+        visible: +searchParams.get("genes") === 1,
       },
       ...datafile.plots.map((d) => {
         return { ...d, source: `data/${file}/${d.source}` };
@@ -186,6 +186,7 @@ function* launchApplication(action) {
       plots,
       connectionsAssociations,
       samples,
+      genesPinned: +searchParams.get("genesPinned") === 1,
     };
     yield put({ type: actions.LAUNCH_APP_SUCCESS, properties });
   } else {
