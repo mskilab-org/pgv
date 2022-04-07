@@ -49,7 +49,7 @@ const TopbarWrapper = styled.div`
             min-width: 500px;
           }
           .files-select {
-            min-width: 100px;
+            min-width: 200px;
           }
         }
         .ant-pro-top-nav-header-menu {

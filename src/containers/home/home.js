@@ -34,7 +34,7 @@ class Home extends Component {
 
   render() {
     const {
-      datafile,
+      selectedFiles,
       strainsList,
       loading,
       selectedCoordinate,
@@ -221,14 +221,7 @@ class Home extends Component {
         <Skeleton active loading={loading}>
           <Affix offsetTop={0}>
             <div className="ant-home-header-container">
-              <HeaderPanel
-                {...{
-                  description: [datafile.reference],
-                  file: datafile.file,
-                  strainsList,
-                  tags: datafile.tags,
-                }}
-              />
+              <HeaderPanel />
             </div>
           </Affix>
           <div className="ant-home-content-container">
@@ -279,9 +272,8 @@ const mapDispatchToProps = (dispatch) => ({
   updateDomain: (from, to) => dispatch(updateDomain(from, to)),
 });
 const mapStateToProps = (state) => ({
-  file: state.App.file,
   tags: state.App.tags,
-  datafile: state.App.datafile,
+  selectedFiles: state.App.selectedFiles,
   datafiles: state.App.datafiles,
   chromoBins: state.App.chromoBins,
   plots: state.App.plots,

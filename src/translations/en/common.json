@@ -5,7 +5,9 @@
     "back-to-home": "Back Home"
   },
   "topbar": {
-    "browse-title": "Listing <strong>{{count}}</strong> out of <strong>{{total}}</strong> samples"
+    "browse-title": "Listing <strong>{{count}}</strong> out of <strong>{{total}}</strong> samples",
+    "browse-sample": "Browse samples",
+    "no-sample-selected": "Select a sample to get started!"
   },
   "menu": {
     "home": {

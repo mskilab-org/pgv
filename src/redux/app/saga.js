@@ -11,7 +11,7 @@ import {
 } from "../../helpers/utility";
 
 function* fetchArrowData(plot) {
-  yield loadArrowTable(plot.source)
+  yield loadArrowTable(plot.path)
     .then((results) => (plot.data = results))
     .catch((error) => (plot.data = []));
 }
@@ -30,14 +30,20 @@ function* launchApplication(action) {
   if (responseSettings && responseDatafiles) {
     let settings = responseSettings.data;
     let datafiles = responseDatafiles.data;
+
     let files = Object.keys(datafiles)
       .map((key, i) => {
         let d = datafiles[key];
         return {
-          filename: key,
-          file: key.replace(".json", ""),
+          file: key,
           tags: d.description,
-          plots: d.plots,
+          plots: d.plots.map((e) => {
+            return {
+              ...e,
+              title: `${key} ${e.title}`,
+              path: `/data/${key}/${e.source}`,
+            };
+          }),
           reference: d.reference,
         };
       })
@@ -64,9 +70,11 @@ function* launchApplication(action) {
 
     let filteredAllTags = [];
     let searchParams = new URL(decodeURI(document.location)).searchParams;
-    let file = searchParams.get("file");
+    let file = searchParams.get("file")
+      ? searchParams.get("file").split(",")
+      : [];
     if (filteredFiles.length > 0) {
-      file = filteredFiles[0].file;
+      file = [filteredFiles[0].file];
       filteredAllTags = filteredFiles.map((d) => d.tags).flat();
     } else {
       filteredFiles = [...files];
@@ -81,14 +89,26 @@ function* launchApplication(action) {
       ),
     ].sort((a, b) => d3.descending(a[1], b[1]));
 
-    if (action.file) {
-      file = action.file;
+    if (action.files) {
+      file = action.files;
     }
 
-    file = files.some((d) => d.file === file) ? file : files[0].file;
+    let selectedFiles = files.filter((d) =>
+      (action.files || file || []).includes(d.file)
+    );
+    //selectedFiles = selectedFiles.length > 0 ? selectedFiles : [files[0]];
 
-    const datafile = files.find((d) => d.file === file);
-    let selectedCoordinate = datafile.reference;
+    let selectedReferences = new Set(selectedFiles.map((d) => d.reference));
+
+    // if all selected files are have the same reference
+    let selectedCoordinate = Array.from(selectedReferences)[0] || "hg19";
+
+    selectedFiles = selectedFiles.filter(
+      (d) => d.reference === selectedCoordinate
+    );
+
+    file = selectedFiles || files[0].file;
+
     let { genomeLength, chromoBins } = updateChromoBins(
       settings.coordinates.sets[selectedCoordinate]
     );
@@ -105,7 +125,7 @@ function* launchApplication(action) {
     let url = new URL(decodeURI(document.location));
     url.searchParams.set("location", domainsToLocation(chromoBins, domains));
 
-    url.searchParams.set("file", file);
+    url.searchParams.set("file", selectedFiles.map((d) => d.file).join(","));
     window.history.replaceState(
       unescape(url.toString()),
       "Pan Genome Viewer",
@@ -118,9 +138,7 @@ function* launchApplication(action) {
         source: `/genes/${selectedCoordinate}.arrow`,
         visible: +searchParams.get("genes") === 1,
       },
-      ...datafile.plots.map((d) => {
-        return { ...d, source: `data/${file}/${d.source}` };
-      }),
+      ...selectedFiles.map((d) => d.plots).flat(),
     ];
     yield axios
       .all(
@@ -128,7 +146,7 @@ function* launchApplication(action) {
           .filter((d, i) =>
             ["genome", "phylogeny", "anatomy", "walk"].includes(d.type)
           )
-          .map((d) => axios.get(d.source))
+          .map((d) => axios.get(d.path))
       )
       .then(
         axios.spread((...responses) => {
@@ -150,29 +168,36 @@ function* launchApplication(action) {
         .map((x) => call(fetchArrowData, x)),
     ]);
 
-    const { response } = yield axios
-      .get(`/data/${file}/connections.associations.json`)
-      .then((response) => ({ response }))
-      .catch((error) => ({ error }));
-    let connectionsAssociations = (response && response.data) || [];
-
-    const { responseSamples } = yield axios
-      .get(`/data/${file}/samples.json`)
-      .then((responseSamples) => ({ responseSamples }))
-      .catch((error) => ({ error }));
-    let samples = (responseSamples && responseSamples.data) || [];
-
+    let connectionsAssociations = [];
+    let samples = [];
     let anatomyPlot = plots.find((d) => d.type === "anatomy");
-    if (anatomyPlot) {
-      const { res } = yield axios
-        .get(`/data/${file}/${anatomyPlot.figure}`)
-        .then((res) => ({ res }))
+    if (selectedFiles.length === 1) {
+      const { response } = yield axios
+        .get(`/data/${selectedFiles[0].file}/connections.associations.json`)
+        .then((response) => ({ response }))
         .catch((error) => ({ error }));
-      anatomyPlot.figure = (res && res.data && StringToReact(res.data)) || null;
+      connectionsAssociations =
+        (response && response.data) || connectionsAssociations;
+
+      const { responseSamples } = yield axios
+        .get(`/data/${selectedFiles[0].file}/samples.json`)
+        .then((responseSamples) => ({ responseSamples }))
+        .catch((error) => ({ error }));
+      samples = (responseSamples && responseSamples.data) || samples;
+
+      if (anatomyPlot && anatomyPlot.figure) {
+        const { res } = yield axios
+          .get(`/data/${selectedFiles[0].file}/${anatomyPlot.figure}`)
+          .then((res) => ({ res }))
+          .catch((error) => ({ error }));
+        anatomyPlot.figure =
+          (res && res.data && StringToReact(res.data)) || null;
+      }
+    } else {
+      plots = plots.filter((d) => !["anatomy", "phylogeny"].includes(d.type));
     }
 
     let properties = {
-      datafile,
       defaultDomain,
       genomeLength,
       datafiles: files,
@@ -180,7 +205,7 @@ function* launchApplication(action) {
       filteredTags,
       selectedCoordinate,
       tags,
-      file,
+      selectedFiles,
       domains,
       chromoBins,
       plots,
@@ -188,6 +213,7 @@ function* launchApplication(action) {
       samples,
       genesPinned: +searchParams.get("genesPinned") === 1,
     };
+    console.log(properties);
     yield put({ type: actions.LAUNCH_APP_SUCCESS, properties });
   } else {
     yield put({ type: actions.LAUNCH_APP_FAILED });

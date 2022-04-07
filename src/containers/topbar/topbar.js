@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
-import { Layout, Space, Spin, Select } from "antd";
+import { Layout, Space, Spin, Select, Typography, Alert } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import TopbarWrapper from "./topbar.style";
 import { siteConfig } from "../../settings";
@@ -11,6 +11,7 @@ import appActions from "../../redux/app/actions";
 
 const { Header } = Layout;
 const { Option } = Select;
+const { Text } = Typography;
 
 const { launchApp } = appActions;
 
@@ -19,14 +20,14 @@ class Topbar extends Component {
     this.props.launchApp(null, selectedTags);
   };
 
-  handleFileChange = (file) => {
-    this.props.launchApp(file, this.props.selectedTags);
+  handleFileChange = (files) => {
+    this.props.launchApp(files, this.props.selectedTags);
   };
 
   render() {
     const {
       t,
-      file,
+      selectedFiles,
       loading,
       missingDataFiles,
       selectedCategories,
@@ -74,15 +75,17 @@ class Topbar extends Component {
                   )}
                   {!missingDataFiles && (
                     <Select
+                      mode="multiple"
                       showSearch={true}
-                      value={file}
+                      value={selectedFiles.map((d) => d.file)}
                       className="files-select"
-                      allowClear={false}
+                      allowClear={true}
                       loading={loading}
                       showArrow={true}
                       optionLabelProp="value"
                       dropdownMatchSelectWidth={false}
                       optionFilterProp="children"
+                      placeholder={t("topbar.browse-sample")}
                       filterOption={(input, option) =>
                         option.children
                           .toLowerCase()
@@ -97,7 +100,11 @@ class Topbar extends Component {
                     >
                       {filteredFiles.map((d) => (
                         <Option key={d.file} value={d.file}>
-                          {d.file}
+                          <Space>
+                            <Text>{d.file}</Text>
+                            <Text type="secondary">{d.reference}</Text>
+                            &nbsp;
+                          </Space>
                         </Option>
                       ))}
                     </Select>
@@ -109,14 +116,23 @@ class Topbar extends Component {
                       }
                     />
                   ) : (
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: t("topbar.browse-title", {
-                          count: filteredFiles.length,
-                          total: datafiles.length,
-                        }),
-                      }}
-                    />
+                    <Space>
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html: t("topbar.browse-title", {
+                            count: filteredFiles.length,
+                            total: datafiles.length,
+                          }),
+                        }}
+                      />
+                      {selectedFiles.length < 1 && (
+                        <Alert
+                          message={t("topbar.no-sample-selected")}
+                          type="info"
+                          showIcon
+                        />
+                      )}
+                    </Space>
                   )}
                 </Space>
               </div>
@@ -144,7 +160,7 @@ class Topbar extends Component {
   }
 }
 Topbar.propTypes = {
-  file: PropTypes.string,
+  selectedFiles: PropTypes.array,
 };
 Topbar.defaultProps = {
   currentPage: "",
@@ -153,7 +169,7 @@ const mapDispatchToProps = (dispatch) => ({
   launchApp: (file, selectedTags) => dispatch(launchApp(file, selectedTags)),
 });
 const mapStateToProps = (state) => ({
-  file: state.App.file,
+  selectedFiles: state.App.selectedFiles,
   domains: state.App.domains,
   chromoBins: state.App.chromoBins,
   missingDataFiles: state.App.missingDataFiles,

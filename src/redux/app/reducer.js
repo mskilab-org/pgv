@@ -7,12 +7,11 @@ const initState = {
   selectedTags: [],
   filteredTags: [],
   filteredFiles: [],
+  selectedFiles: [],
   loading: false,
   genomeLength: 0,
   domains: [],
-  datafile: { filename: "", file: "", tags: [], plots: [], reference: "" },
   chromoBins: {},
-  coordinates: [],
   tags: [],
   plots: [],
   nodes: [],
@@ -26,7 +25,7 @@ const initState = {
   phylogenyPinned: false,
   renderOutsideViewPort: false,
   samples: {},
-  file: null,
+  files: [],
 };
 
 export default function appReducer(state = initState, action) {
@@ -35,7 +34,7 @@ export default function appReducer(state = initState, action) {
       return {
         ...state,
         loading: true,
-        file: action.file,
+        files: action.files,
         selectedTags: action.selectedTags,
       };
     case actions.LAUNCH_APP_SUCCESS:

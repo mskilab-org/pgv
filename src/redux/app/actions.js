@@ -11,9 +11,9 @@ const actions = {
   PHYLOGENY_NODES_SELECTED: "PHYLOGENY_NODES_SELECTED",
   PHYLOGENY_NODES_HIGHLIGHTED: "PHYLOGENY_NODES_HIGHLIGHTED",
   PHYLOGENY_PANEL_HEIGHT_UPDATED: "PHYLOGENY_PANEL_HEIGHT_UPDATED",
-  launchApp: (file, selectedTags) => ({
+  launchApp: (files, selectedTags) => ({
     type: actions.LAUNCH_APP,
-    file,
+    files,
     selectedTags,
   }),
   updateDomains: (domains) => ({

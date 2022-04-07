@@ -99,9 +99,7 @@ class HeaderPanel extends Component {
   render() {
     const {
       t,
-      description,
-      file,
-      tags,
+      selectedFiles,
       plots,
       legendPinned,
       genesPinned,
@@ -112,77 +110,86 @@ class HeaderPanel extends Component {
       selectedConnectionIds,
       phylogenyPanelHeight,
     } = this.props;
+    let tags = [...new Set(selectedFiles.map((d) => d.tags).flat())];
+    let title = selectedFiles.map((d) => d.file).join(", ");
+    let selectedCoordinate = [
+      ...new Set(selectedFiles.map((d) => d.reference).flat()),
+    ][0];
     return (
       <Wrapper>
         <PageHeader
           className="site-page-header"
-          title={file}
+          title={title}
           subTitle={
-            <Space>
-              {description.map((d) => (
-                <span key={d}>{d}</span>
-              ))}
-              <Dropdown
-                overlay={
-                  <Menu>
-                    {tags.map((d, i) => (
-                      <Menu.Item className="no-click-item" key={d}>
-                        {d}
-                      </Menu.Item>
-                    ))}
-                  </Menu>
-                }
-              >
-                <a
-                  className="ant-dropdown-link"
-                  onClick={(e) => e.preventDefault()}
-                  href="/#"
+            selectedFiles.length > 0 && (
+              <Space>
+                {selectedCoordinate}
+                <Dropdown
+                  overlay={
+                    <Menu>
+                      {tags.map((d, i) => (
+                        <Menu.Item className="no-click-item" key={d}>
+                          {d}
+                        </Menu.Item>
+                      ))}
+                    </Menu>
+                  }
                 >
-                  <Space>
-                    <span className="aligned-center" style={{}}>
-                      <span>
-                        <b>{tags.length}</b>{" "}
-                        {t("containers.home.category", { count: tags.length })}
+                  <a
+                    className="ant-dropdown-link"
+                    onClick={(e) => e.preventDefault()}
+                    href="/#"
+                  >
+                    <Space>
+                      <span className="aligned-center" style={{}}>
+                        <span>
+                          <b>{tags.length}</b>{" "}
+                          {t("containers.home.category", {
+                            count: tags.length,
+                          })}
+                        </span>
+                        &nbsp;
+                        <AiOutlineDown />
                       </span>
-                      &nbsp;
-                      <AiOutlineDown />
-                    </span>
-                  </Space>
-                </a>
-              </Dropdown>
-              <span>
-                <b>{nodes.filter((d) => d.selected).length}</b>{" "}
-                {t("containers.home.node", {
-                  count: nodes.filter((d) => d.selected).length,
-                })}
-              </span>
-              <Button
-                type="link"
-                onClick={() =>
-                  this.props.updateDomains(selectedConnectionsRange)
-                }
-                disabled={selectedConnectionIds.length < 1}
-              >
+                    </Space>
+                  </a>
+                </Dropdown>
                 <span>
-                  <b>{selectedConnectionIds.length}</b>{" "}
-                  {t("containers.home.connection", {
-                    count: selectedConnectionIds.length,
+                  <b>{nodes.filter((d) => d.selected).length}</b>{" "}
+                  {t("containers.home.node", {
+                    count: nodes.filter((d) => d.selected).length,
                   })}
                 </span>
-              </Button>
-            </Space>
+                <Button
+                  type="link"
+                  onClick={() =>
+                    this.props.updateDomains(selectedConnectionsRange)
+                  }
+                  disabled={selectedConnectionIds.length < 1}
+                >
+                  <span>
+                    <b>{selectedConnectionIds.length}</b>{" "}
+                    {t("containers.home.connection", {
+                      count: selectedConnectionIds.length,
+                    })}
+                  </span>
+                </Button>
+              </Space>
+            )
           }
           extra={
             <Space>
-              <Tooltip title={t("components.download-as-png-tooltip")}>
-                <Button
-                  type="text"
-                  shape="circle"
-                  icon={<AiOutlineDownload />}
-                  size="small"
-                  onClick={() => this.onDownloadButtonClicked()}
-                />
-              </Tooltip>
+              {selectedFiles.length > 0 && (
+                <Tooltip title={t("components.download-as-png-tooltip")}>
+                  <Button
+                    type="text"
+                    shape="circle"
+                    icon={<AiOutlineDownload />}
+                    size="small"
+                    onClick={() => this.onDownloadButtonClicked()}
+                  />
+                </Tooltip>
+              )}
               <Tooltip title={t("components.settings.tooltip")}>
                 <Button
                   type="text"
@@ -308,14 +315,10 @@ class HeaderPanel extends Component {
   }
 }
 HeaderPanel.propTypes = {
-  description: PropTypes.array,
-  file: PropTypes.string,
-  tags: PropTypes.array,
+  selectedFiles: PropTypes.array,
+  plots: PropTypes.array,
 };
-HeaderPanel.defaultProps = {
-  description: [],
-  tags: [],
-};
+HeaderPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
   updatePlots: (plots) => dispatch(updatePlots(plots)),
   updateLegendPin: (legendPinned) => dispatch(updateLegendPin(legendPinned)),
@@ -330,6 +333,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 const mapStateToProps = (state) => ({
   plots: state.App.plots,
+  tags: state.App.tags,
   legendPinned: state.App.legendPinned,
   genesPinned: state.App.genesPinned,
   phylogenyPinned: state.App.phylogenyPinned,
@@ -338,6 +342,7 @@ const mapStateToProps = (state) => ({
   selectedConnectionIds: state.App.selectedConnectionIds,
   selectedConnectionsRange: state.App.selectedConnectionsRange,
   phylogenyPanelHeight: state.App.phylogenyPanelHeight,
+  selectedFiles: state.App.selectedFiles,
 });
 export default connect(
   mapStateToProps,
