@@ -3,7 +3,17 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Button, Tooltip, message, Row, Col } from "antd";
+import {
+  Card,
+  Space,
+  Button,
+  Tooltip,
+  message,
+  Row,
+  Col,
+  Alert,
+  Typography,
+} from "antd";
 import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import { AiOutlineDotChart } from "react-icons/ai";
@@ -16,6 +26,8 @@ import {
 import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import ScatterPlot from "../scatterPlot";
+
+const { Text } = Typography;
 
 const margins = {
   padding: 0,
@@ -52,9 +64,6 @@ class ScatterPlotPanel extends Component {
       index,
       toggleVisibility,
     } = this.props;
-    if (!data) {
-      return null;
-    }
     return (
       <Wrapper visible={visible}>
         <Card
@@ -69,12 +78,16 @@ class ScatterPlotPanel extends Component {
               <span className="ant-pro-menu-item-title">
                 <Space>
                   {title}
-                  <span>
-                    <b>{d3.format(",")(data.length)}</b>{" "}
-                    {t("components.coverage-panel.datapoint", {
-                      count: data.length,
-                    })}
-                  </span>
+                  {data ? (
+                    <span>
+                      <b>{d3.format(",")(data.numRows)}</b>{" "}
+                      {t("components.coverage-panel.datapoint", {
+                        count: data.numRows,
+                      })}
+                    </span>
+                  ) : (
+                    <Text type="danger">{t("general.invalid-arrow-file")}</Text>
+                  )}
                 </Space>
               </span>
             </Space>
@@ -123,14 +136,25 @@ class ScatterPlotPanel extends Component {
                     (inViewport || renderOutsideViewPort) && (
                       <Row style={{ width }} gutter={[margins.gap, 0]}>
                         <Col flex={1}>
-                          <ScatterPlot
-                            {...{
-                              width,
-                              height,
-                              data,
-                              domains,
-                            }}
-                          />
+                          {data ? (
+                            <ScatterPlot
+                              {...{
+                                width,
+                                height,
+                                data,
+                                domains,
+                              }}
+                            />
+                          ) : (
+                            <Alert
+                              message={t("general.invalid-arrow-file")}
+                              description={t(
+                                "general.invalid-arrow-file-detail"
+                              )}
+                              type="error"
+                              showIcon
+                            />
+                          )}
                         </Col>
                       </Row>
                     )

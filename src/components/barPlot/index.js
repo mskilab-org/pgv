@@ -25,11 +25,11 @@ class BarPlot extends Component {
   constructor(props) {
     super(props);
     let { data } = props;
-    this.barsY = data.getColumn("y").toArray();
+    this.barsY = data.getChild("y").toArray();
     this.maxBarsY = d3.max(this.barsY);
-    this.barsStartPoint = data.getColumn("startPoint").toArray();
-    this.barsEndPoint = data.getColumn("endPoint").toArray();
-    this.barsFill = data.getColumn("color").toArray();
+    this.barsStartPoint = data.getChild("startPoint").toArray();
+    this.barsEndPoint = data.getChild("endPoint").toArray();
+    this.barsFill = data.getChild("color").toArray();
   }
 
   componentDidMount() {

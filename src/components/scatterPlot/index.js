@@ -23,10 +23,10 @@ class ScatterPlot extends Component {
   constructor(props) {
     super(props);
     let { data } = props;
-    this.dataPointsY = data.getColumn("y").toArray();
+    this.dataPointsY = data.getChild("y").toArray();
     this.maxDataPointsY = d3.max(this.dataPointsY);
-    this.dataPointsX = data.getColumn("x").toArray();
-    this.dataPointsColor = data.getColumn("color").toArray();
+    this.dataPointsX = data.getChild("x").toArray();
+    this.dataPointsColor = data.getChild("color").toArray();
   }
 
   componentDidMount() {

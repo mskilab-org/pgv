@@ -56,8 +56,8 @@ class GenesPanel extends Component {
                   {t("components.genes-panel.header")}
                 </span>
                 <span>
-                  <b>{d3.format(",")(genes.count())}</b>{" "}
-                  {t("components.genes-panel.gene", { count: genes.count() })}
+                  <b>{d3.format(",")(genes.numRows)}</b>{" "}
+                  {t("components.genes-panel.gene", { count: genes.numRows })}
                 </span>
               </Space>
             }

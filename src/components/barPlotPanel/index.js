@@ -3,7 +3,17 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Tooltip, Button, message, Row, Col } from "antd";
+import {
+  Card,
+  Space,
+  Tooltip,
+  Button,
+  message,
+  Row,
+  Col,
+  Alert,
+  Typography,
+} from "antd";
 import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import {
@@ -16,6 +26,8 @@ import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
 import BarPlot from "../barPlot";
+
+const { Text } = Typography;
 
 const margins = {
   padding: 0,
@@ -52,9 +64,6 @@ class BarPlotPanel extends Component {
       index,
       toggleVisibility,
     } = this.props;
-    if (!data) {
-      return null;
-    }
     return (
       <Wrapper visible={visible}>
         <Card
@@ -67,10 +76,16 @@ class BarPlotPanel extends Component {
                 <AiOutlineBarChart />
               </span>
               <span className="ant-pro-menu-item-title">{title}</span>
-              <span>
-                <b>{d3.format(",")(data.length)}</b>{" "}
-                {t("components.rpkm-panel.datapoint", { count: data.length })}
-              </span>
+              {data ? (
+                <span>
+                  <b>{d3.format(",")(data.numRows)}</b>{" "}
+                  {t("components.rpkm-panel.datapoint", {
+                    count: data.numRows,
+                  })}
+                </span>
+              ) : (
+                <Text type="danger">{t("general.invalid-arrow-file")}</Text>
+              )}
             </Space>
           }
           extra={
@@ -117,14 +132,25 @@ class BarPlotPanel extends Component {
                     (inViewport || renderOutsideViewPort) && (
                       <Row style={{ width }} gutter={[margins.gap, 0]}>
                         <Col flex={1}>
-                          <BarPlot
-                            {...{
-                              width,
-                              height,
-                              domains,
-                              data,
-                            }}
-                          />
+                          {data ? (
+                            <BarPlot
+                              {...{
+                                width,
+                                height,
+                                domains,
+                                data,
+                              }}
+                            />
+                          ) : (
+                            <Alert
+                              message={t("general.invalid-arrow-file")}
+                              description={t(
+                                "general.invalid-arrow-file-detail"
+                              )}
+                              type="error"
+                              showIcon
+                            />
+                          )}
                         </Col>
                       </Row>
                     )

@@ -31,14 +31,14 @@ class GenesPlot extends Component {
   constructor(props) {
     super(props);
     let { genes } = this.props;
-    this.geneTypes = genes.getColumn("type").toArray();
-    this.geneTitles = genes.getColumn("title").toArray();
-    this.genesStartPoint = genes.getColumn("startPlace").toArray();
-    this.genesEndPoint = genes.getColumn("endPlace").toArray();
-    this.genesY = genes.getColumn("y").toArray();
-    this.genesColor = genes.getColumn("color").toArray();
-    this.genesStrand = genes.getColumn("strand").toArray();
-    this.genesWeight = genes.getColumn("weight").toArray();
+    this.geneTypes = genes.getChild("type").toArray();
+    this.geneTitles = genes.getChild("title").toArray();
+    this.genesStartPoint = genes.getChild("startPlace").toArray();
+    this.genesEndPoint = genes.getChild("endPlace").toArray();
+    this.genesY = genes.getChild("y").toArray();
+    this.genesColor = genes.getChild("color").toArray();
+    this.genesStrand = genes.getChild("strand").toArray();
+    this.genesWeight = genes.getChild("weight").toArray();
 
     this.state = {
       tooltip: {
@@ -115,7 +115,6 @@ class GenesPlot extends Component {
   }
 
   handleMouseMove = (event) => {
-    console.log(event);
     const { genes, width, height } = this.props;
 
     let stageWidth = width - 2 * margins.gapX;
@@ -140,8 +139,7 @@ class GenesPlot extends Component {
         framebuffer: this.plot.fboIntervals,
       });
       let index = pixels[0] * 65536 + pixels[1] * 256 + pixels[2] - 3000;
-
-      if (genes.get(index)) {
+      if (index >= 0 && index < genes.numRows) {
         let selectedGene = genes.get(index).toJSON();
         let textData = this.tooltipContent(selectedGene);
         let diffY = d3.min([
@@ -256,7 +254,7 @@ class GenesPlot extends Component {
       let negativeStrandTexts = [];
 
       let startPosNext = { "+": -1, "-": -1 };
-      for (let i = 0; i < genes.count(); i++) {
+      for (let i = 0; i < genes.numRows; i++) {
         if (
           this.genesStartPoint[i] <= xDomain[1] &&
           this.genesStartPoint[i] >= xDomain[0] &&

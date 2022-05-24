@@ -13,7 +13,10 @@ import {
 function* fetchArrowData(plot) {
   yield loadArrowTable(plot.path)
     .then((results) => (plot.data = results))
-    .catch((error) => (plot.data = []));
+    .catch((error) => {
+      console.log(plot.path, error);
+      plot.data = null;
+    });
 }
 
 function* launchApplication(action) {
@@ -136,6 +139,7 @@ function* launchApplication(action) {
         type: "genes",
         title: "Genes",
         source: `/genes/${selectedCoordinate}.arrow`,
+        path: `/genes/${selectedCoordinate}.arrow`,
         visible: +searchParams.get("genes") === 1,
       },
       ...selectedFiles.map((d) => d.plots).flat(),
@@ -213,7 +217,6 @@ function* launchApplication(action) {
       samples,
       genesPinned: +searchParams.get("genesPinned") === 1,
     };
-    console.log(properties);
     yield put({ type: actions.LAUNCH_APP_SUCCESS, properties });
   } else {
     yield put({ type: actions.LAUNCH_APP_FAILED });
