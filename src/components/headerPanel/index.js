@@ -60,7 +60,11 @@ class HeaderPanel extends Component {
       .then((canvas) => {
         downloadCanvasAsPng(
           canvas,
-          `${this.props.file.replace(/\s+/g, "_").toLowerCase()}.png`
+          `${this.props.selectedFiles
+            .map((d) => d.file)
+            .join("_")
+            .replace(/\s+/g, "_")
+            .toLowerCase()}.png`
         );
       })
       .catch((error) => {

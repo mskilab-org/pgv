@@ -1,4 +1,5 @@
 # pgv
+
 Pan gGnome Viewer
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -8,6 +9,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 ### Dependencies
 
 In order to use PGV you need to have the following:
+
 1. [git lfs](https://git-lfs.github.com/) which is used to manage large files stored on github. Please make sure you have git lfs installed on your machine.
 2. [Node.js](https://nodejs.org/en/)
 3. [yarn](https://yarnpkg.com/)
@@ -75,4 +77,25 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
+## Converting CSV files for coverage data to Apache Arrow
 
+Coverage data CSV files need to have the following structure
+
+```
+x,y,chromosome
+15001,1.24706213403148,1
+```
+
+Where x is the location relevant to the current chromosome, y is the value to render on the vertical axis and chromosome must correspond to the namings of the chromosomes as defined in the ./public/settings.json file.
+
+Such an example CSV coverage file is available in ./scripts/coverage.csv
+
+To convert a coverage CSV file to the respective Apache Arrow file, you need to run the following command on your console
+
+```
+node ./src/scripts/csv2arrow.mjs ./scripts/coverage.csv hg19"
+```
+
+The above command will parse the csv file ./scripts/coverage.csv using hg19 as the reference and store the generated Apache Arrow file at ./scripts/coverage.arrow
+
+The file is then executable by PGV to render in a scatterplot.
