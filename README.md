@@ -93,7 +93,7 @@ Such an example CSV coverage file is available in ./scripts/coverage.csv
 To convert a coverage CSV file to the respective Apache Arrow file, you need to run the following command on your console
 
 ```
-node ./src/scripts/csv2arrow.mjs ./scripts/coverage.csv hg19"
+node ./src/scripts/csv2arrow.mjs ./scripts/coverage.csv hg19
 ```
 
 The above command will parse the csv file ./scripts/coverage.csv using hg19 as the reference and store the generated Apache Arrow file at ./scripts/coverage.arrow
