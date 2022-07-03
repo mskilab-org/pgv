@@ -52,6 +52,7 @@ const actions = {
     type: actions.PHYLOGENY_PANEL_HEIGHT_UPDATED,
     phylogenyPanelHeight,
   }),
+  
 };
 
 export default actions;

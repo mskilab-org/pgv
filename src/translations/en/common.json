@@ -122,6 +122,12 @@
       "datapoint_plural": "datapoints",
       "title": "RPKM data Track"
     },
+    "area-panel": {
+      "header": "Area Chart",
+      "datapoint": "datapoint",
+      "datapoint_plural": "datapoints",
+      "title": "Area data Track"
+    },
     "genes-panel": {
       "header": "Genes",
       "gene": "record",

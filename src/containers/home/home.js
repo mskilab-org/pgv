@@ -16,6 +16,7 @@ import GenomePanel from "../../components/genomePanel";
 import WalkPanel from "../../components/walkPanel";
 import AnatomyPanel from "../../components/anatomyPanel";
 import appActions from "../../redux/app/actions";
+import AreaPlotPanel from "../../components/areaPlotPanel";
 
 const { updateDomain, updatePlots } = appActions;
 
@@ -34,8 +35,6 @@ class Home extends Component {
 
   render() {
     const {
-      selectedFiles,
-      strainsList,
       loading,
       selectedCoordinate,
       chromoBins,
@@ -191,6 +190,20 @@ class Home extends Component {
       } else if (d.type === "scatterplot") {
         plotComponent = (
           <ScatterPlotPanel
+            {...{
+              data: d.data,
+              title: d.title,
+              chromoBins,
+              visible: d.visible,
+              loading,
+              index,
+              toggleVisibility: this.togglePlotVisibility,
+            }}
+          />
+        );
+      } else if (d.type === "bigwig") {
+        plotComponent = (
+          <AreaPlotPanel
             {...{
               data: d.data,
               title: d.title,

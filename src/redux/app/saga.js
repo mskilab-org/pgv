@@ -1,4 +1,4 @@
-import { all, takeEvery, put, call } from "redux-saga/effects";
+import { all, takeEvery, put, call, select } from "redux-saga/effects";
 import axios from "axios";
 import StringToReact from "string-to-react";
 import actions from "./actions";
@@ -8,7 +8,11 @@ import {
   updateChromoBins,
   domainsToLocation,
   locationToDomains,
+  getFloatArray,
 } from "../../helpers/utility";
+import { getCurrentState } from "./selectors";
+
+const ZOOM = 0;
 
 function* fetchArrowData(plot) {
   yield loadArrowTable(plot.path)
@@ -16,6 +20,69 @@ function* fetchArrowData(plot) {
     .catch((error) => {
       console.log(plot.path, error);
       plot.data = null;
+    });
+}
+
+function* fetchHiglassTileset(plot) {
+  yield axios
+    .get(`${plot.server}/api/v1/tileset_info/?d=${plot.uuid}`)
+    .then((results) => {
+      plot.tilesetInfo = results.data[plot.uuid];
+      plot.title = plot.tilesetInfo.name;
+      plot.path = `${plot.server}/api/v1/tiles?${d3
+        .range(0, Math.pow(2, ZOOM))
+        .map((d, i) => `d=${plot.uuid}.${ZOOM}.${d}`)
+        .join("&")}`;
+    })
+    .catch((error) => {
+      console.log(plot.path, error);
+      plot.data = null;
+    });
+}
+
+function* fetchHiglassData(action) {
+  const currentState = yield select(getCurrentState);
+  let { plots } = currentState.App;
+  let bigwigs = plots.filter((d, i) => ["bigwig"].includes(d.type));
+  yield axios
+    .all(bigwigs.map((d) => axios.get(d.path)))
+    .then(
+      axios.spread((...responses) => {
+        responses.forEach((d, i) => {
+          let currentPlot = plots.filter((d, i) => ["bigwig"].includes(d.type))[
+            i
+          ];
+          let resp = d.data;
+          let dataArrays = [];
+          dataArrays.push(
+            Object.keys(resp)
+              .sort((a, b) => d3.ascending(a, b))
+              .map((key, j) => {
+                let obj = resp[key];
+                let k = getFloatArray(
+                  obj.dense,
+                  currentPlot.tilesetInfo.tile_size
+                );
+                return k;
+              })
+          );
+          currentPlot.data = dataArrays
+            .flat()
+            .flat()
+            .map((d, i) => {
+              return {
+                x:
+                  1 +
+                  (i * currentPlot.tilesetInfo.max_width) /
+                    (currentPlot.tilesetInfo.tile_size * Math.pow(2, ZOOM)),
+                y: d,
+              };
+            });
+        });
+      })
+    )
+    .catch((errors) => {
+      console.log("got errors on loading dependencies", errors);
     });
 }
 
@@ -172,6 +239,12 @@ function* launchApplication(action) {
         .map((x) => call(fetchArrowData, x)),
     ]);
 
+    yield all([
+      ...plots
+        .filter((d, i) => ["bigwig"].includes(d.type))
+        .map((x) => call(fetchHiglassTileset, x)),
+    ]);
+
     let connectionsAssociations = [];
     let samples = [];
     let anatomyPlot = plots.find((d) => d.type === "anatomy");
@@ -225,6 +298,7 @@ function* launchApplication(action) {
 
 function* actionWatcher() {
   yield takeEvery(actions.LAUNCH_APP, launchApplication);
+  yield takeEvery(actions.DOMAINS_UPDATED, fetchHiglassData);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

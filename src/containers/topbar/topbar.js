@@ -87,14 +87,14 @@ class Topbar extends Component {
                       optionFilterProp="children"
                       placeholder={t("topbar.browse-sample")}
                       filterOption={(input, option) =>
-                        option.children
+                        (option.children || "")
                           .toLowerCase()
                           .indexOf(input.toLowerCase()) >= 0
                       }
                       filterSort={(optionA, optionB) =>
-                        optionA.children
+                        (optionA.children || "")
                           .toLowerCase()
-                          .localeCompare(optionB.children.toLowerCase())
+                          .localeCompare((optionB.children || "").toLowerCase())
                       }
                       onChange={this.handleFileChange}
                     >

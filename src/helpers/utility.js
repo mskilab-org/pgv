@@ -12,6 +12,29 @@ export function rgbtoInteger(color) {
   );
 }
 
+export function getFloatArray(dense, length) {
+  var blob = window.atob(dense); // Base64 string converted to a char array
+  var fLen = blob.length / Float32Array.BYTES_PER_ELEMENT; // How many floats can be made, but be even
+  var dView = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT)); // ArrayBuffer/DataView to convert 4 bytes into 1 float.
+  var fAry = new Float32Array(fLen); // Final Output at the correct size
+  var p = 0; // Position
+
+  for (var j = 0; j < fLen; j++) {
+    p = j * 4;
+    dView.setUint8(0, blob.charCodeAt(p));
+    dView.setUint8(1, blob.charCodeAt(p + 1));
+    dView.setUint8(2, blob.charCodeAt(p + 2));
+    dView.setUint8(3, blob.charCodeAt(p + 3));
+    fAry[j] = dView.getFloat32(0, true);
+  }
+  if (length) {
+    fAry = Array(1024)
+      .fill(NaN)
+      .map((d, i) => fAry[i] || d);
+  }
+  return fAry;
+}
+
 export function measureText(string, fontSize = 10) {
   const widths = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

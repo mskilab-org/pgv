@@ -142,16 +142,16 @@
           "color": "#843c39"
         },
         {
-          "chromosome": "M",
-          "startPoint": 1,
-          "endPoint": 16571,
-          "color": "#d6616b"
-        },
-        {
           "chromosome": "Y",
           "startPoint": 1,
           "endPoint": 59373566,
           "color": "#ad494a"
+        },
+        {
+          "chromosome": "M",
+          "startPoint": 1,
+          "endPoint": 16571,
+          "color": "#d6616b"
         }
       ],
       "hg19_chr": [
@@ -294,16 +294,16 @@
           "color": "#843c39"
         },
         {
-          "chromosome": "chrM",
-          "startPoint": 1,
-          "endPoint": 16571,
-          "color": "#d6616b"
-        },
-        {
           "chromosome": "chrY",
           "startPoint": 1,
           "endPoint": 59373566,
           "color": "#ad494a"
+        },
+        {
+          "chromosome": "chrM",
+          "startPoint": 1,
+          "endPoint": 16571,
+          "color": "#d6616b"
         }
       ],
       "hg38": [
@@ -609,13 +609,13 @@
     }
   },
   "panels": {
-    "phylogeny": {"visible": true},
-    "geography": {"visible": true},
-    "pca": {"visible": true},
-    "genes": {"visible": true},
-    "anatomy": {"visible": true},
-    "coverage": {"visible": true},
-    "rpkm": {"visible": true}
+    "phylogeny": { "visible": true },
+    "geography": { "visible": true },
+    "pca": { "visible": true },
+    "genes": { "visible": true },
+    "anatomy": { "visible": true },
+    "coverage": { "visible": true },
+    "rpkm": { "visible": true }
   },
   "geography": [
     {
@@ -2578,5 +2578,5 @@
       "code": "ZW",
       "fill": "#FC1B70"
     }
-  ] 
+  ]
 }

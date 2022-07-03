@@ -77,6 +77,13 @@
         "source": "coverage2.arrow",
         "title": "Coverage Distribution 7G",
         "visible": false
+      },
+      {
+        "sample": "7L",
+        "type": "bigwig",
+        "server": "http://higlass.io/",
+        "uuid": "AOR9BgKaS4WPX7esuBM4sQ",
+        "visible": true
       }
     ]
   }
