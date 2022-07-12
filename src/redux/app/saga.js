@@ -42,48 +42,86 @@ function* fetchHiglassTileset(plot) {
 
 function* fetchHiglassData(action) {
   const currentState = yield select(getCurrentState);
-  let { plots } = currentState.App;
+  let domains = action.domains;
+  let { maxGenomeLength, tilesets } = currentState.App;
+  let newTilesets = domains.map((d, i) => {
+    let zoom = Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
+    let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);
+    let tile2 = Math.floor((Math.pow(2, zoom) * d[1]) / maxGenomeLength);
+    return { domain: d, zoom: zoom, tiles: d3.range(tile1, tile2 + 1) };
+  });
+  let properties = {
+    plots: [...currentState.App.plots],
+    tilesets: newTilesets,
+  };
+  let { plots } = properties;
   let bigwigs = plots.filter((d, i) => ["bigwig"].includes(d.type));
-  yield axios
-    .all(bigwigs.map((d) => axios.get(d.path)))
-    .then(
-      axios.spread((...responses) => {
-        responses.forEach((d, i) => {
-          let currentPlot = plots.filter((d, i) => ["bigwig"].includes(d.type))[
-            i
-          ];
-          let resp = d.data;
-          let dataArrays = [];
-          dataArrays.push(
-            Object.keys(resp)
-              .sort((a, b) => d3.ascending(a, b))
-              .map((key, j) => {
-                let obj = resp[key];
-                let k = getFloatArray(
-                  obj.dense,
-                  currentPlot.tilesetInfo.tile_size
-                );
-                return k;
-              })
-          );
-          currentPlot.data = dataArrays
-            .flat()
-            .flat()
-            .map((d, i) => {
-              return {
-                x:
-                  1 +
-                  (i * currentPlot.tilesetInfo.max_width) /
-                    (currentPlot.tilesetInfo.tile_size * Math.pow(2, ZOOM)),
-                y: d,
-              };
-            });
-        });
-      })
+  if (
+    !(
+      newTilesets.length === tilesets.length &&
+      newTilesets.every(
+        (d, i) =>
+          d.zoom === tilesets[i].zoom &&
+          d.tiles.join() === tilesets[i].tiles.join()
+      )
     )
-    .catch((errors) => {
-      console.log("got errors on loading dependencies", errors);
-    });
+  ) {
+    yield axios
+      .all(
+        bigwigs.map((plot) =>
+          axios.get(
+            `${plot.server}/api/v1/tiles?${newTilesets
+              .map((d, i) =>
+                d.tiles.map((e, j) => `d=${plot.uuid}.${d.zoom}.${e}`)
+              )
+              .flat()
+              .join("&")}`
+          )
+        )
+      )
+      .then(
+        axios.spread((...responses) => {
+          responses.forEach((d, i) => {
+            let currentPlot = plots.filter((d, i) =>
+              ["bigwig"].includes(d.type)
+            )[i];
+            let resp = d.data;
+            let dataArrays = [];
+            dataArrays.push(
+              Object.keys(resp)
+                .sort((a, b) => d3.ascending(a, b))
+                .map((key, j) => {
+                  let tileZoom = key
+                    .split(".")
+                    .slice(1)
+                    .map((e) => +e);
+                  let obj = resp[key];
+                  let k = getFloatArray(
+                    obj.dense,
+                    currentPlot.tilesetInfo.tile_size
+                  );
+                  return k.map((e, j) => {
+                    return {
+                      x:
+                        (currentPlot.tilesetInfo.max_width *
+                          (tileZoom[1] * currentPlot.tilesetInfo.tile_size +
+                            j)) /
+                        (currentPlot.tilesetInfo.tile_size *
+                          Math.pow(2, tileZoom[0])),
+                      y: e,
+                    };
+                  });
+                })
+            );
+            currentPlot.data = dataArrays.flat().flat();
+          });
+        })
+      )
+      .catch((errors) => {
+        console.log("got errors on loading dependencies", errors);
+      });
+  }
+  yield put({ type: actions.HIGLASS_LOADED, properties });
 }
 
 function* launchApplication(action) {

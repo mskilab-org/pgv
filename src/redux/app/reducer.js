@@ -10,6 +10,7 @@ const initState = {
   selectedFiles: [],
   loading: false,
   genomeLength: 0,
+  maxGenomeLength: 4294967296,
   domains: [],
   chromoBins: {},
   tags: [],
@@ -26,6 +27,7 @@ const initState = {
   renderOutsideViewPort: false,
   samples: {},
   files: [],
+  tilesets: []
 };
 
 export default function appReducer(state = initState, action) {
@@ -196,6 +198,8 @@ export default function appReducer(state = initState, action) {
         unescape(url0.toString())
       );
       return { ...state, domains: doms };
+    case actions.HIGLASS_LOADED:
+      return { ...state, ...action.properties, loading: false };
     default:
       return state;
   }

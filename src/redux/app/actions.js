@@ -11,6 +11,7 @@ const actions = {
   PHYLOGENY_NODES_SELECTED: "PHYLOGENY_NODES_SELECTED",
   PHYLOGENY_NODES_HIGHLIGHTED: "PHYLOGENY_NODES_HIGHLIGHTED",
   PHYLOGENY_PANEL_HEIGHT_UPDATED: "PHYLOGENY_PANEL_HEIGHT_UPDATED",
+  HIGLASS_LOADED: "HIGLASS_LOADED",
   launchApp: (files, selectedTags) => ({
     type: actions.LAUNCH_APP,
     files,
@@ -52,7 +53,6 @@ const actions = {
     type: actions.PHYLOGENY_PANEL_HEIGHT_UPDATED,
     phylogenyPanelHeight,
   }),
-  
 };
 
 export default actions;
