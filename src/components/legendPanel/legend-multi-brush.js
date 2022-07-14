@@ -171,7 +171,7 @@ class LegendMultiBrush extends Component {
           .map(self.genomeScale.invert)
           .map(Math.floor);
         // finally, update the chart with the selection in question
-        self.update();
+        self.update("brushing");
       })
       .on("end", function (event) {
         // ignore brush-by-zoom
@@ -196,13 +196,13 @@ class LegendMultiBrush extends Component {
         self.activeId = d3.select(this).datum().id;
 
         // finally, update the chart with the selection in question
-        self.update();
+        self.update("brushed");
       });
 
     this.fragments.push(new Fragment(brush));
   };
 
-  update = () => {
+  update = (mode) => {
     // draw the brushes
     this.renderBrushes();
 
@@ -210,7 +210,8 @@ class LegendMultiBrush extends Component {
       this.fragments
         .filter((d) => d.selection)
         .map((d) => d.domain)
-        .sort((a, b) => d3.ascending(a[0], b[0]))
+        .sort((a, b) => d3.ascending(a[0], b[0])),
+      mode
     );
   };
 
@@ -263,15 +264,17 @@ class LegendMultiBrush extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return nextProps.domains.toString() !== this.props.domains.toString()
-        || nextProps.width !== this.props.width;
+    return (
+      nextProps.domains.toString() !== this.props.domains.toString() ||
+      nextProps.width !== this.props.width
+    );
   }
 
   componentDidUpdate() {
     const { domains } = this.props;
-    let visibleFragments = this.fragments.filter(d => d.selection);
+    let visibleFragments = this.fragments.filter((d) => d.selection);
     if (visibleFragments.length !== domains.length) {
-      this.fragments = []
+      this.fragments = [];
       domains.map((d) => this.createDefaults(d));
     } else {
       visibleFragments.forEach((fragment, index) => {
@@ -372,7 +375,7 @@ LegendMultiBrush.defaultProps = {
   width: 400,
 };
 const mapDispatchToProps = (dispatch) => ({
-  updateDomains: (domains) => dispatch(updateDomains(domains)),
+  updateDomains: (domains, mode) => dispatch(updateDomains(domains, mode)),
 });
 const mapStateToProps = (state) => ({
   domains: state.App.domains,

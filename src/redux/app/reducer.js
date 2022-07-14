@@ -27,7 +27,8 @@ const initState = {
   renderOutsideViewPort: false,
   samples: {},
   files: [],
-  tilesets: []
+  tilesets: [],
+  mode: null,
 };
 
 export default function appReducer(state = initState, action) {
@@ -62,6 +63,7 @@ export default function appReducer(state = initState, action) {
         plots: action.plots,
         genesPinned: genesPinnedState,
         phylogenyPinned: phylogenyPinnedState,
+        mode: "brushed",
       };
     case actions.LEGEND_PIN_UPDATED:
       return { ...state, legendPinned: action.legendPinned };
@@ -197,7 +199,7 @@ export default function appReducer(state = initState, action) {
         "Pan Genome Viewer",
         unescape(url0.toString())
       );
-      return { ...state, domains: doms };
+      return { ...state, domains: doms, mode: action.mode };
     case actions.HIGLASS_LOADED:
       return { ...state, ...action.properties, loading: false };
     default:

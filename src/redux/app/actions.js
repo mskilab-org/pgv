@@ -17,9 +17,10 @@ const actions = {
     files,
     selectedTags,
   }),
-  updateDomains: (domains) => ({
+  updateDomains: (domains, mode = null) => ({
     type: actions.DOMAINS_UPDATED,
     domains,
+    mode,
   }),
   updatePlots: (plots) => ({
     type: actions.PLOTS_UPDATED,

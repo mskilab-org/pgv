@@ -86,7 +86,9 @@ class AreaPlotPanel extends Component {
                   })}
                 </span>
               ) : (
-                <Text type="danger">{t("general.invalid-arrow-file")}</Text>
+                false && (
+                  <Text type="danger">{t("general.invalid-arrow-file")}</Text>
+                )
               )}
             </Space>
           }
@@ -144,14 +146,16 @@ class AreaPlotPanel extends Component {
                               }}
                             />
                           ) : (
-                            <Alert
-                              message={t("general.invalid-arrow-file")}
-                              description={t(
-                                "general.invalid-arrow-file-detail"
-                              )}
-                              type="error"
-                              showIcon
-                            />
+                            false && (
+                              <Alert
+                                message={t("general.invalid-arrow-file")}
+                                description={t(
+                                  "general.invalid-arrow-file-detail"
+                                )}
+                                type="error"
+                                showIcon
+                              />
+                            )
                           )}
                         </Col>
                       </Row>

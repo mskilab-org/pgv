@@ -42,8 +42,7 @@ function* fetchHiglassTileset(plot) {
 
 function* fetchHiglassData(action) {
   const currentState = yield select(getCurrentState);
-  let domains = action.domains;
-  let { maxGenomeLength, tilesets } = currentState.App;
+  let { maxGenomeLength, domains, mode } = currentState.App;
   let newTilesets = domains.map((d, i) => {
     let zoom = Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
     let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);
@@ -56,16 +55,7 @@ function* fetchHiglassData(action) {
   };
   let { plots } = properties;
   let bigwigs = plots.filter((d, i) => ["bigwig"].includes(d.type));
-  if (
-    !(
-      newTilesets.length === tilesets.length &&
-      newTilesets.every(
-        (d, i) =>
-          d.zoom === tilesets[i].zoom &&
-          d.tiles.join() === tilesets[i].tiles.join()
-      )
-    )
-  ) {
+  if (mode === "brushed") {
     yield axios
       .all(
         bigwigs.map((plot) =>
