@@ -302,6 +302,71 @@ function* launchApplication(action) {
       plots = plots.filter((d) => !["anatomy", "phylogeny"].includes(d.type));
     }
 
+    const currentState = yield select(getCurrentState);
+    let { maxGenomeLength } = currentState.App;
+    let newTilesets = domains.map((d, i) => {
+      let zoom = Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
+      let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);
+      let tile2 = Math.floor((Math.pow(2, zoom) * d[1]) / maxGenomeLength);
+      return { domain: d, zoom: zoom, tiles: d3.range(tile1, tile2 + 1) };
+    });
+
+    let bigwigs = plots.filter((d, i) => ["bigwig"].includes(d.type));
+    yield axios
+      .all(
+        bigwigs.map((plot) =>
+          axios.get(
+            `${plot.server}/api/v1/tiles?${newTilesets
+              .map((d, i) =>
+                d.tiles.map((e, j) => `d=${plot.uuid}.${d.zoom}.${e}`)
+              )
+              .flat()
+              .join("&")}`
+          )
+        )
+      )
+      .then(
+        axios.spread((...responses) => {
+          responses.forEach((d, i) => {
+            let currentPlot = plots.filter((d, i) =>
+              ["bigwig"].includes(d.type)
+            )[i];
+            let resp = d.data;
+            let dataArrays = [];
+            dataArrays.push(
+              Object.keys(resp)
+                .sort((a, b) => d3.ascending(a, b))
+                .map((key, j) => {
+                  let tileZoom = key
+                    .split(".")
+                    .slice(1)
+                    .map((e) => +e);
+                  let obj = resp[key];
+                  let k = getFloatArray(
+                    obj.dense,
+                    currentPlot.tilesetInfo.tile_size
+                  );
+                  return k.map((e, j) => {
+                    return {
+                      x:
+                        (currentPlot.tilesetInfo.max_width *
+                          (tileZoom[1] * currentPlot.tilesetInfo.tile_size +
+                            j)) /
+                        (currentPlot.tilesetInfo.tile_size *
+                          Math.pow(2, tileZoom[0])),
+                      y: e,
+                    };
+                  });
+                })
+            );
+            currentPlot.data = dataArrays.flat().flat();
+          });
+        })
+      )
+      .catch((errors) => {
+        console.log("got errors on loading dependencies", errors);
+      });
+
     let properties = {
       defaultDomain,
       genomeLength,
