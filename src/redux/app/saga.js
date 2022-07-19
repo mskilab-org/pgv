@@ -29,7 +29,7 @@ function* fetchHiglassTileset(plot) {
     .then((results) => {
       plot.tilesetInfo = results.data[plot.uuid];
       plot.title = plot.tilesetInfo.name;
-      plot.path = `${plot.server}/api/v1/tiles?${d3
+      plot.path = `${plot.server}/api/v1/tiles/?${d3
         .range(0, Math.pow(2, ZOOM))
         .map((d, i) => `d=${plot.uuid}.${ZOOM}.${d}`)
         .join("&")}`;
@@ -60,7 +60,7 @@ function* fetchHiglassData(action) {
       .all(
         bigwigs.map((plot) =>
           axios.get(
-            `${plot.server}/api/v1/tiles?${newTilesets
+            `${plot.server}/api/v1/tiles/?${newTilesets
               .map((d, i) =>
                 d.tiles.map((e, j) => `d=${plot.uuid}.${d.zoom}.${e}`)
               )

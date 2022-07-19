@@ -81,7 +81,7 @@
       {
         "sample": "7L",
         "type": "bigwig",
-        "server": "http://higlass.io/",
+        "server": "http://higlass.io",
         "uuid": "AOR9BgKaS4WPX7esuBM4sQ",
         "visible": true
       }
