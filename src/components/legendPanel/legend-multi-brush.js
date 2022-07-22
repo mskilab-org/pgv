@@ -171,7 +171,7 @@ class LegendMultiBrush extends Component {
           .map(self.genomeScale.invert)
           .map(Math.floor);
         // finally, update the chart with the selection in question
-        self.update("brushing");
+        self.update();
       })
       .on("end", function (event) {
         // ignore brush-by-zoom
@@ -196,7 +196,7 @@ class LegendMultiBrush extends Component {
         self.activeId = d3.select(this).datum().id;
 
         // finally, update the chart with the selection in question
-        self.update("brushed");
+        self.update();
       });
 
     this.fragments.push(new Fragment(brush));
@@ -210,8 +210,7 @@ class LegendMultiBrush extends Component {
       this.fragments
         .filter((d) => d.selection)
         .map((d) => d.domain)
-        .sort((a, b) => d3.ascending(a[0], b[0])),
-      mode
+        .sort((a, b) => d3.ascending(a[0], b[0]))
     );
   };
 
@@ -375,7 +374,7 @@ LegendMultiBrush.defaultProps = {
   width: 400,
 };
 const mapDispatchToProps = (dispatch) => ({
-  updateDomains: (domains, mode) => dispatch(updateDomains(domains, mode)),
+  updateDomains: (domains) => dispatch(updateDomains(domains)),
 });
 const mapStateToProps = (state) => ({
   domains: state.App.domains,

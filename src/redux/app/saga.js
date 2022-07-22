@@ -1,4 +1,12 @@
-import { all, takeEvery, put, call, select } from "redux-saga/effects";
+import {
+  all,
+  takeEvery,
+  put,
+  call,
+  select,
+  takeLatest,
+  delay,
+} from "redux-saga/effects";
 import axios from "axios";
 import StringToReact from "string-to-react";
 import actions from "./actions";
@@ -41,9 +49,10 @@ function* fetchHiglassTileset(plot) {
 }
 
 function* fetchHiglassData(action) {
+  yield delay(100); // to throttle multiple requests fired during zooming and panning
   const currentState = yield select(getCurrentState);
-  let { maxGenomeLength, domains, mode } = currentState.App;
-  let newTilesets = domains.map((d, i) => {
+  let { maxGenomeLength } = currentState.App;
+  let newTilesets = action.domains.map((d, i) => {
     let zoom = Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
     let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);
     let tile2 = Math.floor((Math.pow(2, zoom) * d[1]) / maxGenomeLength);
@@ -51,66 +60,64 @@ function* fetchHiglassData(action) {
   });
   let properties = {
     plots: [...currentState.App.plots],
-    tilesets: newTilesets,
   };
   let { plots } = properties;
   let bigwigs = plots.filter((d, i) => ["bigwig"].includes(d.type));
-  if (mode === "brushed") {
-    yield axios
-      .all(
-        bigwigs.map((plot) =>
-          axios.get(
-            `${plot.server}/api/v1/tiles/?${newTilesets
-              .map((d, i) =>
-                d.tiles.map((e, j) => `d=${plot.uuid}.${d.zoom}.${e}`)
-              )
-              .flat()
-              .join("&")}`
-          )
+
+  yield axios
+    .all(
+      bigwigs.map((plot) =>
+        axios.get(
+          `${plot.server}/api/v1/tiles/?${newTilesets
+            .map((d, i) =>
+              d.tiles.map((e, j) => `d=${plot.uuid}.${d.zoom}.${e}`)
+            )
+            .flat()
+            .join("&")}`
         )
       )
-      .then(
-        axios.spread((...responses) => {
-          responses.forEach((d, i) => {
-            let currentPlot = plots.filter((d, i) =>
-              ["bigwig"].includes(d.type)
-            )[i];
-            let resp = d.data;
-            let dataArrays = [];
-            dataArrays.push(
-              Object.keys(resp)
-                .sort((a, b) => d3.ascending(a, b))
-                .map((key, j) => {
-                  let tileZoom = key
-                    .split(".")
-                    .slice(1)
-                    .map((e) => +e);
-                  let obj = resp[key];
-                  let k = getFloatArray(
-                    obj.dense,
-                    currentPlot.tilesetInfo.tile_size
-                  );
-                  return k.map((e, j) => {
-                    return {
-                      x:
-                        (currentPlot.tilesetInfo.max_width *
-                          (tileZoom[1] * currentPlot.tilesetInfo.tile_size +
-                            j)) /
-                        (currentPlot.tilesetInfo.tile_size *
-                          Math.pow(2, tileZoom[0])),
-                      y: e,
-                    };
-                  });
-                })
-            );
-            currentPlot.data = dataArrays.flat().flat();
-          });
-        })
-      )
-      .catch((errors) => {
-        console.log("got errors on loading dependencies", errors);
-      });
-  }
+    )
+    .then(
+      axios.spread((...responses) => {
+        responses.forEach((d, i) => {
+          let currentPlot = plots.filter((d, i) => ["bigwig"].includes(d.type))[
+            i
+          ];
+          let resp = d.data;
+          let dataArrays = [];
+          dataArrays.push(
+            Object.keys(resp)
+              .sort((a, b) => d3.ascending(a, b))
+              .map((key, j) => {
+                let tileZoom = key
+                  .split(".")
+                  .slice(1)
+                  .map((e) => +e);
+                let obj = resp[key];
+                let k = getFloatArray(
+                  obj.dense,
+                  currentPlot.tilesetInfo.tile_size
+                );
+                return k.map((e, j) => {
+                  return {
+                    x:
+                      (currentPlot.tilesetInfo.max_width *
+                        (tileZoom[1] * currentPlot.tilesetInfo.tile_size + j)) /
+                      (currentPlot.tilesetInfo.tile_size *
+                        Math.pow(2, tileZoom[0])),
+                    y: e,
+                  };
+                });
+              })
+          );
+          currentPlot.data = dataArrays.flat().flat();
+        });
+      })
+    )
+    .catch((errors) => {
+      console.log("got errors on loading dependencies", errors);
+    });
+
   yield put({ type: actions.HIGLASS_LOADED, properties });
 }
 
@@ -391,7 +398,7 @@ function* launchApplication(action) {
 
 function* actionWatcher() {
   yield takeEvery(actions.LAUNCH_APP, launchApplication);
-  yield takeEvery(actions.DOMAINS_UPDATED, fetchHiglassData);
+  yield takeLatest(actions.DOMAINS_UPDATED, fetchHiglassData);
 }
 export default function* rootSaga() {
   yield all([actionWatcher()]);

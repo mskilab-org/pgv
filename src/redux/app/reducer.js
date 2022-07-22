@@ -27,8 +27,6 @@ const initState = {
   renderOutsideViewPort: false,
   samples: {},
   files: [],
-  tilesets: [],
-  mode: null,
 };
 
 export default function appReducer(state = initState, action) {
@@ -199,7 +197,7 @@ export default function appReducer(state = initState, action) {
         "Pan Genome Viewer",
         unescape(url0.toString())
       );
-      return { ...state, domains: doms, mode: action.mode };
+      return { ...state, domains: doms };
     case actions.HIGLASS_LOADED:
       return { ...state, ...action.properties, loading: false };
     default:
