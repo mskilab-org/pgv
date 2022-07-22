@@ -316,7 +316,7 @@ function* launchApplication(action) {
       .all(
         bigwigs.map((plot) =>
           axios.get(
-            `${plot.server}/api/v1/tiles?${newTilesets
+            `${plot.server}/api/v1/tiles/?${newTilesets
               .map((d, i) =>
                 d.tiles.map((e, j) => `d=${plot.uuid}.${d.zoom}.${e}`)
               )
