@@ -137,6 +137,7 @@ class HeaderPanel extends Component {
           {groupedHiglassDataFiles.get(key).map((e, i) => (
             <Menu.Item
               key={e.uuid}
+              disabled={plots.find((d) => d.uuid === e.uuid)}
               onClick={() => this.onHiglassDataFilesMenuClicked(e.uuid)}
             >
               {e.name}

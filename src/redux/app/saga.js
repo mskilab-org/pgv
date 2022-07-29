@@ -40,7 +40,6 @@ function* fetchHiglassPlotData(action) {
   };
   let plot = properties.plots.find((d) => d.uuid === action.uuid);
   yield fetchHiglassTileset(plot);
-  yield fetchHiglassTileset(plot);
   yield put({ type: actions.BIGWIG_PLOT_ADDED, properties });
 }
 
