@@ -12,6 +12,8 @@ const actions = {
   PHYLOGENY_NODES_HIGHLIGHTED: "PHYLOGENY_NODES_HIGHLIGHTED",
   PHYLOGENY_PANEL_HEIGHT_UPDATED: "PHYLOGENY_PANEL_HEIGHT_UPDATED",
   HIGLASS_LOADED: "HIGLASS_LOADED",
+  ADD_BIGWIG_PLOT: "ADD_BIGWIG_PLOT",
+  BIGWIG_PLOT_ADDED: "BIGWIG_PLOT_ADDED",
   launchApp: (files, selectedTags) => ({
     type: actions.LAUNCH_APP,
     files,
@@ -52,6 +54,10 @@ const actions = {
   updatePhylogenyPanelHeight: (phylogenyPanelHeight) => ({
     type: actions.PHYLOGENY_PANEL_HEIGHT_UPDATED,
     phylogenyPanelHeight,
+  }),
+  addBigwigPlot: (uuid) => ({
+    type: actions.ADD_BIGWIG_PLOT,
+    uuid,
   }),
 };
 

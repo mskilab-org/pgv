@@ -3,6 +3,8 @@ import * as d3 from "d3";
 import { domainsToLocation, cluster } from "../../helpers/utility";
 
 const initState = {
+  higlassServer: null,
+  higlassDatafiles: [],
   datafiles: [],
   selectedTags: [],
   filteredTags: [],
@@ -199,6 +201,21 @@ export default function appReducer(state = initState, action) {
       );
       return { ...state, domains: doms };
     case actions.HIGLASS_LOADED:
+      return { ...state, ...action.properties, loading: false };
+    case actions.ADD_BIGWIG_PLOT:
+      let newBigwigPlot = {
+        sample: null,
+        type: "bigwig",
+        server: state.higlassServer,
+        uuid: action.uuid,
+        visible: true,
+      };
+      return {
+        ...state,
+        plots: [...state.plots, newBigwigPlot],
+        loading: true,
+      };
+    case actions.BIGWIG_PLOT_ADDED:
       return { ...state, ...action.properties, loading: false };
     default:
       return state;

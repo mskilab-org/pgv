@@ -1,6 +1,12 @@
 {
   "coordinates": {
     "default": "hg19",
+    "higlassMap": {
+      "hg19": "hg19",
+      "hg19_chr": "hg19",
+      "hg38": "hg38",
+      "hg38_chr": "hg38"
+    },
     "sets": {
       "hg19": [
         {
@@ -607,15 +613,6 @@
         }
       ]
     }
-  },
-  "panels": {
-    "phylogeny": { "visible": true },
-    "geography": { "visible": true },
-    "pca": { "visible": true },
-    "genes": { "visible": true },
-    "anatomy": { "visible": true },
-    "coverage": { "visible": true },
-    "rpkm": { "visible": true }
   },
   "geography": [
     {
@@ -2578,5 +2575,6 @@
       "code": "ZW",
       "fill": "#FC1B70"
     }
-  ]
+  ],
+  "higlassServer": "https://higlass.io/"
 }

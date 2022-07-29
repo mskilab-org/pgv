@@ -21,6 +21,8 @@ import {
 import { getCurrentState } from "./selectors";
 
 const ZOOM = 0;
+const HIGLASS_LIMIT = 10000;
+const HIGLASS_FILETYPE = "bigwig";
 
 function* fetchArrowData(plot) {
   yield loadArrowTable(plot.path)
@@ -29,6 +31,17 @@ function* fetchArrowData(plot) {
       console.log(plot.path, error);
       plot.data = null;
     });
+}
+
+function* fetchHiglassPlotData(action) {
+  const currentState = yield select(getCurrentState);
+  let properties = {
+    plots: [...currentState.App.plots],
+  };
+  let plot = properties.plots.find((d) => d.uuid === action.uuid);
+  yield fetchHiglassTileset(plot);
+  yield fetchHiglassTileset(plot);
+  yield put({ type: actions.BIGWIG_PLOT_ADDED, properties });
 }
 
 function* fetchHiglassTileset(plot) {
@@ -309,6 +322,7 @@ function* launchApplication(action) {
       plots = plots.filter((d) => !["anatomy", "phylogeny"].includes(d.type));
     }
 
+    // loading for bigwig plots
     const currentState = yield select(getCurrentState);
     let { maxGenomeLength } = currentState.App;
     let newTilesets = domains.map((d, i) => {
@@ -374,7 +388,28 @@ function* launchApplication(action) {
         console.log("got errors on loading dependencies", errors);
       });
 
+    // load list of bigwig files from the higlass server in settings.json
+    let higlassServer = settings.higlassServer;
+    let higlassDatafiles = [];
+    yield axios
+      .get(
+        `${higlassServer}/api/v1/tilesets/?limit=${HIGLASS_LIMIT}&t=${HIGLASS_FILETYPE}`
+      )
+      .then((results) => {
+        higlassDatafiles = results.data.results.filter(
+          (d) =>
+            d.coordSystem ===
+            settings.coordinates.higlassMap[selectedCoordinate]
+        );
+      })
+      .catch((error) => {
+        console.log(higlassServer, error);
+        higlassDatafiles = [];
+      });
+
     let properties = {
+      higlassServer,
+      higlassDatafiles,
       defaultDomain,
       genomeLength,
       datafiles: files,
@@ -390,6 +425,7 @@ function* launchApplication(action) {
       samples,
       genesPinned: +searchParams.get("genesPinned") === 1,
     };
+    console.log(properties);
     yield put({ type: actions.LAUNCH_APP_SUCCESS, properties });
   } else {
     yield put({ type: actions.LAUNCH_APP_FAILED });
@@ -398,6 +434,7 @@ function* launchApplication(action) {
 
 function* actionWatcher() {
   yield takeEvery(actions.LAUNCH_APP, launchApplication);
+  yield takeLatest(actions.ADD_BIGWIG_PLOT, fetchHiglassPlotData);
   yield takeLatest(actions.DOMAINS_UPDATED, fetchHiglassData);
 }
 export default function* rootSaga() {

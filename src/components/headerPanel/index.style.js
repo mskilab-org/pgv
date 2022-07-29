@@ -13,9 +13,6 @@ const Wrapper = styled.div`
       align-items: center;
     }
   }
-  .ant-dropdown-menu-item, .ant-dropdown-menu-submenu-title {
-    cursor: default !important;
-  }
 `;
 
 export default Wrapper;

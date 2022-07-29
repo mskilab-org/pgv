@@ -192,3 +192,8 @@ html[dir='rtl'] .ant-notification-notice-with-icon {
 html[dir='rtl'] .dz-hidden-input {
   display: none;
 }
+
+.no-click-item {
+  cursor: default !important;
+  pointer-events: none;
+}

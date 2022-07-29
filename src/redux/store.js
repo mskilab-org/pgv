@@ -12,19 +12,19 @@ const sagaMiddleware = createSagaMiddleware();
 const routeMiddleware = routerMiddleware(history);
 const middlewares = [thunk, sagaMiddleware, routeMiddleware];
 
-// const store = createStore(
-//   combineReducers({
-//     ...reducers,
-//     router: routerReducer,
-//   }),
-//   compose(applyMiddleware(...middlewares, logger))
-// );
 const store = createStore(
   combineReducers({
     ...reducers,
     router: routerReducer,
   }),
-  compose(applyMiddleware(...middlewares))
+  compose(applyMiddleware(...middlewares, logger))
 );
+// const store = createStore(
+//   combineReducers({
+//     ...reducers,
+//     router: routerReducer,
+//   }),
+//   compose(applyMiddleware(...middlewares))
+// );
 sagaMiddleware.run(rootSaga);
 export { store, history };

@@ -36,6 +36,7 @@ const {
   updateRenderOutsideViewport,
   updateDomains,
   updatePhylogenyPanelHeight,
+  addBigwigPlot,
 } = appActions;
 
 const PHYLOGENY_PANEL_HEIGHT = { min: 50, max: 500, default: 200, step: 10 };
@@ -100,6 +101,11 @@ class HeaderPanel extends Component {
     this.props.updatePhylogenyPanelHeight(val);
   };
 
+  onHiglassDataFilesMenuClicked = (uuid) => {
+    this.props.plots.filter((d) => d.uuid === uuid).length < 1 &&
+      this.props.addBigwigPlot(uuid);
+  };
+
   render() {
     const {
       t,
@@ -113,12 +119,31 @@ class HeaderPanel extends Component {
       selectedConnectionsRange,
       selectedConnectionIds,
       phylogenyPanelHeight,
+      higlassDatafiles,
     } = this.props;
     let tags = [...new Set(selectedFiles.map((d) => d.tags).flat())];
     let title = selectedFiles.map((d) => d.file).join(", ");
     let selectedCoordinate = [
       ...new Set(selectedFiles.map((d) => d.reference).flat()),
     ][0];
+    let groupedHiglassDataFiles = d3.group(
+      higlassDatafiles,
+      (d) => d.project_name
+    );
+    let higlassDatafilesMenu = [...groupedHiglassDataFiles.keys()]
+      .sort((a, b) => d3.ascending(a, b))
+      .map((key, i) => (
+        <Menu.SubMenu title={key || t("containers.home.other")}>
+          {groupedHiglassDataFiles.get(key).map((e, i) => (
+            <Menu.Item
+              key={e.uuid}
+              onClick={() => this.onHiglassDataFilesMenuClicked(e.uuid)}
+            >
+              {e.name}
+            </Menu.Item>
+          ))}
+        </Menu.SubMenu>
+      ));
     return (
       <Wrapper>
         <PageHeader
@@ -178,6 +203,26 @@ class HeaderPanel extends Component {
                     })}
                   </span>
                 </Button>
+                <Dropdown overlay={<Menu>{higlassDatafilesMenu}</Menu>}>
+                  <a
+                    className="ant-dropdown-link"
+                    onClick={(e) => e.preventDefault()}
+                    href="/#"
+                  >
+                    <Space>
+                      <span className="aligned-center" style={{}}>
+                        <span>
+                          <b>{higlassDatafiles.length}</b>{" "}
+                          {t("containers.home.bigwig", {
+                            count: higlassDatafiles.length,
+                          })}
+                        </span>
+                        &nbsp;
+                        <AiOutlineDown />
+                      </span>
+                    </Space>
+                  </a>
+                </Dropdown>
               </Space>
             )
           }
@@ -334,6 +379,7 @@ const mapDispatchToProps = (dispatch) => ({
   updateDomains: (domains) => dispatch(updateDomains(domains)),
   updatePhylogenyPanelHeight: (value) =>
     dispatch(updatePhylogenyPanelHeight(value)),
+  addBigwigPlot: (value) => dispatch(addBigwigPlot(value)),
 });
 const mapStateToProps = (state) => ({
   plots: state.App.plots,
@@ -347,6 +393,7 @@ const mapStateToProps = (state) => ({
   selectedConnectionsRange: state.App.selectedConnectionsRange,
   phylogenyPanelHeight: state.App.phylogenyPanelHeight,
   selectedFiles: state.App.selectedFiles,
+  higlassDatafiles: state.App.higlassDatafiles,
 });
 export default connect(
   mapStateToProps,

@@ -31,7 +31,10 @@
       "node": "selected sample",
       "node_plural": "selected samples",
       "connection": "annotated connection",
-      "connection_plural": "annotated connections"
+      "connection_plural": "annotated connections",
+      "bigwig": "matching bigwig tileset",
+      "bigwig_plural": "matching bigwig tilesets",
+      "other": "Other"
     },
     "data-selection": {
       "missing": {
