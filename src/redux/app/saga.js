@@ -108,7 +108,8 @@ function* fetchHiglassData(action) {
                 let obj = resp[key];
                 let k = getFloatArray(
                   obj.dense,
-                  currentPlot.tilesetInfo.tile_size
+                  currentPlot.tilesetInfo.tile_size,
+                  obj.dtype
                 );
                 return k.map((e, j) => {
                   return {
@@ -364,7 +365,8 @@ function* launchApplication(action) {
                   let obj = resp[key];
                   let k = getFloatArray(
                     obj.dense,
-                    currentPlot.tilesetInfo.tile_size
+                    currentPlot.tilesetInfo.tile_size,
+                    obj.dtype
                   );
                   return k.map((e, j) => {
                     return {
@@ -424,7 +426,6 @@ function* launchApplication(action) {
       samples,
       genesPinned: +searchParams.get("genesPinned") === 1,
     };
-    console.log(properties);
     yield put({ type: actions.LAUNCH_APP_SUCCESS, properties });
   } else {
     yield put({ type: actions.LAUNCH_APP_FAILED });

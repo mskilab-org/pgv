@@ -12,20 +12,50 @@ export function rgbtoInteger(color) {
   );
 }
 
-export function getFloatArray(dense, length) {
-  var blob = window.atob(dense); // Base64 string converted to a char array
-  var fLen = blob.length / Float32Array.BYTES_PER_ELEMENT; // How many floats can be made, but be even
-  var dView = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT)); // ArrayBuffer/DataView to convert 4 bytes into 1 float.
-  var fAry = new Float32Array(fLen); // Final Output at the correct size
-  var p = 0; // Position
+// private function to convert a uint16 to a float16
+function decodeFloat16(h) {
+  var s = (h & 0x8000) >> 15;
+  var e = (h & 0x7c00) >> 10;
+  var f = h & 0x03ff;
 
-  for (var j = 0; j < fLen; j++) {
-    p = j * 4;
-    dView.setUint8(0, blob.charCodeAt(p));
-    dView.setUint8(1, blob.charCodeAt(p + 1));
-    dView.setUint8(2, blob.charCodeAt(p + 2));
-    dView.setUint8(3, blob.charCodeAt(p + 3));
-    fAry[j] = dView.getFloat32(0, true);
+  if (e === 0) {
+    return (s ? -1 : 1) * Math.pow(2, -14) * (f / Math.pow(2, 10));
+  } else if (e === 0x1f) {
+    return f ? NaN : (s ? -1 : 1) * Infinity;
+  }
+
+  return (s ? -1 : 1) * Math.pow(2, e - 15) * (1 + f / Math.pow(2, 10));
+}
+
+export function getFloatArray(dense, length, dtype) {
+  var blob = window.atob(dense); // Base64 string converted to a char array
+  var fLen, dView, fAry, p, j;
+  if (dtype === "float32") {
+    fLen = blob.length / Float32Array.BYTES_PER_ELEMENT; // How many floats can be made, but be even
+    dView = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT)); // ArrayBuffer/DataView to convert 4 bytes into 1 float.
+    fAry = new Float32Array(fLen); // Final Output at the correct size
+    p = 0; // Position
+
+    for (j = 0; j < fLen; j++) {
+      p = j * 4;
+      dView.setUint8(0, blob.charCodeAt(p));
+      dView.setUint8(1, blob.charCodeAt(p + 1));
+      dView.setUint8(2, blob.charCodeAt(p + 2));
+      dView.setUint8(3, blob.charCodeAt(p + 3));
+      fAry[j] = dView.getFloat32(0, true);
+    }
+  } else if (dtype === "float16") {
+    fLen = blob.length / Uint16Array.BYTES_PER_ELEMENT; // How many floats can be made, but be even
+    dView = new DataView(new ArrayBuffer(Uint16Array.BYTES_PER_ELEMENT)); // ArrayBuffer/DataView to convert 4 bytes into 1 float.
+    fAry = new Float32Array(fLen); // Final Output at the correct size
+    p = 0; // Position
+
+    for (j = 0; j < fLen; j++) {
+      p = j * 2;
+      dView.setUint8(0, blob.charCodeAt(p));
+      dView.setUint8(1, blob.charCodeAt(p + 1));
+      fAry[j] = decodeFloat16(dView.getUint16(0, true));
+    }
   }
   if (length) {
     fAry = Array(1024)
