@@ -58,6 +58,9 @@ export default function appReducer(state = initState, action) {
         "Pan Genome Viewer",
         unescape(url.toString())
       );
+      action.plots.forEach((d) => {
+        d.deleted = d.visible ? false : d.deleted;
+      });
       return {
         ...state,
         plots: action.plots,

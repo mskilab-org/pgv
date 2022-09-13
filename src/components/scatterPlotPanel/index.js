@@ -16,7 +16,7 @@ import {
 } from "antd";
 import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
-import { AiOutlineDotChart } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineDotChart } from "react-icons/ai";
 import Wrapper from "./index.style";
 import {
   AiOutlineDownload,
@@ -120,6 +120,14 @@ class ScatterPlotPanel extends Component {
                   }
                   size="small"
                   onClick={() => toggleVisibility(!visible, index)}
+                />
+              </Tooltip>
+              <Tooltip title={t("components.delete")}>
+                <Button
+                  type="text"
+                  icon={<AiOutlineClose style={{ marginTop: 5 }} />}
+                  size="small"
+                  onClick={() => toggleVisibility(false, index, true)}
                 />
               </Tooltip>
             </Space>

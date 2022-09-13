@@ -21,6 +21,7 @@ import {
   AiOutlineDownload,
   AiOutlineDown,
   AiOutlineRight,
+  AiOutlineClose,
 } from "react-icons/ai";
 import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
@@ -116,6 +117,14 @@ class BarPlotPanel extends Component {
                   }
                   size="small"
                   onClick={() => toggleVisibility(!visible, index)}
+                />
+              </Tooltip>
+              <Tooltip title={t("components.delete")}>
+                <Button
+                  type="text"
+                  icon={<AiOutlineClose style={{ marginTop: 5 }} />}
+                  size="small"
+                  onClick={() => toggleVisibility(false, index, true)}
                 />
               </Tooltip>
             </Space>

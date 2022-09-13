@@ -27,9 +27,10 @@ class Home extends Component {
     this.setState({ panel: affixed });
   };
 
-  togglePlotVisibility = (checked, index) => {
+  togglePlotVisibility = (checked, index, deleted = false) => {
     let plots = [...this.props.plots];
     plots[index].visible = checked;
+    plots[index].deleted = deleted;
     this.props.updatePlots(plots);
   };
 
@@ -140,6 +141,9 @@ class Home extends Component {
       plotComponents.push(plotPhyloAnatomyComponent);
     }
     plots.forEach((d, index) => {
+      if (d.deleted) {
+        return;
+      }
       let plotComponent = null;
       if (d.type === "genome") {
         plotComponent = (

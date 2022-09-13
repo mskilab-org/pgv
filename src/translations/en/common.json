@@ -49,6 +49,7 @@
     "download-as-png-tooltip": "Download as PNG",
     "expand": "Expand",
     "collapse": "Collapse",
+    "delete": "Remove",
     "settings": {
       "tooltip": "Settings",
       "title": "Settings Panel"
