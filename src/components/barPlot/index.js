@@ -25,7 +25,6 @@ class BarPlot extends Component {
   barsStartPoint = null;
   barsEndPoint = null;
   barsFill = null;
-  zoom = null;
 
   constructor(props) {
     super(props);
@@ -210,7 +209,6 @@ class BarPlot extends Component {
     let panelHeight = stageHeight;
     this.panels = [];
 
-    let windowScales = [];
     domains.forEach((xDomain, index) => {
       let matched = [];
       this.barsStartPoint.forEach((startPoint, i) => {

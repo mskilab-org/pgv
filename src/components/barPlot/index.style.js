@@ -15,7 +15,6 @@ const Wrapper = styled.div`
     position: absolute;
     top: 0px;
     user-select: none;
-    /*pointer-events: none;*/
   }
 `;
 
