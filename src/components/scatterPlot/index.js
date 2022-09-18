@@ -98,11 +98,11 @@ class ScatterPlot extends Component {
         panel.panelGenomeScale(domain[0]),
         panel.panelGenomeScale(domain[1]),
       ];
-      d3.select(this.container)
+      d3.select(this.plotContainer)
         .select(`#panel-rect-${index}`)
         .attr("preserveAspectRatio", "xMinYMin meet")
         .call(panel.zoom); //.on("wheel", (event) => { event.preventDefault(); });;
-      d3.select(this.container)
+      d3.select(this.plotContainer)
         .select(`#panel-rect-${index}`)
         .call(
           panel.zoom.transform,
