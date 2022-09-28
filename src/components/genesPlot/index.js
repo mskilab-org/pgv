@@ -6,7 +6,9 @@ import { withTranslation } from "react-i18next";
 import Wrapper from "./index.style";
 import { humanize, measureText } from "../../helpers/utility";
 import Plot from "./plot";
-import Grid from "../grid/index";
+import appActions from "../../redux/app/actions";
+
+const { updateDomains } = appActions;
 
 const margins = {
   gapX: 24,
@@ -80,6 +82,26 @@ class GenesPlot extends Component {
   componentDidUpdate(prevProps, prevState) {
     const { domains } = this.props;
 
+    this.panels.forEach((panel, index) => {
+      let domain = domains[index];
+      var s = [
+        panel.panelGenomeScale(domain[0]),
+        panel.panelGenomeScale(domain[1]),
+      ];
+      d3.select(this.plotContainer)
+        .select(`#panel-rect-${index}`)
+        .attr("preserveAspectRatio", "xMinYMin meet")
+        .call(panel.zoom); //.on("wheel", (event) => { event.preventDefault(); });;
+      d3.select(this.plotContainer)
+        .select(`#panel-rect-${index}`)
+        .call(
+          panel.zoom.transform,
+          d3.zoomIdentity
+            .scale(panel.panelWidth / (s[1] - s[0]))
+            .translate(-s[0], 0)
+        );
+    });
+
     if (prevProps.width !== this.props.width) {
       this.componentWillUnmount();
       this.componentDidMount();
@@ -102,6 +124,26 @@ class GenesPlot extends Component {
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
 
+    this.panels.forEach((panel, index) => {
+      let domain = domains[index];
+      var s = [
+        panel.panelGenomeScale(domain[0]),
+        panel.panelGenomeScale(domain[1]),
+      ];
+      d3.select(this.plotContainer)
+        .select(`#panel-rect-${index}`)
+        .attr("preserveAspectRatio", "xMinYMin meet")
+        .call(panel.zoom); //.on("wheel", (event) => { event.preventDefault(); });;
+      d3.select(this.plotContainer)
+        .select(`#panel-rect-${index}`)
+        .call(
+          panel.zoom.transform,
+          d3.zoomIdentity
+            .scale(panel.panelWidth / (s[1] - s[0]))
+            .translate(-s[0], 0)
+        );
+    });
+
     this.plot.load(
       stageWidth,
       stageHeight,
@@ -114,14 +156,66 @@ class GenesPlot extends Component {
     this.plot.render();
   }
 
+  zooming(event, index) {
+    let panel = this.panels[index];
+    let newDomain = event.transform
+      .rescaleX(panel.panelGenomeScale)
+      .domain()
+      .map(Math.floor);
+    let newDomains = [...this.props.domains];
+    let selection = Object.assign([], newDomain);
+
+    let otherSelections = this.props.domains.filter((d, i) => i !== index);
+    let lowerEdge = d3.max(
+      otherSelections
+        .filter(
+          (d, i) => selection && d[0] <= selection[0] && selection[0] <= d[1]
+        )
+        .map((d, i) => d[1])
+    );
+
+    // calculate the upper allowed selection edge this brush can move
+    let upperEdge = d3.min(
+      otherSelections
+        .filter(
+          (d, i) => selection && d[1] >= selection[0] && selection[1] <= d[1]
+        )
+        .map((d, i) => d[0])
+    );
+
+    // if there is an upper edge, then set this to be the upper bound of the current selection
+    if (upperEdge !== undefined && selection[1] >= upperEdge) {
+      selection[1] = upperEdge;
+      selection[0] = d3.min([selection[0], upperEdge - 1]);
+    }
+
+    // if there is a lower edge, then set this to the be the lower bound of the current selection
+    if (lowerEdge !== undefined && selection[0] <= lowerEdge) {
+      selection[0] = lowerEdge;
+      selection[1] = d3.max([selection[1], lowerEdge + 1]);
+    }
+
+    newDomains[index] = selection;
+
+    if (newDomains.toString() !== this.props.domains.toString()) {
+      this.setState({ domains: newDomains }, () => {
+        this.props.updateDomains(newDomains);
+      });
+    }
+  }
+
+  zoomEnded(event, index) {
+    this.zooming(event, index);
+  }
+
   handleMouseMove = (event) => {
     const { genes, width, height } = this.props;
 
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
     let position = [
-      d3.pointer(event)[0] - margins.gapX,
-      d3.pointer(event)[1] - margins.gapY,
+      d3.pointer(event)[0] - 0 * margins.gapX,
+      d3.pointer(event)[1] - 0 * margins.gapY,
     ];
 
     if (
@@ -235,19 +329,21 @@ class GenesPlot extends Component {
   }
 
   render() {
-    const { width, height, genes, domains } = this.props;
+    const { width, height, genes, defaultDomain, domains } = this.props;
     const { tooltip } = this.state;
 
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
 
-    let windowWidth =
+    let panelWidth =
       (stageWidth - (domains.length - 1) * margins.gapX) / domains.length;
-    let windowHeight = stageHeight;
-    let yScale = d3.scaleLinear().domain(this.domainY).range([windowHeight, 0]);
-    let windowScales = [];
-    domains.forEach((xDomain, j) => {
-      let xScale = d3.scaleLinear().domain(xDomain).range([0, windowWidth]);
+    let panelHeight = stageHeight;
+    this.panels = [];
+
+    let yScale = d3.scaleLinear().domain(this.domainY).range([panelHeight, 0]);
+
+    domains.forEach((xDomain, index) => {
+      let xScale = d3.scaleLinear().domain(xDomain).range([0, panelWidth]);
 
       let texts = [];
       let positiveStrandTexts = [];
@@ -348,8 +444,36 @@ class GenesPlot extends Component {
         }
       });
 
+      let offset = index * (panelWidth + margins.gapX);
+      let zoom = d3
+        .zoom()
+        .scaleExtent([1, Infinity])
+        .translateExtent([
+          [0, 0],
+          [panelWidth, panelHeight],
+        ])
+        .extent([
+          [0, 0],
+          [panelWidth, panelHeight],
+        ])
+        .on("zoom", (event) => this.zooming(event, index))
+        .on("end", (event) => this.zoomEnded(event, index));
+      let panelGenomeScale = d3
+        .scaleLinear()
+        .domain(defaultDomain)
+        .range([0, panelWidth]);
       texts = nTexts.concat(pTexts);
-      windowScales.push({ xScale, yScale, texts });
+      this.panels.push({
+        index,
+        xScale,
+        yScale,
+        zoom,
+        panelWidth,
+        panelHeight,
+        texts,
+        offset,
+        panelGenomeScale,
+      });
     });
     let tooltipDomainIndex = -1,
       tooltipScale = null;
@@ -361,7 +485,7 @@ class GenesPlot extends Component {
             tooltip.shape.startPlace > xDomain[1]
           )
       );
-      tooltipScale = windowScales[tooltipDomainIndex];
+      tooltipScale = this.panels[tooltipDomainIndex];
     }
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
@@ -369,7 +493,6 @@ class GenesPlot extends Component {
           className="genome-plot"
           style={{ width: stageWidth, height: stageHeight }}
           ref={(elem) => (this.container = elem)}
-          onMouseMove={(e) => this.handleMouseMove(e)}
           onClick={(e) => this.handleClick(e)}
         />
         <svg
@@ -379,8 +502,33 @@ class GenesPlot extends Component {
           ref={(elem) => (this.plotContainer = elem)}
         >
           <clipPath id="clipping">
-            <rect x={0} y={0} width={windowWidth} height={windowHeight} />
+            <rect x={0} y={0} width={panelWidth} height={panelHeight} />
           </clipPath>
+          <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
+            {this.panels.map((panel, i) => (
+              <g
+                key={`panel-${panel.index}`}
+                id={`panel-${panel.index}`}
+                transform={`translate(${[panel.offset, 0]})`}
+              >
+                <rect
+                  className="zoom-background"
+                  id={`panel-rect-${panel.index}`}
+                  x={0.5}
+                  width={panelWidth}
+                  height={panelHeight}
+                  onMouseMove={(e) => this.handleMouseMove(e)}
+                  style={{
+                    stroke: "steelblue",
+                    fill: "transparent",
+                    strokeWidth: 1,
+                    opacity: 0.375,
+                    pointerEvents: "auto",
+                  }}
+                />
+              </g>
+            ))}
+          </g>
           <g
             className="labels-container"
             transform={`translate(${[0, margins.gapY]})`}
@@ -406,14 +554,13 @@ class GenesPlot extends Component {
             className="texts-container"
             transform={`translate(${[margins.gapX, margins.gapY]})`}
           >
-            {windowScales.map((d, i) => (
+            {this.panels.map((panel, i) => (
               <g
-                transform={`translate(${[
-                  i * (margins.gapX + windowWidth),
-                  0,
-                ]})`}
+                key={`panel-texts--${panel.index}`}
+                id={`panel-texts-${panel.index}`}
+                transform={`translate(${[panel.offset, 0]})`}
               >
-                {d.texts}
+                {panel.texts}
               </g>
             ))}
           </g>
@@ -421,7 +568,7 @@ class GenesPlot extends Component {
             <g transform={`translate(${[margins.gapX, margins.gapY]})`}>
               <g
                 transform={`translate(${[
-                  tooltipDomainIndex * (margins.gapX + windowWidth),
+                  tooltipDomainIndex * (margins.gapX + panelWidth),
                   0,
                 ]})`}
               >
@@ -481,8 +628,10 @@ GenesPlot.propTypes = {
   genes: PropTypes.object,
 };
 GenesPlot.defaultProps = {};
-const mapDispatchToProps = (dispatch) => ({});
-const mapStateToProps = (state) => ({});
+const mapDispatchToProps = (dispatch) => ({
+  updateDomains: (domains) => dispatch(updateDomains(domains)),
+});
+const mapStateToProps = (state) => ({ defaultDomain: state.App.defaultDomain });
 export default connect(
   mapStateToProps,
   mapDispatchToProps

@@ -9,12 +9,12 @@ const Wrapper = styled.div`
     margin: ${(props) => props.margins.gapY}px
       ${(props) => props.margins.gapX}px !important;
     padding: 0px !important;
-    pointer-events: all;
+    pointer-events: auto;
   }
   svg.plot-container {
     position: absolute;
     top: 0px;
-    pointer-events: none;
+    pointer-events: auto;
     g.labels-container {
       text {
         user-select: none;
