@@ -232,9 +232,9 @@ class AreaPlot extends Component {
                 <g clipPath={`url(#1cuttOffViewPane-${panel.index})`}>
                   <path
                     transform={`translate(${[0, 0]})`}
-                    fill="#cce5df"
+                    fill="#69b3a2"
                     stroke="#69b3a2"
-                    strokeWidth="1.0"
+                    strokeWidth="0.0"
                     d={d3
                       .area()
                       .defined((e, j) => e.y)
