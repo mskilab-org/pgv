@@ -20,7 +20,7 @@ import {
 } from "../../helpers/utility";
 import { getCurrentState } from "./selectors";
 
-const ZOOM = 2;
+const ZOOM = 3;
 const HIGLASS_LIMIT = 10000;
 const HIGLASS_FILETYPE = "bigwig";
 
@@ -65,7 +65,7 @@ function* fetchHiglassData(action) {
   const currentState = yield select(getCurrentState);
   let { maxGenomeLength } = currentState.App;
   let newTilesets = action.domains.map((d, i) => {
-    let zoom = 2 + Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
+    let zoom = 3 + Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
     let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);
     let tile2 = Math.floor((Math.pow(2, zoom) * d[1]) / maxGenomeLength);
     return { domain: d, zoom: zoom, tiles: d3.range(tile1, tile2 + 1) };
@@ -326,7 +326,7 @@ function* launchApplication(action) {
     const currentState = yield select(getCurrentState);
     let { maxGenomeLength } = currentState.App;
     let newTilesets = domains.map((d, i) => {
-      let zoom = 2 + Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
+      let zoom = 3 + Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
       let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);
       let tile2 = Math.floor((Math.pow(2, zoom) * d[1]) / maxGenomeLength);
       return { domain: d, zoom: zoom, tiles: d3.range(tile1, tile2 + 1) };
