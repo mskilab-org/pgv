@@ -29,6 +29,7 @@ const initState = {
   renderOutsideViewPort: false,
   samples: {},
   files: [],
+  hoveredLocation: null,
 };
 
 export default function appReducer(state = initState, action) {
@@ -220,6 +221,13 @@ export default function appReducer(state = initState, action) {
       };
     case actions.BIGWIG_PLOT_ADDED:
       return { ...state, ...action.properties, loading: false };
+    case actions.HOVERED_LOCATION_UPDATED:
+      return {
+        ...state,
+        hoveredLocation: action.hoveredLocation,
+        hoveredLocationPanelIndex: action.hoveredLocationPanelIndex,
+        loading: false,
+      };
     default:
       return state;
   }

@@ -7,7 +7,7 @@ import Grid from "../grid/index";
 import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 
-const { updateDomains } = appActions;
+const { updateDomains, updateHoveredLocation } = appActions;
 
 const margins = {
   gapX: 24,
@@ -17,15 +17,6 @@ const margins = {
 
 class AreaPlot extends Component {
   plotContainer = null;
-
-  // shouldComponentUpdate(nextProps, nextState) {
-  //   return (
-  //     nextProps.data.toString() !== this.props.data.toString() ||
-  //     nextProps.domains.toString() !== this.props.domains.toString() ||
-  //     nextProps.width !== this.props.width ||
-  //     nextProps.height !== this.props.height
-  //   );
-  // }
 
   componentDidMount() {
     const { domains } = this.props;
@@ -51,7 +42,8 @@ class AreaPlot extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { domains } = this.props;
+    const { domains, hoveredLocationPanelIndex, hoveredLocation, chromoBins } =
+      this.props;
 
     this.panels.forEach((panel, index) => {
       let domain = domains[index];
@@ -72,6 +64,32 @@ class AreaPlot extends Component {
             .translate(-s[0], 0)
         );
     });
+
+    d3.select(this.plotContainer)
+      .select(`#hovered-location-line-${hoveredLocationPanelIndex}`)
+      .attr(
+        "transform",
+        `translate(${[
+          this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation),
+          0,
+        ]})`
+      );
+    d3.select(this.plotContainer)
+      .select(`#hovered-location-text-${hoveredLocationPanelIndex}`)
+      .attr("x", this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation))
+      .text(
+        Object.values(chromoBins)
+          .filter(
+            (chromo) =>
+              hoveredLocation < chromo.endPlace &&
+              hoveredLocation >= chromo.startPlace
+          )
+          .map((chromo) =>
+            d3.format(",")(
+              Math.floor(chromo.scaleToGenome.invert(hoveredLocation))
+            )
+          )
+      );
   }
 
   zooming(event, index) {
@@ -125,6 +143,17 @@ class AreaPlot extends Component {
   zoomEnded(event, index) {
     this.zooming(event, index);
   }
+
+  handleMouseMove = (e, panelIndex) => {
+    this.props.updateHoveredLocation(
+      this.panels[panelIndex].xScale.invert(d3.pointer(e)[0]),
+      panelIndex
+    );
+  };
+
+  handleMouseOut = (e, panelIndex) => {
+    this.props.updateHoveredLocation(null, panelIndex);
+  };
 
   render() {
     const { width, height, domains, chromoBins, data, defaultDomain } =
@@ -244,20 +273,7 @@ class AreaPlot extends Component {
                       .y1((e, j) => panel.yScale(e.y))(panel.dataPoints)}
                   />
                 </g>
-                <rect
-                  className="zoom-background"
-                  id={`panel-rect-${panel.index}`}
-                  x={0.5}
-                  width={panelWidth}
-                  height={panelHeight}
-                  style={{
-                    stroke: "steelblue",
-                    fill: "transparent",
-                    strokeWidth: 1,
-                    opacity: 0.375,
-                    pointerEvents: "all",
-                  }}
-                />
+
                 <Grid
                   gap={0}
                   scaleX={panel.xScale}
@@ -265,6 +281,36 @@ class AreaPlot extends Component {
                   axisWidth={panel.panelWidth}
                   axisHeight={panel.panelHeight}
                   chromoBins={chromoBins}
+                />
+                <line
+                  className="hovered-location-line"
+                  id={`hovered-location-line-${panel.index}`}
+                  transform={`translate(${(-1000, -1000)})`}
+                  y1={0}
+                  y2={panel.panelHeight}
+                />
+                <text
+                  className="hovered-location-text"
+                  id={`hovered-location-text-${panel.index}`}
+                  x={-1000}
+                  dx={5}
+                  dy={10}
+                ></text>
+                <rect
+                  className="zoom-background"
+                  id={`panel-rect-${panel.index}`}
+                  x={0.5}
+                  width={panelWidth}
+                  height={panelHeight}
+                  onMouseMove={(e) => this.handleMouseMove(e, i)}
+                  onMouseOut={(e) => this.handleMouseOut(e, i)}
+                  style={{
+                    stroke: "steelblue",
+                    fill: "transparent",
+                    strokeWidth: 1,
+                    opacity: 0.375,
+                    pointerEvents: "all",
+                  }}
                 />
               </g>
             ))}
@@ -283,10 +329,14 @@ AreaPlot.propTypes = {
 AreaPlot.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
   updateDomains: (domains) => dispatch(updateDomains(domains)),
+  updateHoveredLocation: (hoveredLocation, panelIndex) =>
+    dispatch(updateHoveredLocation(hoveredLocation, panelIndex)),
 });
 const mapStateToProps = (state) => ({
   chromoBins: state.App.chromoBins,
   defaultDomain: state.App.defaultDomain,
+  hoveredLocation: state.App.hoveredLocation,
+  hoveredLocationPanelIndex: state.App.hoveredLocationPanelIndex,
 });
 export default connect(
   mapStateToProps,

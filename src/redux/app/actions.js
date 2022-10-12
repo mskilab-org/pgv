@@ -14,6 +14,7 @@ const actions = {
   HIGLASS_LOADED: "HIGLASS_LOADED",
   ADD_BIGWIG_PLOT: "ADD_BIGWIG_PLOT",
   BIGWIG_PLOT_ADDED: "BIGWIG_PLOT_ADDED",
+  HOVERED_LOCATION_UPDATED: "HOVERED_LOCATION_UPDATED",
   launchApp: (files, selectedTags) => ({
     type: actions.LAUNCH_APP,
     files,
@@ -58,6 +59,11 @@ const actions = {
   addBigwigPlot: (uuid) => ({
     type: actions.ADD_BIGWIG_PLOT,
     uuid,
+  }),
+  updateHoveredLocation: (hoveredLocation, hoveredLocationPanelIndex) => ({
+    type: actions.HOVERED_LOCATION_UPDATED,
+    hoveredLocation,
+    hoveredLocationPanelIndex,
   }),
 };
 
