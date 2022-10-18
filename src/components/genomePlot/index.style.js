@@ -21,13 +21,22 @@ const Wrapper = styled.div`
   }
   .annotated {
     fill-opacity: 0.33;
-    stroke: #A020F0 !important;
+    stroke: #a020f0 !important;
     stroke-width: 2 !important;
     opacity: 1 !important;
   }
   .cross-annotated {
     stroke: url(#crossgrad) !important;
     stroke-width: 4 !important;
+  }
+  line.hovered-location-line {
+    stroke: rgb(255, 127, 14);
+    stroke-width: 1.33px;
+    stroke-dasharray: 5, 5;
+  }
+  text.hovered-location-text {
+    fill: rgb(255, 127, 14);
+    font-size: 10px;
   }
 `;
 

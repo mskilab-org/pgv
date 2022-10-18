@@ -17,8 +17,12 @@ import {
 import Grid from "../grid/index";
 import appActions from "../../redux/app/actions";
 
-const { updateDomains, selectPhylogenyNodes, highlightPhylogenyNodes } =
-  appActions;
+const {
+  updateDomains,
+  selectPhylogenyNodes,
+  highlightPhylogenyNodes,
+  updateHoveredLocation,
+} = appActions;
 
 const margins = {
   gap: 24,
@@ -258,7 +262,10 @@ class WalkPlot extends Component {
         this.props.selectedConnectionIds.toString() ||
       nextProps.annotation !== this.props.annotation ||
       nextProps.width !== this.props.width ||
-      nextProps.height !== this.props.height
+      nextProps.height !== this.props.height ||
+      nextProps.hoveredLocation !== this.props.hoveredLocation ||
+      nextProps.hoveredLocationPanelIndex !==
+        this.props.hoveredLocationPanelIndex
     );
   }
 
@@ -286,7 +293,8 @@ class WalkPlot extends Component {
   }
 
   componentDidUpdate() {
-    const { domains } = this.props;
+    const { domains, hoveredLocationPanelIndex, hoveredLocation, chromoBins } =
+      this.props;
     this.panels.forEach((panel, index) => {
       let domain = domains[index];
       var s = [
@@ -306,6 +314,36 @@ class WalkPlot extends Component {
             .translate(-s[0], 0)
         );
     });
+    if (this.panels[hoveredLocationPanelIndex]) {
+      d3.select(this.container)
+        .select(`#hovered-location-line-${hoveredLocationPanelIndex}`)
+        .attr(
+          "transform",
+          `translate(${[
+            this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation),
+            0,
+          ]})`
+        );
+      d3.select(this.container)
+        .select(`#hovered-location-text-${hoveredLocationPanelIndex}`)
+        .attr(
+          "x",
+          this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation)
+        )
+        .text(
+          Object.values(chromoBins)
+            .filter(
+              (chromo) =>
+                hoveredLocation < chromo.endPlace &&
+                hoveredLocation >= chromo.startPlace
+            )
+            .map((chromo) =>
+              d3.format(",")(
+                Math.floor(chromo.scaleToGenome.invert(hoveredLocation))
+              )
+            )
+        );
+    }
   }
 
   zooming(event, index) {
@@ -452,6 +490,18 @@ class WalkPlot extends Component {
     this.props.updateDomains(cluster(annotated, this.props.genomeLength));
   }
 
+  handlePanelMouseMove = (e, panelIndex) => {
+    panelIndex > -1 &&
+      this.props.updateHoveredLocation(
+        this.panels[panelIndex].xScale.invert(d3.pointer(e)[0]),
+        panelIndex
+      );
+  };
+
+  handlePanelMouseOut = (e, panelIndex) => {
+    panelIndex > -1 && this.props.updateHoveredLocation(null, panelIndex);
+  };
+
   render() {
     const { width, height, selectedConnectionIds } = this.props;
     const { stageWidth, stageHeight, tooltip } = this.state;
@@ -514,12 +564,41 @@ class WalkPlot extends Component {
                 id={`panel-${panel.index}`}
                 transform={`translate(${[panel.offset, 0]})`}
               >
+                <g ref={(elem) => (this.grid = elem)}>
+                  {
+                    <>
+                      <Grid
+                        scaleX={panel.xScale}
+                        scaleY={null}
+                        showY={false}
+                        axisWidth={panel.panelWidth}
+                        axisHeight={panel.panelHeight}
+                      />
+                      <line
+                        className="hovered-location-line"
+                        id={`hovered-location-line-${panel.index}`}
+                        transform={`translate(${(-1000, -1000)})`}
+                        y1={0}
+                        y2={panel.panelHeight}
+                      />
+                      <text
+                        className="hovered-location-text"
+                        id={`hovered-location-text-${panel.index}`}
+                        x={-1000}
+                        dx={5}
+                        dy={10}
+                      ></text>
+                    </>
+                  }
+                </g>
                 <rect
                   className="zoom-background"
                   id={`panel-rect-${panel.index}`}
                   x={0.5}
                   width={panel.panelWidth}
                   height={panel.panelHeight}
+                  onMouseMove={(e) => this.handlePanelMouseMove(e, i)}
+                  onMouseOut={(e) => this.handlePanelMouseOut(e, i)}
                   style={{
                     stroke: "steelblue",
                     fill: "transparent",
@@ -528,17 +607,6 @@ class WalkPlot extends Component {
                     pointerEvents: "all",
                   }}
                 />
-                <g ref={(elem) => (this.grid = elem)}>
-                  {
-                    <Grid
-                      scaleX={panel.xScale}
-                      scaleY={null}
-                      showY={false}
-                      axisWidth={panel.panelWidth}
-                      axisHeight={panel.panelHeight}
-                    />
-                  }
-                </g>
                 <g clipPath={`url(#cuttOffViewPane-${panel.index})`}>
                   {panel.intervals.map((d, i) => {
                     return (
@@ -657,6 +725,8 @@ const mapDispatchToProps = (dispatch) => ({
   updateDomains: (domains) => dispatch(updateDomains(domains)),
   selectPhylogenyNodes: (nodes) => dispatch(selectPhylogenyNodes(nodes)),
   highlightPhylogenyNodes: (nodes) => dispatch(highlightPhylogenyNodes(nodes)),
+  updateHoveredLocation: (hoveredLocation, panelIndex) =>
+    dispatch(updateHoveredLocation(hoveredLocation, panelIndex)),
 });
 const mapStateToProps = (state) => ({
   genomeLength: state.App.genomeLength,
@@ -665,6 +735,8 @@ const mapStateToProps = (state) => ({
   domains: state.App.domains,
   selectedConnectionIds: state.App.selectedConnectionIds,
   connectionsAssociations: state.App.connectionsAssociations,
+  hoveredLocation: state.App.hoveredLocation,
+  hoveredLocationPanelIndex: state.App.hoveredLocationPanelIndex,
 });
 export default connect(
   mapStateToProps,

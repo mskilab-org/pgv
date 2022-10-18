@@ -29,6 +29,15 @@ const Wrapper = styled.div`
     stroke: url(#crossgrad) !important;
     stroke-width: 4 !important;
   }
+  line.hovered-location-line {
+    stroke: rgb(255, 127, 14);
+    stroke-width: 1.33px;
+    stroke-dasharray: 5, 5;
+  }
+  text.hovered-location-text {
+    fill: rgb(255, 127, 14);
+    font-size: 10px;
+  }
 `;
 
 export default Wrapper;
