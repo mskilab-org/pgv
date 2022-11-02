@@ -135,7 +135,8 @@
     "genes-panel": {
       "header": "Genes",
       "gene": "record",
-      "gene_plural": "records"
+      "gene_plural": "records",
+      "locator": "Type in the genes you wish to locate"
     },
     "genome-panel": {
       "header": "Genome Graph",
