@@ -4,7 +4,15 @@ import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Button, Tooltip, message, Select } from "antd";
+import {
+  Card,
+  Space,
+  Button,
+  Tooltip,
+  message,
+  Select,
+  Typography,
+} from "antd";
 import * as d3 from "d3";
 import { GiDna2 } from "react-icons/gi";
 import {
@@ -29,6 +37,7 @@ import appActions from "../../redux/app/actions";
 const { updateDomains } = appActions;
 
 const { Option } = Select;
+const { Text } = Typography;
 
 const margins = {
   padding: 0,
@@ -178,6 +187,7 @@ class GenomePanel extends Component {
           }
           extra={
             <Space>
+              <Text type="secondary">{t("components.zoom-help")}</Text>
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
                   type="default"

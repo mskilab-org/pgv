@@ -19,6 +19,7 @@ const Wrapper = styled.div`
   text.hovered-location-text {
     fill: rgb(255, 127, 14);
     font-size: 10px;
+    user-select: none;
   }
 `;
 

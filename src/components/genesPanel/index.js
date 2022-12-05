@@ -4,7 +4,17 @@ import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Tooltip, Button, message, Row, Col, Select } from "antd";
+import {
+  Card,
+  Space,
+  Tooltip,
+  Button,
+  message,
+  Row,
+  Col,
+  Select,
+  Typography,
+} from "antd";
 import * as d3 from "d3";
 import { AiOutlineDownload } from "react-icons/ai";
 import { downloadCanvasAsPng, merge, cluster } from "../../helpers/utility";
@@ -15,6 +25,8 @@ import GenesPlot from "../genesPlot";
 import appActions from "../../redux/app/actions";
 
 const { updateDomains } = appActions;
+
+const { Text } = Typography;
 
 const margins = {
   padding: 0,
@@ -105,6 +117,7 @@ class GenesPanel extends Component {
             }
             extra={
               <Space>
+                <Text type="secondary">{t("components.zoom-help")}</Text>
                 <Select
                   allowClear
                   showSearch

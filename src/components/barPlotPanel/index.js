@@ -91,6 +91,7 @@ class BarPlotPanel extends Component {
           }
           extra={
             <Space>
+              <Text type="secondary">{t("components.zoom-help")}</Text>
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
                   type="default"

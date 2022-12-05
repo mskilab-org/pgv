@@ -5,7 +5,7 @@ import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
 import WalkPlot from "../walkPlot";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Button, Tooltip, message } from "antd";
+import { Card, Space, Button, Tooltip, message, Typography } from "antd";
 import * as d3 from "d3";
 import { GiPathDistance } from "react-icons/gi";
 import {
@@ -21,6 +21,8 @@ import Wrapper from "./index.style";
 const margins = {
   padding: 0,
 };
+
+const { Text } = Typography;
 
 class WalkPanel extends Component {
   container = null;
@@ -72,6 +74,7 @@ class WalkPanel extends Component {
           }
           extra={
             <Space>
+              <Text type="secondary">{t("components.zoom-help")}</Text>
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
                   type="default"

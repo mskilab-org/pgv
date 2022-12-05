@@ -266,11 +266,12 @@ class GenomePlot extends Component {
       d3.select(this.container)
         .select(`#panel-rect-${index}`)
         .attr("preserveAspectRatio", "xMinYMin meet")
-        .call(panel.zoom); //.on("wheel", (event) => { event.preventDefault(); });;
+        .call(panel.zoom.filter((event) => !event.button && event.metaKey));
       d3.select(this.container)
         .select(`#panel-rect-${index}`)
         .call(
-          panel.zoom.transform,
+          panel.zoom.filter((event) => !event.button && event.metaKey)
+            .transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))
             .translate(-s[0], 0)
@@ -290,11 +291,12 @@ class GenomePlot extends Component {
       d3.select(this.container)
         .select(`#panel-rect-${index}`)
         .attr("preserveAspectRatio", "xMinYMin meet")
-        .call(panel.zoom); //.on("wheel", (event) => { event.preventDefault(); });;
+        .call(panel.zoom.filter((event) => !event.button && event.metaKey));
       d3.select(this.container)
         .select(`#panel-rect-${index}`)
         .call(
-          panel.zoom.transform,
+          panel.zoom.filter((event) => !event.button && event.metaKey)
+            .transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))
             .translate(-s[0], 0)
