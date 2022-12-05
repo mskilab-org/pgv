@@ -318,6 +318,7 @@ class WalkPlot extends Component {
     if (this.panels[hoveredLocationPanelIndex]) {
       d3.select(this.container)
         .select(`#hovered-location-line-${hoveredLocationPanelIndex}`)
+        .classed("hidden", !hoveredLocation)
         .attr(
           "transform",
           `translate(${[
@@ -576,9 +577,8 @@ class WalkPlot extends Component {
                         axisHeight={panel.panelHeight}
                       />
                       <line
-                        className="hovered-location-line"
+                        className="hovered-location-line hidden"
                         id={`hovered-location-line-${panel.index}`}
-                        transform={`translate(${(-1000, -1000)})`}
                         y1={0}
                         y2={panel.panelHeight}
                       />

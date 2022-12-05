@@ -69,6 +69,7 @@ class AreaPlot extends Component {
 
     d3.select(this.plotContainer)
       .select(`#hovered-location-line-${hoveredLocationPanelIndex}`)
+      .classed("hidden", !hoveredLocation)
       .attr(
         "transform",
         `translate(${[
@@ -285,9 +286,8 @@ class AreaPlot extends Component {
                   chromoBins={chromoBins}
                 />
                 <line
-                  className="hovered-location-line"
+                  className="hovered-location-line hidden"
                   id={`hovered-location-line-${panel.index}`}
-                  transform={`translate(${(-1000, -1000)})`}
                   y1={0}
                   y2={panel.panelHeight}
                 />

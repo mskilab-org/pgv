@@ -197,3 +197,7 @@ html[dir='rtl'] .dz-hidden-input {
   cursor: default !important;
   pointer-events: none;
 }
+
+.hidden {
+  display: none !important;
+}
