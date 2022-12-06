@@ -7,7 +7,7 @@ const PublicRoutes = () => {
   return (
     <Route>
       <Switch>
-        <Route exact path="/" component={Home} />
+        <Route path="" component={Home} />
         <Route component={Error} />
       </Switch>
     </Route>

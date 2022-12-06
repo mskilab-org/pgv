@@ -136,7 +136,7 @@ function* fetchHiglassData(action) {
 
 function* launchApplication(action) {
   const { responseSettings, responseDatafiles } = yield axios
-    .all([axios.get("/settings.json"), axios.get("/datafiles.json")])
+    .all([axios.get("settings.json"), axios.get("datafiles.json")])
     .then(
       axios.spread((responseSettings, responseDatafiles) => {
         return { ...{ responseSettings, responseDatafiles } };
@@ -159,7 +159,7 @@ function* launchApplication(action) {
             return {
               ...e,
               title: `${key} ${e.title}`,
-              path: `/data/${key}/${e.source}`,
+              path: `data/${key}/${e.source}`,
             };
           }),
           reference: d.reference,
@@ -253,8 +253,8 @@ function* launchApplication(action) {
       {
         type: "genes",
         title: "Genes",
-        source: `/genes/${selectedCoordinate}.arrow`,
-        path: `/genes/${selectedCoordinate}.arrow`,
+        source: `genes/${selectedCoordinate}.arrow`,
+        path: `genes/${selectedCoordinate}.arrow`,
         visible: +searchParams.get("genes") === 1,
       },
       ...selectedFiles.map((d) => d.plots).flat(),
@@ -298,21 +298,21 @@ function* launchApplication(action) {
     let anatomyPlot = plots.find((d) => d.type === "anatomy");
     if (selectedFiles.length === 1) {
       const { response } = yield axios
-        .get(`/data/${selectedFiles[0].file}/connections.associations.json`)
+        .get(`data/${selectedFiles[0].file}/connections.associations.json`)
         .then((response) => ({ response }))
         .catch((error) => ({ error }));
       connectionsAssociations =
         (response && response.data) || connectionsAssociations;
 
       const { responseSamples } = yield axios
-        .get(`/data/${selectedFiles[0].file}/samples.json`)
+        .get(`data/${selectedFiles[0].file}/samples.json`)
         .then((responseSamples) => ({ responseSamples }))
         .catch((error) => ({ error }));
       samples = (responseSamples && responseSamples.data) || samples;
 
       if (anatomyPlot && anatomyPlot.figure) {
         const { res } = yield axios
-          .get(`/data/${selectedFiles[0].file}/${anatomyPlot.figure}`)
+          .get(`data/${selectedFiles[0].file}/${anatomyPlot.figure}`)
           .then((res) => ({ res }))
           .catch((error) => ({ error }));
         anatomyPlot.figure =
