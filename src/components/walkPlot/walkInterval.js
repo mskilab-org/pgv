@@ -19,6 +19,7 @@ class WalkInterval extends Interval {
     let attributes = [
       { label: "iid", value: this.fullTitle },
       { label: "Chromosome", value: this.chromosome },
+      { label: "Y", value: d3.format(",")(this.y) },
       { label: "Start Point", value: d3.format(",")(this.startPoint) },
       { label: "End Point", value: d3.format(",")(this.endPoint) },
       {

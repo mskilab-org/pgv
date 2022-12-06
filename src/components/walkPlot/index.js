@@ -38,17 +38,9 @@ class WalkPlot extends Component {
     const { chromoBins, walks } = this.props;
 
     let currentTransform = null;
-    this.yScale = d3.scaleLinear().domain([0, 1]);
+    this.yScale = d3.scaleLinear();
     let intervals = [];
     let frameConnections = [];
-    // to vertically align the walk intervals within the same chromosome
-    Array.from(
-      d3.group(walks.map((w) => w.iids).flat(), (d) => d.chromosome),
-      ([key, intervals]) =>
-        intervals.forEach((interval, j) => {
-          interval.y = (10 * (j + 1)) / (intervals.length + 1);
-        })
-    );
     let walksAll = walks.map((wlk, i) => {
       let walk = new Walk(wlk);
       walk.intervals = walk.iids.map((d, i) => {
@@ -110,7 +102,6 @@ class WalkPlot extends Component {
     let panelWidth =
       (stageWidth - (domains.length - 1) * margins.gap) / domains.length;
     let panelHeight = stageHeight;
-    this.yScale = d3.scaleLinear().domain([0, 10]).range([panelHeight, 0]);
     this.connections = [];
     this.panels = domains.map((domain, index) => {
       let filteredIntervals = intervals.filter(
@@ -161,6 +152,15 @@ class WalkPlot extends Component {
       };
       return panel;
     });
+    this.yDomain = [
+      d3.min(this.panels.map((d) => d.intervals).flat(), (d) => d.y) - 0.1,
+      d3.max(this.panels.map((d) => d.intervals).flat(), (d) => d.y) + 3,
+    ];
+    this.yScale = d3
+      .scaleLinear()
+      .domain(this.yDomain)
+      .range([panelHeight, 0])
+      .nice();
     this.panels.forEach((panel, i) => {
       let { domain, scale } = panel;
       // filter the connections on same panel
