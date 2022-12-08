@@ -47,7 +47,7 @@
   "components": {
     "visibility-switch-tooltip": "Toggle visibility",
     "download-as-png-tooltip": "Download as PNG",
-    "zoom-help": "⌘ + scroll to zoom in/out",
+    "zoom-help": "⌘ + scroll to zoom",
     "expand": "Expand",
     "collapse": "Collapse",
     "delete": "Remove",
