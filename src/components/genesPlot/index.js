@@ -80,7 +80,7 @@ class GenesPlot extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { domains } = this.props;
+    const { domains, zoomedByCmd } = this.props;
 
     this.panels.forEach((panel, index) => {
       let domain = domains[index];
@@ -91,11 +91,17 @@ class GenesPlot extends Component {
       d3.select(this.plotContainer)
         .select(`#panel-rect-${index}`)
         .attr("preserveAspectRatio", "xMinYMin meet")
-        .call(panel.zoom); //.on("wheel", (event) => { event.preventDefault(); });;
+        .call(
+          panel.zoom.filter(
+            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+          )
+        );
       d3.select(this.plotContainer)
         .select(`#panel-rect-${index}`)
         .call(
-          panel.zoom.transform,
+          panel.zoom.filter(
+            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+          ).transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))
             .translate(-s[0], 0)
@@ -120,7 +126,7 @@ class GenesPlot extends Component {
   }
 
   updateStage() {
-    let { domains, width, height } = this.props;
+    let { domains, width, height, zoomedByCmd } = this.props;
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
 
@@ -133,12 +139,17 @@ class GenesPlot extends Component {
       d3.select(this.plotContainer)
         .select(`#panel-rect-${index}`)
         .attr("preserveAspectRatio", "xMinYMin meet")
-        .call(panel.zoom.filter((event) => !event.button && event.metaKey));
+        .call(
+          panel.zoom.filter(
+            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+          )
+        );
       d3.select(this.plotContainer)
         .select(`#panel-rect-${index}`)
         .call(
-          panel.zoom.filter((event) => !event.button && event.metaKey)
-            .transform,
+          panel.zoom.filter(
+            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+          ).transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))
             .translate(-s[0], 0)
@@ -632,7 +643,10 @@ GenesPlot.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
   updateDomains: (domains) => dispatch(updateDomains(domains)),
 });
-const mapStateToProps = (state) => ({ defaultDomain: state.App.defaultDomain });
+const mapStateToProps = (state) => ({
+  defaultDomain: state.App.defaultDomain,
+  zoomedByCmd: state.App.zoomedByCmd,
+});
 export default connect(
   mapStateToProps,
   mapDispatchToProps

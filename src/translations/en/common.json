@@ -160,6 +160,7 @@
       "genes-pinned": "Genes Panel pinned",
       "phylogeny-pinned": "Phylogeny Panel pinned",
       "phylogeny-panel-height": "Phylogeny Height (px)",
+      "zoomed-by-cmd": "⌘ + scroll to zoom",
       "panels": {
         "label": "Visible Panels"
       }

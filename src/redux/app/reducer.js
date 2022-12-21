@@ -30,6 +30,7 @@ const initState = {
   samples: {},
   files: [],
   hoveredLocation: null,
+  zoomedByCmd: true,
 };
 
 export default function appReducer(state = initState, action) {
@@ -115,6 +116,8 @@ export default function appReducer(state = initState, action) {
       }
     case actions.RENDER_OUTSIDE_VIEWPORT_UPDATED:
       return { ...state, renderOutsideViewPort: action.renderOutsideViewPort };
+    case actions.ZOOM_BY_CMD_ENABLED:
+      return { ...state, zoomedByCmd: action.zoomedByCmd };
     case actions.PHYLOGENY_NODES_HIGHLIGHTED:
       return { ...state, highlightedNodes: action.nodes };
     case actions.PHYLOGENY_PANEL_HEIGHT_UPDATED:

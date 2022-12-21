@@ -33,6 +33,7 @@ const {
   updateLegendPin,
   updateGenesPin,
   updatePhylogenyPin,
+  updateZoomedByCmd,
   updateRenderOutsideViewport,
   updateDomains,
   updatePhylogenyPanelHeight,
@@ -106,11 +107,16 @@ class HeaderPanel extends Component {
       this.props.addBigwigPlot(uuid);
   };
 
+  onZoomedByCmdChanged = (checked) => {
+    this.props.updateZoomedByCmd(checked);
+  };
+
   render() {
     const {
       t,
       selectedFiles,
       plots,
+      zoomedByCmd,
       legendPinned,
       genesPinned,
       phylogenyPinned,
@@ -266,6 +272,16 @@ class HeaderPanel extends Component {
               <Col span={24}>
                 <Space>
                   <Switch
+                    onChange={(checked) => this.onZoomedByCmdChanged(checked)}
+                    size="small"
+                    checked={zoomedByCmd}
+                  />
+                  {t("components.settings-panel.zoomed-by-cmd")}
+                </Space>
+              </Col>
+              <Col span={24}>
+                <Space>
+                  <Switch
                     onChange={(checked) => this.onLegendPinChanged(checked)}
                     size="small"
                     checked={legendPinned}
@@ -375,6 +391,8 @@ const mapDispatchToProps = (dispatch) => ({
   updateGenesPin: (genesPinned) => dispatch(updateGenesPin(genesPinned)),
   updatePhylogenyPin: (phylogenyPinned) =>
     dispatch(updatePhylogenyPin(phylogenyPinned)),
+  updateZoomedByCmd: (checked) =>
+  dispatch(updateZoomedByCmd(checked)),
   updateRenderOutsideViewport: (renderOutsideViewPort) =>
     dispatch(updateRenderOutsideViewport(renderOutsideViewPort)),
   updateDomains: (domains) => dispatch(updateDomains(domains)),
@@ -385,6 +403,7 @@ const mapDispatchToProps = (dispatch) => ({
 const mapStateToProps = (state) => ({
   plots: state.App.plots,
   tags: state.App.tags,
+  zoomedByCmd: state.App.zoomedByCmd,
   legendPinned: state.App.legendPinned,
   genesPinned: state.App.genesPinned,
   phylogenyPinned: state.App.phylogenyPinned,

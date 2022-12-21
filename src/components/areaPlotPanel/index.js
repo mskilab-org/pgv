@@ -66,6 +66,7 @@ class AreaPlotPanel extends Component {
       visible,
       index,
       toggleVisibility,
+      zoomedByCmd,
     } = this.props;
     return (
       <Wrapper visible={visible}>
@@ -95,7 +96,9 @@ class AreaPlotPanel extends Component {
           }
           extra={
             <Space>
-              <Text type="secondary">{t("components.zoom-help")}</Text>
+              {zoomedByCmd && (
+                <Text type="secondary">{t("components.zoom-help")}</Text>
+              )}
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
                   type="default"
@@ -186,6 +189,7 @@ const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   domains: state.App.domains,
   renderOutsideViewPort: state.App.renderOutsideViewPort,
+  zoomedByCmd: state.App.zoomedByCmd,
 });
 export default connect(
   mapStateToProps,

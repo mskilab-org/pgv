@@ -51,6 +51,7 @@ class WalkPanel extends Component {
       visible,
       index,
       toggleVisibility,
+      zoomedByCmd,
     } = this.props;
 
     return (
@@ -74,7 +75,9 @@ class WalkPanel extends Component {
           }
           extra={
             <Space>
-              <Text type="secondary">{t("components.zoom-help")}</Text>
+              {zoomedByCmd && (
+                <Text type="secondary">{t("components.zoom-help")}</Text>
+              )}
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
                   type="default"
@@ -146,6 +149,7 @@ WalkPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   renderOutsideViewPort: state.App.renderOutsideViewPort,
+  zoomedByCmd: state.App.zoomedByCmd,
 });
 export default connect(
   mapStateToProps,

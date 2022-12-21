@@ -15,6 +15,7 @@ const actions = {
   ADD_BIGWIG_PLOT: "ADD_BIGWIG_PLOT",
   BIGWIG_PLOT_ADDED: "BIGWIG_PLOT_ADDED",
   HOVERED_LOCATION_UPDATED: "HOVERED_LOCATION_UPDATED",
+  ZOOM_BY_CMD_ENABLED: "ZOOM_BY_CMD_ENABLED",
   launchApp: (files, selectedTags) => ({
     type: actions.LAUNCH_APP,
     files,
@@ -39,6 +40,10 @@ const actions = {
   updatePhylogenyPin: (phylogenyPinned) => ({
     type: actions.PHYLOGENY_PIN_UPDATED,
     phylogenyPinned,
+  }),
+  updateZoomedByCmd: (zoomedByCmd) => ({
+    type: actions.ZOOM_BY_CMD_ENABLED,
+    zoomedByCmd,
   }),
   updateRenderOutsideViewport: (renderOutsideViewPort) => ({
     type: actions.RENDER_OUTSIDE_VIEWPORT_UPDATED,

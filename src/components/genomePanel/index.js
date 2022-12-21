@@ -142,6 +142,7 @@ class GenomePanel extends Component {
       visible,
       toggleVisibility,
       index,
+      zoomedByCmd,
     } = this.props;
     let { activeAnnotation } = this.state;
     if (Object.keys(genome).length < 1) return null;
@@ -187,7 +188,9 @@ class GenomePanel extends Component {
           }
           extra={
             <Space>
-              <Text type="secondary">{t("components.zoom-help")}</Text>
+              {zoomedByCmd && (
+                <Text type="secondary">{t("components.zoom-help")}</Text>
+              )}
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
                   type="default"
@@ -263,6 +266,7 @@ const mapDispatchToProps = (dispatch) => ({
 const mapStateToProps = (state) => ({
   renderOutsideViewPort: state.App.renderOutsideViewPort,
   genomeLength: state.App.genomeLength,
+  zoomedByCmd: state.App.zoomedByCmd,
   domains: state.App.domains,
 });
 export default connect(

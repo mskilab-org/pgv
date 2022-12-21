@@ -256,7 +256,7 @@ class GenomePlot extends Component {
   }
 
   componentDidMount() {
-    const { domains } = this.props;
+    const { domains, zoomedByCmd } = this.props;
     this.panels.forEach((panel, index) => {
       let domain = domains[index];
       var s = [
@@ -266,12 +266,17 @@ class GenomePlot extends Component {
       d3.select(this.container)
         .select(`#panel-rect-${index}`)
         .attr("preserveAspectRatio", "xMinYMin meet")
-        .call(panel.zoom.filter((event) => !event.button && event.metaKey));
+        .call(
+          panel.zoom.filter(
+            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+          )
+        );
       d3.select(this.container)
         .select(`#panel-rect-${index}`)
         .call(
-          panel.zoom.filter((event) => !event.button && event.metaKey)
-            .transform,
+          panel.zoom.filter(
+            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+          ).transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))
             .translate(-s[0], 0)
@@ -280,8 +285,13 @@ class GenomePlot extends Component {
   }
 
   componentDidUpdate() {
-    const { domains, hoveredLocationPanelIndex, hoveredLocation, chromoBins } =
-      this.props;
+    const {
+      domains,
+      hoveredLocationPanelIndex,
+      hoveredLocation,
+      chromoBins,
+      zoomedByCmd,
+    } = this.props;
     this.panels.forEach((panel, index) => {
       let domain = domains[index];
       var s = [
@@ -291,12 +301,17 @@ class GenomePlot extends Component {
       d3.select(this.container)
         .select(`#panel-rect-${index}`)
         .attr("preserveAspectRatio", "xMinYMin meet")
-        .call(panel.zoom.filter((event) => !event.button && event.metaKey));
+        .call(
+          panel.zoom.filter(
+            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+          )
+        );
       d3.select(this.container)
         .select(`#panel-rect-${index}`)
         .call(
-          panel.zoom.filter((event) => !event.button && event.metaKey)
-            .transform,
+          panel.zoom.filter(
+            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+          ).transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))
             .translate(-s[0], 0)
@@ -701,6 +716,7 @@ const mapStateToProps = (state) => ({
   chromoBins: state.App.chromoBins,
   defaultDomain: state.App.defaultDomain,
   domains: state.App.domains,
+  zoomedByCmd: state.App.zoomedByCmd,
   selectedConnectionIds: state.App.selectedConnectionIds,
   connectionsAssociations: state.App.connectionsAssociations,
   hoveredLocation: state.App.hoveredLocation,
