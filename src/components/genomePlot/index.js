@@ -477,7 +477,9 @@ class GenomePlot extends Component {
           })
           .sort((a, b) => d3.ascending(a.startPlace, b.startPlace))
       );
-      this.props.updateDomains(cluster(merged, this.props.genomeLength));
+      console.log(merged, newDomains);
+      this.props.updateDomains(merged.map((d) => [d.startPlace, d.endPlace]));
+      //this.props.updateDomains(cluster(merged, this.props.genomeLength));
     } else {
       this.props.selectPhylogenyNodes(
         this.props.connectionsAssociations.map((d, i) => {
