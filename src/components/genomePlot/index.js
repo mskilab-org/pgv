@@ -465,8 +465,8 @@ class GenomePlot extends Component {
   handleConnectionClick(event, connection) {
     if (connection.kind === "ANCHOR") {
       let newDomain = [
-        Math.floor(0.98 * connection.otherEnd.interval.startPlace),
-        Math.floor(1.02 * connection.otherEnd.interval.endPlace),
+        Math.floor(connection.otherEnd.place - 1e3),
+        Math.floor(connection.otherEnd.place + 1e3),
       ];
       let newDomains = [...this.props.domains];
       newDomains.push(newDomain);
@@ -477,9 +477,7 @@ class GenomePlot extends Component {
           })
           .sort((a, b) => d3.ascending(a.startPlace, b.startPlace))
       );
-      console.log(merged, newDomains);
       this.props.updateDomains(merged.map((d) => [d.startPlace, d.endPlace]));
-      //this.props.updateDomains(cluster(merged, this.props.genomeLength));
     } else {
       this.props.selectPhylogenyNodes(
         this.props.connectionsAssociations.map((d, i) => {
