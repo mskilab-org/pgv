@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
-import { Layout, Space, Spin, Select, Typography, Alert } from "antd";
+import { Layout, Space, Spin, Select, Typography, Tooltip } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import TopbarWrapper from "./topbar.style";
 import { siteConfig } from "../../settings";
@@ -74,39 +74,67 @@ class Topbar extends Component {
                     </Select>
                   )}
                   {!missingDataFiles && (
-                    <Select
-                      mode="multiple"
-                      showSearch={true}
-                      value={selectedFiles.map((d) => d.file)}
-                      className="files-select"
-                      allowClear={true}
-                      loading={loading}
-                      showArrow={true}
-                      optionLabelProp="value"
-                      dropdownMatchSelectWidth={false}
-                      optionFilterProp="children"
-                      placeholder={t("topbar.browse-sample")}
-                      filterOption={(input, option) =>
-                        option.key.toLowerCase().indexOf(input.toLowerCase()) >=
-                        0
-                      }
-                      filterSort={(optionA, optionB) =>
-                        optionA.key
-                          .toLowerCase()
-                          .localeCompare(optionB.key.toLowerCase())
-                      }
-                      onChange={this.handleFileChange}
+                    <Tooltip
+                      title={t("topbar.no-sample-selected")}
+                      visible={selectedFiles.length < 1}
+                      color={"blue"}
+                      placement="right"
                     >
-                      {filteredFiles.map((d) => (
-                        <Option key={d.file} value={d.file}>
-                          <Space>
-                            <Text>{d.file}</Text>
-                            <Text type="secondary">{d.reference}</Text>
-                            &nbsp;
-                          </Space>
-                        </Option>
-                      ))}
-                    </Select>
+                      <Select
+                        mode="multiple"
+                        showSearch={true}
+                        value={selectedFiles.map((d) => d.file)}
+                        className="files-select"
+                        allowClear={true}
+                        loading={loading}
+                        showArrow={true}
+                        optionLabelProp="value"
+                        dropdownMatchSelectWidth={false}
+                        optionFilterProp="children"
+                        placeholder={t("topbar.browse-sample")}
+                        filterOption={(input, option) =>
+                          option.key
+                            .toLowerCase()
+                            .indexOf(input.toLowerCase()) >= 0
+                        }
+                        filterSort={(optionA, optionB) =>
+                          optionA.key
+                            .toLowerCase()
+                            .localeCompare(optionB.key.toLowerCase())
+                        }
+                        onChange={this.handleFileChange}
+                      >
+                        {filteredFiles.map((d) => (
+                          <Option
+                            key={d.file}
+                            value={d.file}
+                            disabled={
+                              selectedFiles.length > 0 &&
+                              !selectedFiles
+                                .map((e) => e.reference)
+                                .includes(d.reference)
+                            }
+                          >
+                            <Space>
+                              <Text
+                                type={
+                                  selectedFiles.length > 0 &&
+                                  !selectedFiles
+                                    .map((e) => e.reference)
+                                    .includes(d.reference)
+                                    ? "secondary"
+                                    : "primary"
+                                }
+                              >
+                                {d.file}
+                              </Text>
+                              <Text type="secondary">{d.reference}</Text>
+                              &nbsp;
+                            </Space>
+                          </Option>
+                        ))}
+                      </Select>
+                    </Tooltip>
                   )}
                   {loading ? (
                     <Spin
@@ -116,19 +144,15 @@ class Topbar extends Component {
                     />
                   ) : (
                     <Space>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: t("topbar.browse-title", {
-                            count: filteredFiles.length,
-                            total: datafiles.length,
-                          }),
-                        }}
-                      />
-                      {selectedFiles.length < 1 && (
-                        <Alert
-                          message={t("topbar.no-sample-selected")}
-                          type="info"
-                          showIcon
+                      {selectedFiles.length > 0 && (
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html: t("topbar.browse-title-with-reference", {
+                              reference: selectedFiles[0].reference,
+                              count: filteredFiles.length,
+                              total: datafiles.length,
+                            }),
+                          }}
                         />
                       )}
                     </Space>

@@ -214,7 +214,6 @@ function* launchApplication(action) {
     let selectedFiles = files.filter((d) =>
       (action.files || file || []).includes(d.file)
     );
-    //selectedFiles = selectedFiles.length > 0 ? selectedFiles : [files[0]];
 
     let selectedReferences = new Set(selectedFiles.map((d) => d.reference));
 

@@ -7,7 +7,7 @@
     "invalid-arrow-file-detail": "Reading the data has failed as the given Apache Arrow file appears to be corrupted or malformed. Please check the console for further details on the exception message at hand."
   },
   "topbar": {
-    "browse-title": "Listing <strong>{{count}}</strong> out of <strong>{{total}}</strong> samples",
+    "browse-title-with-reference": "Listing <strong>{{count}}</strong> out of <strong>{{total}}</strong> samples, where only <strong>{{reference}}</strong> samples are selectable",
     "browse-sample": "Browse samples",
     "no-sample-selected": "Select a sample to get started!"
   },
