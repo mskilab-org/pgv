@@ -10,11 +10,12 @@ class Walk {
     this.strand = walk.strand;
     this.cids = walk.cids;
     this.iids = walk.iids;
-    this.title = `${this.pid} | ${this.cn}`;
+    this.title = `pid: ${this.pid} | cn: ${this.cn} | type: ${this.type} | strand: ${this.strand}`;
   }
 
   get toString() {
     return `identifier: ${this.identifier},
+    title: ${this.title}
     pid: ${this.pid},
     cn: ${this.cn},
     type: ${this.type},

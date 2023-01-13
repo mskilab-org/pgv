@@ -17,6 +17,7 @@ class WalkInterval extends Interval {
 
   get tooltipContent() {
     let attributes = [
+      { label: "walk", value: this.walk.title },
       { label: "iid", value: this.fullTitle },
       { label: "Chromosome", value: this.chromosome },
       { label: "Y", value: d3.format(",")(this.y) },
