@@ -342,7 +342,7 @@ class HeaderPanel extends Component {
                 </Divider>
               </Col>
               {plots.map((d, index) => (
-                <Col span={24}>
+                <Col key={d.id} span={24}>
                   <Space>
                     <Switch
                       onChange={(checked) =>

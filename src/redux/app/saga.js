@@ -63,7 +63,8 @@ function* fetchHiglassTileset(plot) {
 function* fetchHiglassData(action) {
   yield delay(100); // to throttle multiple requests fired during zooming and panning
   const currentState = yield select(getCurrentState);
-  let { maxGenomeLength } = currentState.App;
+  let { maxGenomeLength, higlassServer, higlassGeneFileUUID } =
+    currentState.App;
   let newTilesets = action.domains.map((d, i) => {
     let zoom = 2 + Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
     let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);
@@ -72,8 +73,9 @@ function* fetchHiglassData(action) {
   });
   let properties = {
     plots: [...currentState.App.plots],
+    genes: [],
   };
-  let { plots } = properties;
+  let { plots, genes } = properties;
   let bigwigs = plots.filter((d, i) => ["bigwig"].includes(d.type));
 
   yield axios
@@ -131,6 +133,32 @@ function* fetchHiglassData(action) {
       console.log("got errors on loading dependencies", errors);
     });
 
+  let newGeneTilesets = action.domains.map((d, i) => {
+    let zoom = 0 + Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
+    let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);
+    let tile2 = Math.floor((Math.pow(2, zoom) * d[1]) / maxGenomeLength);
+    return { domain: d, zoom: zoom, tiles: d3.range(tile1, tile2 + 1) };
+  });
+  yield axios
+    .get(
+      `${higlassServer}/api/v1/tiles/?${newGeneTilesets
+        .map((d, i) =>
+          d.tiles.map((e, j) => `d=${higlassGeneFileUUID}.${d.zoom}.${e}`)
+        )
+        .flat()
+        .join("&")}`
+    )
+    .then((results) => {
+      Object.values(results.data)
+        .flat()
+        .forEach((gene, i) => {
+          genes.push(gene);
+        });
+    })
+    .catch((error) => {
+      console.log(higlassServer, error);
+      genes = [];
+    });
   yield put({ type: actions.HIGLASS_LOADED, properties });
 }
 
@@ -407,7 +435,30 @@ function* launchApplication(action) {
         higlassDatafiles = [];
       });
 
+    let genesPlotData = plots.find((d) => d.type === "genes").data;
+    let geneTypesIndexes = genesPlotData
+      .getChild("type")
+      .toArray()
+      .map((d, i) => (d === "gene" ? i : undefined))
+      .filter((x) => x);
+    let geneTitlesList = genesPlotData.getChild("title").toArray();
+    let genesOptionsList = geneTypesIndexes
+      .map((d, i) => {
+        return {
+          label: geneTitlesList[d],
+          value: d,
+        };
+      })
+      .sort((a, b) =>
+        d3.ascending(a.label.toLowerCase(), b.label.toLowerCase())
+      );
+
+    // load gene-annotations from higlass server
+    let higlassGeneFileUUID = settings.geneAnnotations[selectedCoordinate];
+
     let properties = {
+      genesOptionsList,
+      higlassGeneFileUUID,
       higlassServer,
       higlassDatafiles,
       defaultDomain,

@@ -21,7 +21,7 @@ import { downloadCanvasAsPng, merge, cluster } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import { CgArrowsBreakeH } from "react-icons/cg";
 import Wrapper from "./index.style";
-import GenesPlot from "../genesPlot";
+import GenesPlot from "../genesPlotHiglass";
 import appActions from "../../redux/app/actions";
 
 const { updateDomains } = appActions;
@@ -54,32 +54,8 @@ class GenesPanel extends Component {
       });
   };
 
-  handleGenesLocatorChange = (values) => {
-    const { genomeLength, chromoBins, genes } = this.props;
-    let selectedGenes = values.map((d, i) => genes.get(d).toJSON());
-    let newDomains = selectedGenes.map((d, i) => [
-      d3.max([Math.floor(0.99999 * d.startPlace), 1]),
-      d3.min([Math.floor(1.00001 * d.endPlace), genomeLength]),
-    ]);
-    if (values.length < 1) {
-      let firstChromosome = Object.values(chromoBins)[0];
-      newDomains = [[firstChromosome.startPlace, firstChromosome.endPlace]];
-      this.props.updateDomains(newDomains);
-    } else {
-      let merged = merge(
-        newDomains
-          .map((d) => {
-            return { startPlace: d[0], endPlace: d[1] };
-          })
-          .sort((a, b) => d3.ascending(a.startPlace, b.startPlace))
-      );
-      this.props.updateDomains(cluster(merged, genomeLength));
-    }
-  };
-
   render() {
-    const { t, genes, genesList, genesOptionsList, domains } = this.props;
-    if (!genes) return null;
+    const { t, genesList, domains } = this.props;
     return (
       <Wrapper>
         {
@@ -104,26 +80,6 @@ class GenesPanel extends Component {
             extra={
               <Space>
                 <Text type="secondary">{t("components.zoom-help")}</Text>
-                <Select
-                  allowClear
-                  showSearch
-                  mode="multiple"
-                  style={{ width: 300 }}
-                  placeholder={t("components.genes-panel.locator")}
-                  onChange={this.handleGenesLocatorChange}
-                  options={genesOptionsList}
-                  optionFilterProp="children"
-                  filterOption={(input, option) =>
-                    (option?.label.toLowerCase() ?? "").includes(
-                      input.toLowerCase()
-                    )
-                  }
-                  filterSort={(optionA, optionB) =>
-                    (optionA?.label ?? "")
-                      .toLowerCase()
-                      .localeCompare((optionB?.label ?? "").toLowerCase())
-                  }
-                />
                 <Tooltip title={t("components.download-as-png-tooltip")}>
                   <Button
                     type="default"
@@ -151,7 +107,7 @@ class GenesPanel extends Component {
                               width,
                               height,
                               domains,
-                              genes,
+                              genesList,
                             }}
                           />
                         </Col>
@@ -178,7 +134,6 @@ const mapStateToProps = (state) => ({
   renderOutsideViewPort: state.App.renderOutsideViewPort,
   genomeLength: state.App.genomeLength,
   genesList: state.App.genes,
-  genesOptionsList: state.App.genesOptionsList,
 });
 export default connect(
   mapStateToProps,

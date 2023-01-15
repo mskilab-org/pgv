@@ -5,6 +5,7 @@ import { domainsToLocation, cluster } from "../../helpers/utility";
 const initState = {
   higlassServer: null,
   higlassDatafiles: [],
+  higlassGeneFileUUID: [],
   datafiles: [],
   selectedTags: [],
   filteredTags: [],
@@ -17,6 +18,8 @@ const initState = {
   chromoBins: {},
   tags: [],
   plots: [],
+  genes: [],
+  genesOptionsList: [],
   nodes: [],
   phylogenyPanelHeight: 200,
   selectedConnectionIds: [],

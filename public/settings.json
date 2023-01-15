@@ -454,8 +454,14 @@
         {
           "chromosome": "Y",
           "startPoint": 1,
-          "endPoint": 56887909,
+          "endPoint": 57227415,
           "color": "#40a35a"
+        },
+        {
+          "chromosome": "M",
+          "startPoint": 1,
+          "endPoint": 16569,
+          "color": "#d6616b"
         }
       ],
       "hg38_chr": [
@@ -598,10 +604,16 @@
           "color": "#843c39"
         },
         {
-          "chromosome": "chrY",
+          "chromosome": "Y",
           "startPoint": 1,
-          "endPoint": 56887909,
+          "endPoint": 57227415,
           "color": "#40a35a"
+        },
+        {
+          "chromosome": "M",
+          "startPoint": 1,
+          "endPoint": 16569,
+          "color": "#d6616b"
         }
       ],
       "covid19": [
@@ -2576,5 +2588,9 @@
       "fill": "#FC1B70"
     }
   ],
-  "higlassServer": "http://higlass.io/"
+  "higlassServer": "http://higlass.io/",
+  "geneAnnotations": {
+    "hg19": "OHJakQICQD6gTD7skx4EWA",
+    "hg38": "P0PLbQMwTYGy-5uPIQid7A"
+  }
 }
