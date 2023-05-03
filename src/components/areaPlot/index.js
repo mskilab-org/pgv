@@ -82,32 +82,37 @@ class AreaPlot extends Component {
         );
     });
 
-    d3.select(this.plotContainer)
-      .select(`#hovered-location-line-${hoveredLocationPanelIndex}`)
-      .classed("hidden", !hoveredLocation)
-      .attr(
-        "transform",
-        `translate(${[
-          this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation),
-          0,
-        ]})`
-      );
-    d3.select(this.plotContainer)
-      .select(`#hovered-location-text-${hoveredLocationPanelIndex}`)
-      .attr("x", this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation))
-      .text(
-        Object.values(chromoBins)
-          .filter(
-            (chromo) =>
-              hoveredLocation < chromo.endPlace &&
-              hoveredLocation >= chromo.startPlace
-          )
-          .map((chromo) =>
-            d3.format(",")(
-              Math.floor(chromo.scaleToGenome.invert(hoveredLocation))
+    if (this.panels[hoveredLocationPanelIndex]) {
+      d3.select(this.plotContainer)
+        .select(`#hovered-location-line-${hoveredLocationPanelIndex}`)
+        .classed("hidden", !hoveredLocation)
+        .attr(
+          "transform",
+          `translate(${[
+            this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation),
+            0,
+          ]})`
+        );
+      d3.select(this.plotContainer)
+        .select(`#hovered-location-text-${hoveredLocationPanelIndex}`)
+        .attr(
+          "x",
+          this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation)
+        )
+        .text(
+          Object.values(chromoBins)
+            .filter(
+              (chromo) =>
+                hoveredLocation < chromo.endPlace &&
+                hoveredLocation >= chromo.startPlace
             )
-          )
-      );
+            .map((chromo) =>
+              d3.format(",")(
+                Math.floor(chromo.scaleToGenome.invert(hoveredLocation))
+              )
+            )
+        );
+    }
   }
 
   zooming(event, index) {

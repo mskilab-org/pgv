@@ -3,6 +3,7 @@ node_modules
 scripts/flow/*/.flowconfig
 .flowconfig
 deploy.sh
+connect.sh
 *~
 *.pyc
 .grunt
