@@ -239,9 +239,14 @@ function* launchApplication(action) {
       file = action.files;
     }
 
-    let selectedFiles = files.filter((d) =>
-      (action.files || file || []).includes(d.file)
-    );
+    let selectedFiles = files
+      .sort((a, b) =>
+        d3.ascending(
+          (file || action.files).indexOf(a.file),
+          (file || action.files).indexOf(b.file)
+        )
+      )
+      .filter((d) => (action.files || file || []).includes(d.file));
 
     let selectedReferences = new Set(selectedFiles.map((d) => d.reference));
 
