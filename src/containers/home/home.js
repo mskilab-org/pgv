@@ -16,7 +16,7 @@ import GenomePanel from "../../components/genomePanel";
 import WalkPanel from "../../components/walkPanel";
 import AnatomyPanel from "../../components/anatomyPanel";
 import appActions from "../../redux/app/actions";
-import AreaPlotPanel from "../../components/areaPlotPanel";
+import BigwigPlotPanel from "../../components/bigwigPlotPanel";
 
 const { updateDomain, updatePlots } = appActions;
 
@@ -207,7 +207,7 @@ class Home extends Component {
         );
       } else if (d.type === "bigwig") {
         plotComponent = (
-          <AreaPlotPanel
+          <BigwigPlotPanel
             {...{
               data: d.data,
               title: d.title,

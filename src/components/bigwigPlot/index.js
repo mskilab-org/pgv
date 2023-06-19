@@ -15,7 +15,7 @@ const margins = {
   yTicksCount: 10,
 };
 
-class AreaPlot extends Component {
+class BigwigPlot extends Component {
   plotContainer = null;
 
   componentDidMount() {
@@ -179,8 +179,15 @@ class AreaPlot extends Component {
   };
 
   render() {
-    const { width, height, domains, chromoBins, data, defaultDomain } =
-      this.props;
+    const {
+      width,
+      height,
+      domains,
+      chromoBins,
+      data,
+      defaultDomain,
+      plotType,
+    } = this.props;
 
     let stageWidth = width - 2 * margins.gapX;
     let stageHeight = height - 3 * margins.gapY;
@@ -282,19 +289,31 @@ class AreaPlot extends Component {
                 transform={`translate(${[panel.offset, 0]})`}
               >
                 <g clipPath={`url(#1cuttOffViewPane-${panel.index})`}>
-                  <path
-                    transform={`translate(${[0, 0]})`}
-                    fill="#69b3a2"
-                    stroke="#69b3a2"
-                    strokeWidth="0.0"
-                    d={d3
-                      .area()
-                      .defined((e, j) => e.y)
-                      .curve(d3.curveStep)
-                      .x((e, j) => panel.xScale(e.x))
-                      .y0(panel.yScale.range()[0])
-                      .y1((e, j) => panel.yScale(e.y))(panel.dataPoints)}
-                  />
+                  {plotType === "area" && (
+                    <path
+                      transform={`translate(${[0, 0]})`}
+                      fill="#69b3a2"
+                      stroke="#69b3a2"
+                      strokeWidth="0.0"
+                      d={d3
+                        .area()
+                        .defined((e, j) => e.y)
+                        .curve(d3.curveStep)
+                        .x((e, j) => panel.xScale(e.x))
+                        .y0(panel.yScale.range()[0])
+                        .y1((e, j) => panel.yScale(e.y))(panel.dataPoints)}
+                    />
+                  )}
+                  {plotType === "dots" &&
+                    panel.dataPoints.map((d) => (
+                      <circle
+                        cx={panel.xScale(d.x)}
+                        cy={panel.yScale(d.y)}
+                        r={2.5}
+                        fill={"#69b3a2"}
+                        opacity={0.5}
+                      />
+                    ))}
                 </g>
 
                 <Grid
@@ -342,13 +361,13 @@ class AreaPlot extends Component {
     );
   }
 }
-AreaPlot.propTypes = {
+BigwigPlot.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   data: PropTypes.array,
   chromoBins: PropTypes.object,
 };
-AreaPlot.defaultProps = {};
+BigwigPlot.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
   updateDomains: (domains) => dispatch(updateDomains(domains)),
   updateHoveredLocation: (hoveredLocation, panelIndex) =>
@@ -364,4 +383,4 @@ const mapStateToProps = (state) => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withTranslation("common")(AreaPlot));
+)(withTranslation("common")(BigwigPlot));

@@ -13,11 +13,12 @@ import {
   Col,
   Alert,
   Typography,
+  Segmented,
 } from "antd";
 import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
 import {
-  AiOutlineBarChart,
+  AiOutlineDotChart,
   AiOutlineDownload,
   AiOutlineDown,
   AiOutlineRight,
@@ -27,8 +28,7 @@ import {
 import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
-import BarPlot from "../barPlot";
-import AreaPlot from "../areaPlot";
+import BigwigPlot from "../bigwigPlot";
 
 const { Text } = Typography;
 
@@ -37,8 +37,9 @@ const margins = {
   gap: 0,
 };
 
-class AreaPlotPanel extends Component {
+class BigwigPlotPanel extends Component {
   container = null;
+  state = { plotType: "area" };
 
   onDownloadButtonClicked = () => {
     htmlToImage
@@ -52,6 +53,10 @@ class AreaPlotPanel extends Component {
       .catch((error) => {
         message.error(this.props.t("general.error", { error }));
       });
+  };
+
+  handleSegmentedChange = (plotType) => {
+    this.setState({ plotType });
   };
 
   render() {
@@ -68,6 +73,7 @@ class AreaPlotPanel extends Component {
       toggleVisibility,
       zoomedByCmd,
     } = this.props;
+    const { plotType } = this.state;
     return (
       <Wrapper visible={visible}>
         <Card
@@ -77,7 +83,11 @@ class AreaPlotPanel extends Component {
           title={
             <Space>
               <span role="img" className="anticon anticon-dashboard">
-                <AiOutlineAreaChart />
+                {plotType === "area" ? (
+                  <AiOutlineAreaChart />
+                ) : (
+                  <AiOutlineDotChart />
+                )}
               </span>
               <span className="ant-pro-menu-item-title">{title}</span>
               {data ? (
@@ -96,6 +106,23 @@ class AreaPlotPanel extends Component {
           }
           extra={
             <Space>
+              {
+                <Segmented
+                  size="small"
+                  defaultValue={plotType}
+                  onChange={(plotType) => this.handleSegmentedChange(plotType)}
+                  options={[
+                    {
+                      value: "area",
+                      icon: <AiOutlineAreaChart />,
+                    },
+                    {
+                      value: "dots",
+                      icon: <AiOutlineDotChart />,
+                    },
+                  ]}
+                />
+              }
               {zoomedByCmd && (
                 <Text type="secondary">{t("components.zoom-help")}</Text>
               )}
@@ -150,12 +177,13 @@ class AreaPlotPanel extends Component {
                       <Row style={{ width }} gutter={[margins.gap, 0]}>
                         <Col flex={1}>
                           {data ? (
-                            <AreaPlot
+                            <BigwigPlot
                               {...{
                                 width,
                                 height,
                                 domains,
                                 data,
+                                plotType,
                               }}
                             />
                           ) : (
@@ -183,8 +211,8 @@ class AreaPlotPanel extends Component {
     );
   }
 }
-AreaPlotPanel.propTypes = {};
-AreaPlotPanel.defaultProps = {};
+BigwigPlotPanel.propTypes = {};
+BigwigPlotPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   domains: state.App.domains,
@@ -196,6 +224,6 @@ export default connect(
   mapDispatchToProps
 )(
   withTranslation("common")(
-    handleViewport(AreaPlotPanel, { rootMargin: "-1.0px" })
+    handleViewport(BigwigPlotPanel, { rootMargin: "-1.0px" })
   )
 );
