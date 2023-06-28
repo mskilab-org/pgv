@@ -34,6 +34,8 @@ const initState = {
   files: [],
   hoveredLocation: null,
   zoomedByCmd: true,
+  bigwigsYRange: [0, 1],
+  globalBigwigYScale: true,
 };
 
 export default function appReducer(state = initState, action) {
@@ -121,6 +123,8 @@ export default function appReducer(state = initState, action) {
       return { ...state, renderOutsideViewPort: action.renderOutsideViewPort };
     case actions.ZOOM_BY_CMD_ENABLED:
       return { ...state, zoomedByCmd: action.zoomedByCmd };
+    case actions.GLOBAL_BIGWIG_Y_SCALE_ENABLED:
+      return { ...state, globalBigwigYScale: action.globalBigwigYScale };
     case actions.PHYLOGENY_NODES_HIGHLIGHTED:
       return { ...state, highlightedNodes: action.nodes };
     case actions.PHYLOGENY_PANEL_HEIGHT_UPDATED:

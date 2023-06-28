@@ -187,6 +187,8 @@ class BigwigPlot extends Component {
       data,
       defaultDomain,
       plotType,
+      bigwigsYRange,
+      globalBigwigYScale,
     } = this.props;
 
     let stageWidth = width - 2 * margins.gapX;
@@ -225,7 +227,9 @@ class BigwigPlot extends Component {
         .domain(defaultDomain)
         .range([0, panelWidth]);
 
-      let yExtent = d3.extent(dataPoints, (e) => e.y);
+      let yExtent = globalBigwigYScale
+        ? bigwigsYRange
+        : d3.extent(dataPoints, (e) => e.y);
 
       let yScale = d3
         .scaleLinear()
@@ -304,7 +308,7 @@ class BigwigPlot extends Component {
                         .y1((e, j) => panel.yScale(e.y))(panel.dataPoints)}
                     />
                   )}
-                  {plotType === "dots" &&
+                  {plotType === "scatterplot" &&
                     panel.dataPoints.map((d) => (
                       <circle
                         cx={panel.xScale(d.x)}
@@ -379,6 +383,8 @@ const mapStateToProps = (state) => ({
   hoveredLocation: state.App.hoveredLocation,
   hoveredLocationPanelIndex: state.App.hoveredLocationPanelIndex,
   zoomedByCmd: state.App.zoomedByCmd,
+  bigwigsYRange: state.App.bigwigsYRange,
+  globalBigwigYScale: state.App.globalBigwigYScale,
 });
 export default connect(
   mapStateToProps,

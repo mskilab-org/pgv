@@ -16,6 +16,7 @@ const actions = {
   BIGWIG_PLOT_ADDED: "BIGWIG_PLOT_ADDED",
   HOVERED_LOCATION_UPDATED: "HOVERED_LOCATION_UPDATED",
   ZOOM_BY_CMD_ENABLED: "ZOOM_BY_CMD_ENABLED",
+  GLOBAL_BIGWIG_Y_SCALE_ENABLED: "GLOBAL_BIGWIG_Y_SCALE_ENABLED",
   launchApp: (files, selectedTags) => ({
     type: actions.LAUNCH_APP,
     files,
@@ -44,6 +45,10 @@ const actions = {
   updateZoomedByCmd: (zoomedByCmd) => ({
     type: actions.ZOOM_BY_CMD_ENABLED,
     zoomedByCmd,
+  }),
+  updateGlobalBigwigYScale: (globalBigwigYScale) => ({
+    type: actions.GLOBAL_BIGWIG_Y_SCALE_ENABLED,
+    globalBigwigYScale,
   }),
   updateRenderOutsideViewport: (renderOutsideViewPort) => ({
     type: actions.RENDER_OUTSIDE_VIEWPORT_UPDATED,

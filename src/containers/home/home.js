@@ -210,6 +210,7 @@ class Home extends Component {
           <BigwigPlotPanel
             {...{
               data: d.data,
+              defaultChartType: d.defaultChartType,
               title: d.title,
               chromoBins,
               visible: d.visible,

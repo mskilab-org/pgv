@@ -83,6 +83,15 @@
         "type": "bigwig",
         "server": "http://higlass.io",
         "uuid": "AOR9BgKaS4WPX7esuBM4sQ",
+        "defaultChartType": "area",
+        "visible": true
+      },
+      {
+        "sample": "7L",
+        "type": "bigwig",
+        "server": "http://higlass.io",
+        "uuid": "S61ggUe5SYCFGcH-TbqB9g",
+        "defaultChartType": "scatterplot",
         "visible": true
       }
     ]

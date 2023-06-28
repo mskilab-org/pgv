@@ -39,7 +39,14 @@ const margins = {
 
 class BigwigPlotPanel extends Component {
   container = null;
-  state = { plotType: "area" };
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      plotType: props.defaultChartType,
+    };
+  }
 
   onDownloadButtonClicked = () => {
     htmlToImage
@@ -117,7 +124,7 @@ class BigwigPlotPanel extends Component {
                       icon: <AiOutlineAreaChart />,
                     },
                     {
-                      value: "dots",
+                      value: "scatterplot",
                       icon: <AiOutlineDotChart />,
                     },
                   ]}
@@ -212,7 +219,9 @@ class BigwigPlotPanel extends Component {
   }
 }
 BigwigPlotPanel.propTypes = {};
-BigwigPlotPanel.defaultProps = {};
+BigwigPlotPanel.defaultProps = {
+  defaultChartType: "area",
+};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   domains: state.App.domains,

@@ -159,6 +159,13 @@ function* fetchHiglassData(action) {
       console.log(higlassServer, error);
       genes = [];
     });
+  properties.bigwigsYRange = d3.extent(
+    properties.plots
+      .filter((d) => d.type === "bigwig")
+      .map((d) => d.data)
+      .flat()
+      .map((d) => d.y)
+  );
   yield put({ type: actions.HIGLASS_LOADED, properties });
 }
 
@@ -480,6 +487,12 @@ function* launchApplication(action) {
       connectionsAssociations,
       samples,
       genesPinned: +searchParams.get("genesPinned") === 1,
+      bigwigsYRange: d3.extent(
+        plots
+          .filter((d) => d.type === "bigwig")
+          .map((d) => d.data)
+          .flat()
+      ),
     };
     yield put({ type: actions.LAUNCH_APP_SUCCESS, properties });
   } else {

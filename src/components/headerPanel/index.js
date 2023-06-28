@@ -38,6 +38,7 @@ const {
   updateDomains,
   updatePhylogenyPanelHeight,
   addBigwigPlot,
+  updateGlobalBigwigYScale,
 } = appActions;
 
 const PHYLOGENY_PANEL_HEIGHT = { min: 50, max: 500, default: 200, step: 10 };
@@ -111,6 +112,10 @@ class HeaderPanel extends Component {
     this.props.updateZoomedByCmd(checked);
   };
 
+  onGlobalBigwigYScaleChanged = (checked) => {
+    this.props.updateGlobalBigwigYScale(checked);
+  };
+
   render() {
     const {
       t,
@@ -126,6 +131,7 @@ class HeaderPanel extends Component {
       selectedConnectionIds,
       phylogenyPanelHeight,
       higlassDatafiles,
+      globalBigwigYScale,
     } = this.props;
     let tags = [...new Set(selectedFiles.map((d) => d.tags).flat())];
     let title = selectedFiles.map((d) => d.file).join(", ");
@@ -373,6 +379,24 @@ class HeaderPanel extends Component {
                   </Space>
                 </Tooltip>
               </Col>
+              <Col span={24}>
+                <Tooltip
+                  title={t(
+                    "components.settings-panel.global-bigwig-y-scale-help"
+                  )}
+                >
+                  <Space>
+                    <Switch
+                      onChange={(checked) =>
+                        this.onGlobalBigwigYScaleChanged(checked)
+                      }
+                      size="small"
+                      checked={globalBigwigYScale}
+                    />
+                    {t("components.settings-panel.global-bigwig-y-scale")}
+                  </Space>
+                </Tooltip>
+              </Col>
             </Row>
           </Drawer>
         </PageHeader>
@@ -391,8 +415,9 @@ const mapDispatchToProps = (dispatch) => ({
   updateGenesPin: (genesPinned) => dispatch(updateGenesPin(genesPinned)),
   updatePhylogenyPin: (phylogenyPinned) =>
     dispatch(updatePhylogenyPin(phylogenyPinned)),
-  updateZoomedByCmd: (checked) =>
-  dispatch(updateZoomedByCmd(checked)),
+  updateZoomedByCmd: (checked) => dispatch(updateZoomedByCmd(checked)),
+  updateGlobalBigwigYScale: (checked) =>
+    dispatch(updateGlobalBigwigYScale(checked)),
   updateRenderOutsideViewport: (renderOutsideViewPort) =>
     dispatch(updateRenderOutsideViewport(renderOutsideViewPort)),
   updateDomains: (domains) => dispatch(updateDomains(domains)),
@@ -414,6 +439,7 @@ const mapStateToProps = (state) => ({
   phylogenyPanelHeight: state.App.phylogenyPanelHeight,
   selectedFiles: state.App.selectedFiles,
   higlassDatafiles: state.App.higlassDatafiles,
+  globalBigwigYScale: state.App.globalBigwigYScale,
 });
 export default connect(
   mapStateToProps,
