@@ -309,15 +309,18 @@ class BigwigPlot extends Component {
                     />
                   )}
                   {plotType === "scatterplot" &&
-                    panel.dataPoints.map((d) => (
-                      <circle
-                        cx={panel.xScale(d.x)}
-                        cy={panel.yScale(d.y)}
-                        r={2.5}
-                        fill={"#69b3a2"}
-                        opacity={0.5}
-                      />
-                    ))}
+                    panel.dataPoints.map(
+                      (d) =>
+                        !isNaN(d.y) && (
+                          <circle
+                            cx={panel.xScale(d.x)}
+                            cy={panel.yScale(d.y)}
+                            r={2.5}
+                            fill="#69b3a2"
+                            opacity={0.5}
+                          />
+                        )
+                    )}
                 </g>
 
                 <Grid
