@@ -26,6 +26,7 @@ import {
   AiOutlineAreaChart,
   AiOutlineClose,
 } from "react-icons/ai";
+import { TbAxisY } from "react-icons/tb";
 import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
@@ -47,6 +48,7 @@ class BigwigPlotPanel extends Component {
 
     this.state = {
       plotType: props.defaultChartType,
+      commonYScale: false,
     };
   }
 
@@ -68,6 +70,10 @@ class BigwigPlotPanel extends Component {
     this.setState({ plotType });
   };
 
+  handleCommonYScaleChange = (commonYScale) => {
+    this.setState({ commonYScale });
+  };
+
   render() {
     const {
       t,
@@ -83,7 +89,7 @@ class BigwigPlotPanel extends Component {
       toggleVisibility,
       zoomedByCmd,
     } = this.props;
-    const { plotType } = this.state;
+    const { plotType, commonYScale } = this.state;
     return (
       <Wrapper visible={visible}>
         <Card
@@ -114,13 +120,18 @@ class BigwigPlotPanel extends Component {
               )}
               {tag && (
                 <span className="ant-pro-menu-item-title">
-                  <Tag color={TAG_COLOR[tag]}>{tag}</Tag>
+                  <Tag bordered={false} color={TAG_COLOR[tag]}>
+                    {tag}
+                  </Tag>
                 </span>
               )}
             </Space>
           }
           extra={
             <Space>
+              {zoomedByCmd && (
+                <Text type="secondary">{t("components.zoom-help")}</Text>
+              )}
               {
                 <Segmented
                   size="small"
@@ -138,9 +149,41 @@ class BigwigPlotPanel extends Component {
                   ]}
                 />
               }
-              {zoomedByCmd && (
-                <Text type="secondary">{t("components.zoom-help")}</Text>
-              )}
+              {
+                <Segmented
+                  size="small"
+                  defaultValue={commonYScale}
+                  onChange={(commonYScale) =>
+                    this.handleCommonYScaleChange(commonYScale)
+                  }
+                  options={[
+                    {
+                      value: true,
+                      label: (
+                        <Tooltip
+                          title={t("components.area-panel.common-yscale-help")}
+                        >
+                          {t("components.area-panel.common-yscale")}
+                        </Tooltip>
+                      ),
+                      icon: <TbAxisY />,
+                    },
+                    {
+                      value: false,
+                      label: (
+                        <Tooltip
+                          title={t(
+                            "components.area-panel.distinct-yscale-help"
+                          )}
+                        >
+                          {t("components.area-panel.distinct-yscale")}
+                        </Tooltip>
+                      ),
+                      icon: <TbAxisY />,
+                    },
+                  ]}
+                />
+              }
               <Tooltip title={t("components.download-as-png-tooltip")}>
                 <Button
                   type="default"
@@ -200,6 +243,7 @@ class BigwigPlotPanel extends Component {
                                 data,
                                 tag,
                                 plotType,
+                                commonYScale,
                               }}
                             />
                           ) : (

@@ -190,6 +190,7 @@ class BigwigPlot extends Component {
       tag,
       bigwigsYRange,
       globalBigwigYScale,
+      commonYScale,
     } = this.props;
 
     let stageWidth = width - 2 * margins.gapX;
@@ -228,9 +229,10 @@ class BigwigPlot extends Component {
         .domain(defaultDomain)
         .range([0, panelWidth]);
 
-      let yExtent = tag === "bigwig_atac" && globalBigwigYScale
-        ? bigwigsYRange
-        : d3.extent(dataPoints, (e) => e.y);
+      let yExtent =
+        tag === "bigwig_atac" && globalBigwigYScale
+          ? bigwigsYRange
+          : d3.extent(dataPoints, (e) => e.y);
 
       let yScale = d3
         .scaleLinear()
@@ -255,6 +257,20 @@ class BigwigPlot extends Component {
       });
     });
 
+    if (commonYScale) {
+      let extent = d3.extent(this.panels.map((d) => d.yScale.domain()).flat());
+      let commonYScale = d3
+        .scaleLinear()
+        .domain(extent)
+        .range([panelHeight, 0])
+        .nice();
+      let commonYTicks = commonYScale.ticks(margins.yTicksCount);
+      commonYTicks[commonYTicks.length - 1] = commonYScale.domain()[1];
+      this.panels.forEach((d) => {
+        d.yScale = commonYScale;
+        d.yTicks = commonYTicks;
+      });
+    }
     return (
       <Wrapper className="ant-wrapper" margins={margins}>
         <div

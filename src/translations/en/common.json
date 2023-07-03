@@ -131,7 +131,11 @@
       "header": "Area Chart",
       "datapoint": "datapoint",
       "datapoint_plural": "datapoints",
-      "title": "Area data Track"
+      "title": "Area data Track",
+      "common-yscale": "Common",
+      "distinct-yscale": "Distinct",
+      "common-yscale-help": "The same Y-axis range is applied on all panels in this track",
+      "distinct-yscale-help": "Each panel in this track has an optimised Y-axis range"
     },
     "genes-panel": {
       "header": "Genes",
