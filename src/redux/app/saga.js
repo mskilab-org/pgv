@@ -161,7 +161,7 @@ function* fetchHiglassData(action) {
     });
   properties.bigwigsYRange = d3.extent(
     properties.plots
-      .filter((d) => d.type === "bigwig")
+      .filter((d) => d.type === "bigwig" && d.tag === "bigwig_atac")
       .map((d) => d.data)
       .flat()
       .map((d) => d.y)

@@ -14,6 +14,7 @@ import {
   Alert,
   Typography,
   Segmented,
+  Tag,
 } from "antd";
 import * as d3 from "d3";
 import { withTranslation } from "react-i18next";
@@ -31,6 +32,7 @@ import Wrapper from "./index.style";
 import BigwigPlot from "../bigwigPlot";
 
 const { Text } = Typography;
+const TAG_COLOR = { bigwig_coverage: "#f50", bigwig_atac: "#2db7f5" };
 
 const margins = {
   padding: 0,
@@ -77,6 +79,7 @@ class BigwigPlotPanel extends Component {
       renderOutsideViewPort,
       visible,
       index,
+      tag,
       toggleVisibility,
       zoomedByCmd,
     } = this.props;
@@ -108,6 +111,11 @@ class BigwigPlotPanel extends Component {
                 false && (
                   <Text type="danger">{t("general.invalid-arrow-file")}</Text>
                 )
+              )}
+              {tag && (
+                <span className="ant-pro-menu-item-title">
+                  <Tag color={TAG_COLOR[tag]}>{tag}</Tag>
+                </span>
               )}
             </Space>
           }
@@ -190,6 +198,7 @@ class BigwigPlotPanel extends Component {
                                 height,
                                 domains,
                                 data,
+                                tag,
                                 plotType,
                               }}
                             />

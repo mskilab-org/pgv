@@ -84,6 +84,7 @@
         "server": "http://higlass.io",
         "uuid": "AOR9BgKaS4WPX7esuBM4sQ",
         "defaultChartType": "area",
+        "tag": "bigwig_atac",
         "visible": true
       },
       {
@@ -92,6 +93,16 @@
         "server": "http://higlass.io",
         "uuid": "S61ggUe5SYCFGcH-TbqB9g",
         "defaultChartType": "scatterplot",
+        "tag": "bigwig_coverage",
+        "visible": true
+      },
+      {
+        "sample": "7L",
+        "type": "bigwig",
+        "server": "http://higlass.io",
+        "uuid": "E36VpigUTAaHI-_pm1hGsA",
+        "defaultChartType": "scatterplot",
+        "tag": "bigwig_atac",
         "visible": true
       }
     ]

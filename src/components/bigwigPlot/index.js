@@ -187,6 +187,7 @@ class BigwigPlot extends Component {
       data,
       defaultDomain,
       plotType,
+      tag,
       bigwigsYRange,
       globalBigwigYScale,
     } = this.props;
@@ -227,7 +228,7 @@ class BigwigPlot extends Component {
         .domain(defaultDomain)
         .range([0, panelWidth]);
 
-      let yExtent = globalBigwigYScale
+      let yExtent = tag === "bigwig_atac" && globalBigwigYScale
         ? bigwigsYRange
         : d3.extent(dataPoints, (e) => e.y);
 

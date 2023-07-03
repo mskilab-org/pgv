@@ -211,6 +211,7 @@ class Home extends Component {
             {...{
               data: d.data,
               defaultChartType: d.defaultChartType,
+              tag: d.tag,
               title: d.title,
               chromoBins,
               visible: d.visible,
