@@ -23,7 +23,11 @@ import {
   AiOutlineRight,
   AiOutlineClose,
 } from "react-icons/ai";
-import { downloadCanvasAsPng, transitionStyle } from "../../helpers/utility";
+import {
+  downloadCanvasAsPng,
+  transitionStyle,
+  domainsToLocation,
+} from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
 import BarPlot from "../barPlot";
@@ -44,7 +48,12 @@ class BarPlotPanel extends Component {
       .then((canvas) => {
         downloadCanvasAsPng(
           canvas,
-          `${this.props.title.replace(/\s+/g, "_").toLowerCase()}.png`
+          `${this.props.title
+            .replace(/\s+/g, "_")
+            .toLowerCase()}_${domainsToLocation(
+            this.props.chromoBins,
+            this.props.domains
+          )}.png`
         );
       })
       .catch((error) => {
@@ -182,6 +191,7 @@ BarPlotPanel.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({});
 const mapStateToProps = (state) => ({
   domains: state.App.domains,
+  chromoBins: state.App.chromoBins,
   renderOutsideViewPort: state.App.renderOutsideViewPort,
   zoomedByCmd: state.App.zoomedByCmd,
 });

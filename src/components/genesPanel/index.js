@@ -17,7 +17,12 @@ import {
 } from "antd";
 import * as d3 from "d3";
 import { AiOutlineDownload } from "react-icons/ai";
-import { downloadCanvasAsPng, merge, cluster } from "../../helpers/utility";
+import {
+  downloadCanvasAsPng,
+  merge,
+  cluster,
+  domainsToLocation,
+} from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import { CgArrowsBreakeH } from "react-icons/cg";
 import Wrapper from "./index.style";
@@ -43,10 +48,12 @@ class GenesPanel extends Component {
       .then((canvas) => {
         downloadCanvasAsPng(
           canvas,
-          `${this.props
-            .t("components.genes-panel.header")
+          `${this.props.title
             .replace(/\s+/g, "_")
-            .toLowerCase()}.png`
+            .toLowerCase()}_${domainsToLocation(
+            this.props.chromoBins,
+            this.props.domains
+          )}.png`
         );
       })
       .catch((error) => {
@@ -175,6 +182,7 @@ const mapDispatchToProps = (dispatch) => ({
 const mapStateToProps = (state) => ({
   chromoBins: state.App.chromoBins,
   domains: state.App.domains,
+  chromoBins: state.App.chromoBins,
   renderOutsideViewPort: state.App.renderOutsideViewPort,
   genomeLength: state.App.genomeLength,
   genesList: state.App.genes,

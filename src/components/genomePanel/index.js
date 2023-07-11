@@ -26,6 +26,7 @@ import {
   transitionStyle,
   merge,
   cluster,
+  domainsToLocation,
 } from "../../helpers/utility";
 import * as htmlToImage from "html-to-image";
 import Wrapper from "./index.style";
@@ -93,7 +94,12 @@ class GenomePanel extends Component {
       .then((canvas) => {
         downloadCanvasAsPng(
           canvas,
-          `${this.props.title.replace(/\s+/g, "_").toLowerCase()}.png`
+          `${this.props.title
+            .replace(/\s+/g, "_")
+            .toLowerCase()}_${domainsToLocation(
+            this.props.chromoBins,
+            this.props.domains
+          )}.png`
         );
       })
       .catch((error) => {
@@ -268,6 +274,7 @@ const mapStateToProps = (state) => ({
   genomeLength: state.App.genomeLength,
   zoomedByCmd: state.App.zoomedByCmd,
   domains: state.App.domains,
+  chromoBins: state.App.chromoBins,
 });
 export default connect(
   mapStateToProps,
