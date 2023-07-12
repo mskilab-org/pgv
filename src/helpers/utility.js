@@ -473,3 +473,43 @@ export function combinations(set) {
   }
   return combs;
 }
+
+export function assignUniqueYValues(intervals) {
+  // Step 1: Sort intervals based on start points
+  intervals.sort((a, b) => d3.ascending(a.startPoint, b.startPoint));
+
+  // Step 2: Initialize result array
+  const result = [];
+
+  // Step 3: Initialize currentY
+  let currentY = 1;
+
+  // Step 4: Iterate over intervals
+  for (const interval of intervals) {
+    // Step 4a: Check for overlaps
+    let maxOverlapY = 0;
+    for (const resultInterval of result) {
+      if (
+        interval.startPoint <= resultInterval.endPoint &&
+        interval.endPoint >= resultInterval.startPoint
+      ) {
+        maxOverlapY = Math.max(maxOverlapY, resultInterval.y);
+      }
+    }
+
+    // Step 4b: Update y value if overlap found
+    if (maxOverlapY >= currentY) {
+      interval.y = maxOverlapY + 1;
+      currentY = maxOverlapY + 2;
+    } else {
+      interval.y = currentY;
+      currentY++;
+    }
+
+    // Step 4c: Add updated interval to result
+    result.push(interval);
+  }
+
+  // Step 5: Return updated intervals
+  return result;
+}

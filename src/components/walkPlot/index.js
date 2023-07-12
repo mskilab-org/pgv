@@ -13,6 +13,7 @@ import {
   k_combinations,
   cluster,
   merge,
+  assignUniqueYValues,
 } from "../../helpers/utility";
 import Grid from "../grid/index";
 import appActions from "../../redux/app/actions";
@@ -41,6 +42,27 @@ class WalkPlot extends Component {
     this.yScale = d3.scaleLinear();
     let intervals = [];
     let frameConnections = [];
+
+    let panelHeight = this.props.height - 3 * margins.gap;
+    // align y values to get the walk intervals nicely positioned
+    d3.groups(walks.map((d) => d.iids).flat(), (d) => d.chromosome).forEach(
+      (group, i) => {
+        group[1] = assignUniqueYValues(group[1]);
+        let yValues = [...new Set(group[1].map((e) => e.y))].sort((a, b) =>
+          d3.ascending(a, b)
+        );
+        let bandScale = d3
+          .scaleBand()
+          .domain(yValues)
+          .range([panelHeight, 0])
+          .paddingInner(0.1)
+          .paddingOuter(1)
+          .align(0.5)
+          .round(true);
+        group[1].forEach((e) => (e.y = bandScale(e.y)));
+      }
+    );
+
     let walksAll = walks.map((wlk, i) => {
       let walk = new Walk(wlk);
       walk.intervals = walk.iids.map((d, i) => {
@@ -152,10 +174,10 @@ class WalkPlot extends Component {
       };
       return panel;
     });
-    this.yDomain = [
-      d3.min(this.panels.map((d) => d.intervals).flat(), (d) => d.y) - 0.1,
-      d3.max(this.panels.map((d) => d.intervals).flat(), (d) => d.y) + 3,
-    ];
+    this.yDomain = d3.extent(
+      this.panels.map((d) => d.intervals).flat(),
+      (d) => d.y
+    );
     this.yScale = d3
       .scaleLinear()
       .domain(this.yDomain)
