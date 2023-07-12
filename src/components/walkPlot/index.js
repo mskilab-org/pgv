@@ -13,7 +13,6 @@ import {
   k_combinations,
   cluster,
   merge,
-  assignUniqueYValues,
 } from "../../helpers/utility";
 import Grid from "../grid/index";
 import appActions from "../../redux/app/actions";
@@ -47,7 +46,6 @@ class WalkPlot extends Component {
     // align y values to get the walk intervals nicely positioned
     d3.groups(walks.map((d) => d.iids).flat(), (d) => d.chromosome).forEach(
       (group, i) => {
-        group[1] = assignUniqueYValues(group[1]);
         let yValues = [...new Set(group[1].map((e) => e.y))].sort((a, b) =>
           d3.ascending(a, b)
         );
