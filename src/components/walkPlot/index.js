@@ -46,7 +46,11 @@ class WalkPlot extends Component {
     // align y values to get the walk intervals nicely positioned
     d3.groups(walks.map((d) => d.iids).flat(), (d) => d.chromosome).forEach(
       (group, i) => {
-        let yValues = [...new Set(group[1].map((e) => e.y))].sort((a, b) =>
+        let intervals = group[1];
+
+        intervals = this.repositionYposIntervals(intervals);
+
+        let yValues = [...new Set(intervals.map((e) => e.y))].sort((a, b) =>
           d3.ascending(a, b)
         );
         let bandScale = d3
@@ -54,10 +58,10 @@ class WalkPlot extends Component {
           .domain(yValues)
           .range([panelHeight, 0])
           .paddingInner(0.1)
-          .paddingOuter(1)
+          .paddingOuter(0.5)
           .align(0.5)
           .round(true);
-        group[1].forEach((e) => (e.y = bandScale(e.y)));
+        intervals.forEach((e) => (e.y = bandScale(e.y)));
       }
     );
 
@@ -113,6 +117,23 @@ class WalkPlot extends Component {
       },
     };
   }
+
+  repositionYposIntervals = (intervals) => {
+    intervals.forEach((i1, i) => {
+      intervals.forEach((j1, j) => {
+        if (i1.iid !== j1.iid) {
+          if (
+            i1.y === j1.y &&
+            d3.max([i1.startPoint, j1.startPoint]) <
+              d3.min([i1.endPoint, j1.endPoint])
+          ) {
+            j1.y += 10 * Math.random();
+          }
+        }
+      });
+    });
+    return intervals;
+  };
 
   updatePanels() {
     const { intervals, frameConnections } = this.state;
@@ -178,7 +199,7 @@ class WalkPlot extends Component {
     );
     this.yScale = d3
       .scaleLinear()
-      .domain(this.yDomain)
+      .domain([this.yDomain[0] - margins.bar, this.yDomain[1] + margins.bar])
       .range([panelHeight, 0])
       .nice();
     this.panels.forEach((panel, i) => {
