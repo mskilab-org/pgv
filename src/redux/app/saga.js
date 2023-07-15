@@ -65,6 +65,9 @@ function* fetchHiglassData(action) {
   const currentState = yield select(getCurrentState);
   let { maxGenomeLength, higlassServer, higlassGeneFileUUID } =
     currentState.App;
+  if (!higlassGeneFileUUID) {
+    return;
+  }
   let newTilesets = action.domains.map((d, i) => {
     let zoom = 2 + Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
     let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);

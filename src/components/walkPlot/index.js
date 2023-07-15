@@ -42,29 +42,38 @@ class WalkPlot extends Component {
     let intervals = [];
     let frameConnections = [];
 
-    let panelHeight = this.props.height - 3 * margins.gap;
     // align y values to get the walk intervals nicely positioned
     d3.groups(walks.map((d) => d.iids).flat(), (d) => d.chromosome).forEach(
       (group, i) => {
         let intervals = group[1];
-
-        intervals = this.repositionYposIntervals(intervals);
-
-        let yValues = [...new Set(intervals.map((e) => e.y))].sort((a, b) =>
-          d3.ascending(a, b)
+        intervals.forEach((d) => (d.y = 0));
+        intervals = intervals.sort((a, b) =>
+          d3.descending(a.endPoint - a.startPoint, b.endPoint - b.startPoint)
         );
-        let bandScale = d3
-          .scaleBand()
-          .domain(yValues)
-          .range([panelHeight, 0])
-          .paddingInner(0.1)
-          .paddingOuter(0.5)
-          .align(0.5)
-          .round(true);
-        intervals.forEach((e) => (e.y = bandScale(e.y)));
+        let processedIntervals = [];
+
+        intervals.forEach((interval) => {
+          let maxY =
+            d3.max(
+              processedIntervals.filter(
+                (d) =>
+                  d.y === interval.y ||
+                  d3.max([interval.startPoint, d.startPoint]) <=
+                    d3.min([interval.endPoint, d.endPoint])
+              ),
+              (d) => d.y
+            ) || 0;
+          interval.y = maxY + 1;
+          processedIntervals.push(interval);
+        });
+        intervals = processedIntervals;
       }
     );
-
+    let maximumY = d3.max(walks.map((d) => d.iids).flat(), (d) => d.y);
+    let maxNeededHeight = d3.max([
+      maximumY * margins.bar * 1.5 + 3 * margins.gap,
+      this.props.height,
+    ]);
     let walksAll = walks.map((wlk, i) => {
       let walk = new Walk(wlk);
       walk.intervals = walk.iids.map((d, i) => {
@@ -102,6 +111,7 @@ class WalkPlot extends Component {
     });
 
     this.state = {
+      height: maxNeededHeight,
       walksAll,
       intervals,
       frameConnections,
@@ -118,26 +128,9 @@ class WalkPlot extends Component {
     };
   }
 
-  repositionYposIntervals = (intervals) => {
-    intervals.forEach((i1, i) => {
-      intervals.forEach((j1, j) => {
-        if (i1.iid !== j1.iid) {
-          if (
-            i1.y === j1.y &&
-            d3.max([i1.startPoint, j1.startPoint]) <
-              d3.min([i1.endPoint, j1.endPoint])
-          ) {
-            j1.y += 10 * Math.random();
-          }
-        }
-      });
-    });
-    return intervals;
-  };
-
   updatePanels() {
-    const { intervals, frameConnections } = this.state;
-    let { domains, width, height, defaultDomain } = this.props;
+    const { intervals, frameConnections, height } = this.state;
+    let { domains, width, defaultDomain } = this.props;
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 3 * margins.gap;
     let panelWidth =
@@ -199,8 +192,8 @@ class WalkPlot extends Component {
     );
     this.yScale = d3
       .scaleLinear()
-      .domain([this.yDomain[0] - margins.bar, this.yDomain[1] + margins.bar])
-      .range([panelHeight, 0])
+      .domain(this.yDomain)
+      .range([panelHeight - margins.bar, margins.bar])
       .nice();
     this.panels.forEach((panel, i) => {
       let { domain, scale } = panel;
@@ -458,8 +451,8 @@ class WalkPlot extends Component {
   }
 
   handleMouseMove = (e) => {
-    const { width, height } = this.props;
-    const { intervals } = this.state;
+    const { width } = this.props;
+    const { intervals, height } = this.state;
     let primaryKey = d3.select(e.target) && d3.select(e.target).attr("id");
     let shapeClass = d3.select(e.target) && d3.select(e.target).attr("class");
     let shapeType = d3.select(e.target) && d3.select(e.target).attr("type");
@@ -562,8 +555,8 @@ class WalkPlot extends Component {
   };
 
   render() {
-    const { width, height, selectedConnectionIds } = this.props;
-    const { stageWidth, stageHeight, tooltip } = this.state;
+    const { width, selectedConnectionIds } = this.props;
+    const { stageWidth, stageHeight, height, tooltip } = this.state;
 
     this.updatePanels();
 
