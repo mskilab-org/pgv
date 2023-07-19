@@ -571,7 +571,7 @@ class WalkPlot extends Component {
         >
           <defs>
             <clipPath key={`cuttOffViewPane`} id={`cuttOffViewPane`}>
-              <rect x={0} y={0} width={stageWidth} height={height} />
+              <rect x={0} y={0} width={stageWidth} height={20 * height} />
             </clipPath>
             {this.panels.map((panel, i) => (
               <clipPath
@@ -582,7 +582,7 @@ class WalkPlot extends Component {
                   x={0}
                   y={0}
                   width={panel.panelWidth}
-                  height={2 * height}
+                  height={20 * height}
                 />
               </clipPath>
             ))}
