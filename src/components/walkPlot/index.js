@@ -139,7 +139,8 @@ class WalkPlot extends Component {
     this.connections = [];
     this.panels = domains.map((domain, index) => {
       let filteredIntervals = intervals.filter(
-        (d) => d.startPlace <= domain[1] && d.endPlace >= domain[0]
+        (d) =>
+          d3.max([d.startPlace, domain[0]]) <= d3.min([d.endPlace, domain[1]])
       );
 
       const xScale = d3.scaleLinear().domain(domain).range([0, panelWidth]);
