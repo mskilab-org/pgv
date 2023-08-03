@@ -80,16 +80,18 @@ function* fetchHiglassData(action) {
 
   yield axios
     .all(
-      bigwigs.map((plot) =>
-        axios.get(
-          `${plot.server}/api/v1/tiles/?${newTilesets
-            .map((d, i) =>
-              d.tiles.map((e, j) => `d=${plot.uuid}.${d.zoom}.${e}`)
-            )
-            .flat()
-            .join("&")}`
+      bigwigs
+        .filter((plot) => plot.uuid)
+        .map((plot) =>
+          axios.get(
+            `${plot.server}/api/v1/tiles/?${newTilesets
+              .map((d, i) =>
+                d.tiles.map((e, j) => `d=${plot.uuid}.${d.zoom}.${e}`)
+              )
+              .flat()
+              .join("&")}`
+          )
         )
-      )
     )
     .then(
       axios.spread((...responses) => {
@@ -170,20 +172,26 @@ function* fetchHiglassData(action) {
 }
 
 function* launchApplication(action) {
-  const { responseSettings, responseDatafiles } = yield axios
-    .all([axios.get("settings.json"), axios.get("datafiles.json")])
-    .then(
-      axios.spread((responseSettings, responseDatafiles) => {
-        return { ...{ responseSettings, responseDatafiles } };
-      })
-    )
-    .catch((errors) => {
-      console.log("got errors", errors);
-    });
-  if (responseSettings && responseDatafiles) {
-    let settings = responseSettings.data;
-    let datafiles = responseDatafiles.data;
-
+  const currentState = yield select(getCurrentState);
+  let { settings, datafilesJSON } = currentState.App;
+  let datafiles = datafilesJSON;
+  let errorLoading = false;
+  if (!settings || !datafiles) {
+    const { responseSettings, responseDatafiles } = yield axios
+      .all([axios.get("settings.json"), axios.get("datafiles.json")])
+      .then(
+        axios.spread((responseSettings, responseDatafiles) => {
+          return { ...{ responseSettings, responseDatafiles } };
+        })
+      )
+      .catch((errors) => {
+        errorLoading = true;
+        console.log("got errors", errors);
+      });
+    settings = responseSettings.data;
+    datafiles = responseDatafiles.data;
+  }
+  if (!errorLoading) {
     let files = Object.keys(datafiles)
       .map((key, i) => {
         let d = datafiles[key];
@@ -476,6 +484,7 @@ function* launchApplication(action) {
       defaultDomain,
       genomeLength,
       datafiles: files,
+      datafilesJSON: datafiles,
       filteredFiles,
       filteredTags,
       selectedCoordinate,
@@ -485,6 +494,7 @@ function* launchApplication(action) {
       chromoBins,
       plots,
       connectionsAssociations,
+      settings,
       samples,
       genesPinned: +searchParams.get("genesPinned") === 1,
       bigwigsYRange: d3.extent(

@@ -7,6 +7,8 @@ const initState = {
   higlassDatafiles: [],
   higlassGeneFileUUID: [],
   datafiles: [],
+  datafilesJSON: null,
+  settings: null,
   selectedTags: [],
   filteredTags: [],
   filteredFiles: [],
