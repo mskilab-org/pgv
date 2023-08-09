@@ -164,6 +164,7 @@ class Home extends Component {
           <WalkPanel
             {...{
               loading,
+              maximumY: d.data.maximumY,
               walks: d.data.walks,
               title: d.title,
               chromoBins: chromoBins,

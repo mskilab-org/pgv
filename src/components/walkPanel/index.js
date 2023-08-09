@@ -24,6 +24,9 @@ import Wrapper from "./index.style";
 
 const margins = {
   padding: 0,
+  gap: 24,
+  bar: 10,
+  minHeight: 400,
 };
 
 const { Text } = Typography;
@@ -54,6 +57,7 @@ class WalkPanel extends Component {
     const {
       t,
       walks,
+      maximumY,
       title,
       inViewport,
       renderOutsideViewPort,
@@ -64,7 +68,7 @@ class WalkPanel extends Component {
     } = this.props;
 
     return (
-      <Wrapper visible={visible}>
+      <Wrapper visible={visible} minHeight={margins.minHeight}>
         <Card
           style={transitionStyle(inViewport || renderOutsideViewPort)}
           size="small"
@@ -138,7 +142,10 @@ class WalkPanel extends Component {
                       <WalkPlot
                         {...{
                           width: width - 2 * margins.padding,
-                          height,
+                          height: d3.max([
+                            maximumY * margins.bar * 1.5 + 3 * margins.gap,
+                            margins.minHeight,
+                          ]),
                           walks,
                         }}
                       />

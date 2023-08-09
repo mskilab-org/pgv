@@ -42,38 +42,6 @@ class WalkPlot extends Component {
     let intervals = [];
     let frameConnections = [];
 
-    // align y values to get the walk intervals nicely positioned
-    d3.groups(walks.map((d) => d.iids).flat(), (d) => d.chromosome).forEach(
-      (group, i) => {
-        let intervals = group[1];
-        intervals.forEach((d) => (d.y = 0));
-        intervals = intervals.sort((a, b) =>
-          d3.descending(a.endPoint - a.startPoint, b.endPoint - b.startPoint)
-        );
-        let processedIntervals = [];
-
-        intervals.forEach((interval) => {
-          let maxY =
-            d3.max(
-              processedIntervals.filter(
-                (d) =>
-                  d.y === interval.y ||
-                  d3.max([interval.startPoint, d.startPoint]) <=
-                    d3.min([interval.endPoint, d.endPoint])
-              ),
-              (d) => d.y
-            ) || 0;
-          interval.y = maxY + 1;
-          processedIntervals.push(interval);
-        });
-        intervals = processedIntervals;
-      }
-    );
-    let maximumY = d3.max(walks.map((d) => d.iids).flat(), (d) => d.y);
-    let maxNeededHeight = d3.max([
-      maximumY * margins.bar * 1.5 + 3 * margins.gap,
-      this.props.height,
-    ]);
     let walksAll = walks.map((wlk, i) => {
       let walk = new Walk(wlk);
       walk.intervals = walk.iids.map((d, i) => {
@@ -111,7 +79,6 @@ class WalkPlot extends Component {
     });
 
     this.state = {
-      height: maxNeededHeight,
       walksAll,
       intervals,
       frameConnections,
@@ -129,8 +96,8 @@ class WalkPlot extends Component {
   }
 
   updatePanels() {
-    const { intervals, frameConnections, height } = this.state;
-    let { domains, width, defaultDomain } = this.props;
+    const { intervals, frameConnections } = this.state;
+    let { domains, width, defaultDomain, height } = this.props;
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 3 * margins.gap;
     let panelWidth =
@@ -452,8 +419,8 @@ class WalkPlot extends Component {
   }
 
   handleMouseMove = (e) => {
-    const { width } = this.props;
-    const { intervals, height } = this.state;
+    const { width, height } = this.props;
+    const { intervals } = this.state;
     let primaryKey = d3.select(e.target) && d3.select(e.target).attr("id");
     let shapeClass = d3.select(e.target) && d3.select(e.target).attr("class");
     let shapeType = d3.select(e.target) && d3.select(e.target).attr("type");
@@ -556,8 +523,8 @@ class WalkPlot extends Component {
   };
 
   render() {
-    const { width, selectedConnectionIds } = this.props;
-    const { stageWidth, stageHeight, height, tooltip } = this.state;
+    const { width, selectedConnectionIds, height } = this.props;
+    const { stageWidth, tooltip } = this.state;
 
     this.updatePanels();
 

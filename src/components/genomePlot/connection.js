@@ -198,20 +198,20 @@ class Connection {
           [origin, this.yScale(originY)],
           [
             d3.min([origin + Math.sign(originSign) * 5, midPointX - 5]),
-            this.yScale(originY),
+            this.yScale(originY + 0.06),
           ],
           [
             d3.min([origin + Math.sign(originSign) * 25, midPointX - 5]),
-            this.yScale(midPointY + (midPointY < 10 ? 0.5 : 1)),
+            this.yScale(originY + 0.36),
           ],
-          [midPointX, this.yScale(midPointY + (midPointY < 10 ? 0.75 : 2))],
+          [midPointX, this.yScale(midPointY + 0.5)],
           [
             d3.max([target + Math.sign(targetSign) * 25, midPointX + 5]),
-            this.yScale(midPointY + (midPointY < 10 ? 0.5 : 1)),
+            this.yScale(targetY + 0.36),
           ],
           [
             d3.max([target + Math.sign(targetSign) * 5, midPointX + 5]),
-            this.yScale(targetY),
+            this.yScale(targetY + 0.06),
           ],
           [target, this.yScale(targetY)],
         ];

@@ -473,3 +473,35 @@ export function combinations(set) {
   }
   return combs;
 }
+
+/**
+ * align y values to get the walk intervals nicely positioned
+ */
+export function alignWalks(walks) {
+  d3.groups(walks.map((d) => d.iids).flat(), (d) => d.chromosome).forEach(
+    (group, i) => {
+      let intervals = group[1];
+      intervals.forEach((d) => (d.y = 0));
+      intervals = intervals.sort((a, b) =>
+        d3.descending(a.endPoint - a.startPoint, b.endPoint - b.startPoint)
+      );
+      let processedIntervals = [];
+
+      intervals.forEach((interval) => {
+        let maxY =
+          d3.max(
+            processedIntervals.filter(
+              (d) =>
+                d.y === interval.y ||
+                d3.max([interval.startPoint, d.startPoint]) <=
+                  d3.min([interval.endPoint, d.endPoint])
+            ),
+            (d) => d.y
+          ) || 0;
+        interval.y = maxY + 1;
+        processedIntervals.push(interval);
+      });
+      intervals = processedIntervals;
+    }
+  );
+}

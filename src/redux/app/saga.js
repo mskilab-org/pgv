@@ -17,6 +17,7 @@ import {
   domainsToLocation,
   locationToDomains,
   getFloatArray,
+  alignWalks,
 } from "../../helpers/utility";
 import { getCurrentState } from "./selectors";
 
@@ -303,6 +304,7 @@ function* launchApplication(action) {
         source: `genes/${selectedCoordinate}.arrow`,
         path: `genes/${selectedCoordinate}.arrow`,
         visible: +searchParams.get("genes") === 1,
+        data: null,
       },
       ...selectedFiles.map((d) => d.plots).flat(),
     ];
@@ -339,6 +341,17 @@ function* launchApplication(action) {
         .filter((d, i) => ["bigwig"].includes(d.type))
         .map((x) => call(fetchHiglassTileset, x)),
     ]);
+
+    // ensure walk intervals are aligned properly before pushing for rendering
+    plots
+      .filter((d) => d.type === "walk")
+      .forEach((d) => {
+        alignWalks(d.data.walks);
+        d.data.maximumY = d3.max(
+          d.data.walks.map((d) => d.iids).flat(),
+          (d) => d.y
+        );
+      });
 
     let connectionsAssociations = [];
     let samples = [];
