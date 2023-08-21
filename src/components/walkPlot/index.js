@@ -372,7 +372,7 @@ class WalkPlot extends Component {
 
       d3.select(this.container)
         .selectAll(`polygon.interval-wlk${this.state.tooltip.walkId}`)
-        .style("fill-opacity", 0)
+        .style("opacity", 0)
         .transition()
         .duration(500)
         .delay(function (d, i) {
@@ -382,7 +382,7 @@ class WalkPlot extends Component {
             ) * 100
           );
         })
-        .style("fill-opacity", 1);
+        .style("opacity", 1);
 
       d3.select(this.container)
         .selectAll(`path.connection-wlk${this.state.tooltip.walkId}`)
