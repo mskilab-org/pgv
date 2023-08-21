@@ -364,6 +364,42 @@ class WalkPlot extends Component {
             )
         );
     }
+
+    if (this.state.tooltip.walkId) {
+      let walk = this.state.walksAll.find(
+        (d) => d.pid === this.state.tooltip.walkId
+      );
+
+      d3.select(this.container)
+        .selectAll(`polygon.interval-wlk${this.state.tooltip.walkId}`)
+        .style("opacity", 0)
+        .transition()
+        .duration(500)
+        .delay(function (d, i) {
+          return (
+            walk.iids.findIndex(
+              (e) => +e.iid === +d3.select(this).attr("iid")
+            ) * 100
+          );
+        })
+        .style("opacity", 1);
+
+      d3.select(this.container)
+        .selectAll(`path.connection-wlk${this.state.tooltip.walkId}`)
+        .style("opacity", 0)
+        .transition()
+        .duration(500)
+        .delay(function (d, i) {
+          let con = walk.cids.find(
+            (e) => +e.cid === +d3.select(this).attr("cid")
+          );
+          return (
+            walk.iids.findIndex((e) => +e.iid === Math.abs(con.source)) * 100 +
+            50
+          );
+        })
+        .style("opacity", 1);
+    }
   }
 
   zooming(event, index) {
@@ -584,6 +620,22 @@ class WalkPlot extends Component {
                 id={`panel-${panel.index}`}
                 transform={`translate(${[panel.offset, 0]})`}
               >
+                <rect
+                  className="zoom-background"
+                  id={`panel-rect-${panel.index}`}
+                  x={0.5}
+                  width={panel.panelWidth}
+                  height={panel.panelHeight}
+                  onMouseMove={(e) => this.handlePanelMouseMove(e, i)}
+                  onMouseOut={(e) => this.handlePanelMouseOut(e, i)}
+                  style={{
+                    stroke: "steelblue",
+                    fill: "transparent",
+                    strokeWidth: 1,
+                    opacity: 0.375,
+                    pointerEvents: "all",
+                  }}
+                />
                 <g ref={(elem) => (this.grid = elem)}>
                   {
                     <>
@@ -610,30 +662,15 @@ class WalkPlot extends Component {
                     </>
                   }
                 </g>
-                <rect
-                  className="zoom-background"
-                  id={`panel-rect-${panel.index}`}
-                  x={0.5}
-                  width={panel.panelWidth}
-                  height={panel.panelHeight}
-                  onMouseMove={(e) => this.handlePanelMouseMove(e, i)}
-                  onMouseOut={(e) => this.handlePanelMouseOut(e, i)}
-                  style={{
-                    stroke: "steelblue",
-                    fill: "transparent",
-                    strokeWidth: 1,
-                    opacity: 0.375,
-                    pointerEvents: "all",
-                  }}
-                />
                 <g clipPath={`url(#cuttOffViewPane-${panel.index})`}>
                   {panel.intervals.map((d, i) => {
                     return (
                       <polygon
                         id={d.primaryKey}
+                        iid={d.iid}
                         title={d.fullTitle}
                         type="interval"
-                        className={`shape ${
+                        className={`shape interval-wlk${d.walk.pid} ${
                           d.walk.pid === tooltip.walkId ? "highlighted" : ""
                         }`}
                         transform={`translate(${[
@@ -651,7 +688,7 @@ class WalkPlot extends Component {
                           opacity: tooltip.walkId
                             ? d.walk.pid === tooltip.walkId
                               ? 1.0
-                              : 0.33
+                              : 0.03
                             : 1.0,
                         }}
                       />
@@ -664,10 +701,11 @@ class WalkPlot extends Component {
               {this.connections.map((d, i) => (
                 <path
                   id={d.primaryKey}
+                  cid={d.cid}
                   type="connection"
                   key={d.identifier}
                   transform={d.transform}
-                  className={`connection ${
+                  className={`connection connection-wlk${d.walk.pid} ${
                     d.primaryKey === tooltip.shapeId ? "highlighted" : ""
                   } ${
                     selectedConnectionIds.includes(d.cid)
@@ -685,7 +723,7 @@ class WalkPlot extends Component {
                     opacity: tooltip.walkId
                       ? d.walk.pid === tooltip.walkId
                         ? d.opacity
-                        : 0.33
+                        : 0.03
                       : d.opacity,
                   }}
                 />
@@ -709,7 +747,7 @@ class WalkPlot extends Component {
                 rx="5"
                 ry="5"
                 fill="rgb(97, 97, 97)"
-                fillOpacity="0.97"
+                fillOpacity="0.67"
               />
               <text x="10" y="28" fontSize="12" fill="#FFF">
                 {tooltip.text.map((d, i) => (

@@ -549,6 +549,22 @@ class GenomePlot extends Component {
                 id={`panel-${panel.index}`}
                 transform={`translate(${[panel.offset, 0]})`}
               >
+                <rect
+                  className="zoom-background"
+                  id={`panel-rect-${panel.index}`}
+                  x={0.5}
+                  width={panel.panelWidth}
+                  height={panel.panelHeight}
+                  onMouseMove={(e) => this.handlePanelMouseMove(e, i)}
+                  onMouseOut={(e) => this.handlePanelMouseOut(e, i)}
+                  style={{
+                    stroke: "steelblue",
+                    fill: "transparent",
+                    strokeWidth: 1,
+                    opacity: 0.375,
+                    pointerEvents: "all",
+                  }}
+                />
                 <g ref={(elem) => (this.grid = elem)}>
                   {
                     <>
@@ -574,22 +590,6 @@ class GenomePlot extends Component {
                     </>
                   }
                 </g>
-                <rect
-                  className="zoom-background"
-                  id={`panel-rect-${panel.index}`}
-                  x={0.5}
-                  width={panel.panelWidth}
-                  height={panel.panelHeight}
-                  onMouseMove={(e) => this.handlePanelMouseMove(e, i)}
-                  onMouseOut={(e) => this.handlePanelMouseOut(e, i)}
-                  style={{
-                    stroke: "steelblue",
-                    fill: "transparent",
-                    strokeWidth: 1,
-                    opacity: 0.375,
-                    pointerEvents: "all",
-                  }}
-                />
                 <g clipPath={`url(#cuttOffViewPane-${panel.index})`}>
                   {panel.intervals.map((d, i) => {
                     return (

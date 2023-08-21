@@ -5,6 +5,8 @@ import { withTranslation } from "react-i18next";
 import * as d3 from "d3";
 import { magnitude } from "../../helpers/utility";
 import Wrapper from "./index.style";
+import appActions from "../../redux/app/actions";
+const { updateDomains } = appActions;
 
 class Grid extends Component {
   container = null;
@@ -32,7 +34,8 @@ class Grid extends Component {
   }
 
   renderXAxis() {
-    let { scaleX, axisWidth, fontSize, axisHeight, chromoBins } = this.props;
+    let { scaleX, axisWidth, fontSize, axisHeight, chromoBins, updateDomains } =
+      this.props;
 
     let data = Object.keys(chromoBins).filter(
       (d) =>
@@ -98,6 +101,8 @@ class Grid extends Component {
 
         d3.select(this).call(axisX);
 
+        d3.select(this).select("text.label-chromosome").remove();
+
         d3.select(this)
           .append("text")
           .attr("class", "label-chromosome")
@@ -110,6 +115,8 @@ class Grid extends Component {
           .attr("fill", chromo.color)
           .text((e, j) => chromo.chromosome);
 
+        d3.select(this).select("circle.circle-chromosome").remove();
+
         d3.select(this)
           .append("circle")
           .attr("class", "circle-chromosome")
@@ -119,12 +126,21 @@ class Grid extends Component {
               `translate(${[rangeWidth / 2, -axisHeight + 1.3 * fontSize]})`
           )
           .attr("stroke", chromo.color)
-          .attr("r", fontSize);
+          .attr("r", fontSize)
+          .on("mouseover", function () {
+            d3.select(this).style("stroke-width", 2);
+          })
+          .on("mouseout", function () {
+            d3.select(this).style("stroke-width", 1);
+          });
 
         d3.select(this)
           .selectAll(".tick > text")
           .attr("transform", "rotate(45)")
           .style("text-anchor", "start");
+
+        d3.select(this).select("text.label-magnitude").remove();
+
         d3.select(this)
           .append("text")
           .attr("class", "label-magnitude")
@@ -135,6 +151,9 @@ class Grid extends Component {
               `translate(${[rangeWidth / 2, -axisHeight - 1 * fontSize]})`
           )
           .text((e, j) => d3.format(".1s")(magnitudeText));
+
+        d3.select(this).select("polyline.line-magnitude").remove();
+
         d3.select(this)
           .append("polyline")
           .attr("class", "line-magnitude")
@@ -202,6 +221,7 @@ class Grid extends Component {
           .selectAll(".tick > text")
           .attr("transform", "rotate(45)")
           .style("text-anchor", "start");
+
         d3.select(this)
           .select("text.label-chromosome")
           .attr(
@@ -209,13 +229,26 @@ class Grid extends Component {
             (e, j) =>
               `translate(${[rangeWidth / 2, -axisHeight + 1.3 * fontSize]})`
           );
+
         d3.select(this)
           .select("circle.circle-chromosome")
           .attr(
             "transform",
             (e, j) =>
               `translate(${[rangeWidth / 2, -axisHeight + 1.3 * fontSize]})`
-          );
+          )
+          .on("mouseover", function () {
+            d3.select(this).style("stroke-width", 2);
+          })
+          .on("mouseout", function () {
+            d3.select(this).style("stroke-width", 1);
+          })
+          .on("click", () => {
+            updateDomains([
+              [chromoBins[d].startPlace + 1e1, chromoBins[d].endPlace - 1e1],
+            ]);
+          });
+
         d3.select(this)
           .select("text.label-magnitude")
           .attr(
@@ -325,7 +358,9 @@ Grid.defaultProps = {
   fontSize: 10,
   showY: true,
 };
-const mapDispatchToProps = (dispatch) => ({});
+const mapDispatchToProps = (dispatch) => ({
+  updateDomains: (domains) => dispatch(updateDomains(domains)),
+});
 const mapStateToProps = (state) => ({
   chromoBins: state.App.chromoBins,
 });
