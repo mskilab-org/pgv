@@ -178,11 +178,14 @@ class GenomePanel extends Component {
               <span>
                 <Select
                   allowClear
+                  showSearch={true}
                   onChange={(value) => this.onAnnotationSelectChange(value)}
                   style={{ width: 200 }}
                   placeholder={t(
                     "components.genome-panel.select-annotation-placeholder"
                   )}
+                  showArrow={true}
+                  optionLabelProp="value"
                   optionFilterProp="children"
                 >
                   {annotationValues.map((d) => (
