@@ -12,6 +12,9 @@ const Wrapper = styled.g`
     user-select: none;
   }
 
+  text {
+    user-select: none;
+  }
   .axis--y g.tick line {
     stroke: #777;
     stroke-dasharray: 2, 2;

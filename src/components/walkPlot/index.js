@@ -84,6 +84,7 @@ class WalkPlot extends Component {
       frameConnections,
       currentTransform,
       showGrid: true,
+      selectedWalkId: null,
       tooltip: {
         visible: false,
         shapeId: -1,
@@ -260,6 +261,9 @@ class WalkPlot extends Component {
     return (
       nextProps.domains.toString() !== this.props.domains.toString() ||
       nextState.tooltip.shapeId !== this.state.tooltip.shapeId ||
+      nextState.selectedWalkId !== this.state.selectedWalkId ||
+      nextState.tooltip.x !== this.state.tooltip.x ||
+      nextState.tooltip.y !== this.state.tooltip.y ||
       nextProps.selectedConnectionIds.toString() !==
         this.props.selectedConnectionIds.toString() ||
       nextProps.annotation !== this.props.annotation ||
@@ -364,42 +368,6 @@ class WalkPlot extends Component {
             )
         );
     }
-
-    if (this.state.tooltip.walkId) {
-      let walk = this.state.walksAll.find(
-        (d) => d.pid === this.state.tooltip.walkId
-      );
-
-      d3.select(this.container)
-        .selectAll(`polygon.interval-wlk${this.state.tooltip.walkId}`)
-        .style("opacity", 0)
-        .transition()
-        .duration(500)
-        .delay(function (d, i) {
-          return (
-            walk.iids.findIndex(
-              (e) => +e.iid === +d3.select(this).attr("iid")
-            ) * 100
-          );
-        })
-        .style("opacity", 1);
-
-      d3.select(this.container)
-        .selectAll(`path.connection-wlk${this.state.tooltip.walkId}`)
-        .style("opacity", 0)
-        .transition()
-        .duration(500)
-        .delay(function (d, i) {
-          let con = walk.cids.find(
-            (e) => +e.cid === +d3.select(this).attr("cid")
-          );
-          return (
-            walk.iids.findIndex((e) => +e.iid === Math.abs(con.source)) * 100 +
-            50
-          );
-        })
-        .style("opacity", 1);
-    }
   }
 
   zooming(event, index) {
@@ -484,27 +452,26 @@ class WalkPlot extends Component {
             ) -
             30,
         ]);
-        this.state.tooltip.shapeId !== shape.primaryKey &&
-          this.setState(
-            {
-              tooltip: {
-                shapeId: shape.primaryKey,
-                walkId: shape.walk.pid,
-                visible: true,
-                x: e.nativeEvent.offsetX + diffX,
-                y: e.nativeEvent.offsetY + diffY,
-                text: shape.tooltipContent,
-              },
+        this.setState(
+          {
+            tooltip: {
+              shapeId: shape.primaryKey,
+              walkId: shape.walk.pid,
+              visible: true,
+              x: e.nativeEvent.offsetX + diffX,
+              y: e.nativeEvent.offsetY + diffY,
+              text: shape.tooltipContent,
             },
-            () => {
-              shapeType === "connection" &&
-                this.props.highlightPhylogenyNodes(
-                  this.props.connectionsAssociations
-                    .filter((d) => d.connections.includes(shape.cid))
-                    .map((d, i) => d.sample)
-                );
-            }
-          );
+          },
+          () => {
+            shapeType === "connection" &&
+              this.props.highlightPhylogenyNodes(
+                this.props.connectionsAssociations
+                  .filter((d) => d.connections.includes(shape.cid))
+                  .map((d, i) => d.sample)
+              );
+          }
+        );
       }
     } else {
       this.state.tooltip.visible &&
@@ -538,13 +505,69 @@ class WalkPlot extends Component {
     }
   }
 
-  handleIntervalClick(interval) {
-    let annotated = interval.walk.intervals.sort((a, b) =>
-      d3.ascending(a.startPlace, b.startPlace)
+  handleIntervalClick = (e, shape) => {
+    console.log(e.detail);
+    this.setState(
+      {
+        selectedWalkId: shape.walk.pid,
+        tooltip: {
+          shapeId: null,
+          walkId: null,
+          visible: false,
+        },
+      },
+      () => {
+        let annotated = shape.walk.intervals.sort((a, b) =>
+          d3.ascending(a.startPlace, b.startPlace)
+        );
+        annotated = merge(annotated);
+        this.props.updateDomains(cluster(annotated, this.props.genomeLength));
+        this.props.highlightPhylogenyNodes([]);
+
+        if (e.detail === 2) {
+          let walk = this.state.walksAll.find((d) => d.pid === shape.walk.pid);
+          let durationLength = d3
+            .scaleLinear()
+            .domain([1, walk.iids.length])
+            .range([1000, 2000])
+            .interpolate(d3.interpolateRound)
+            .clamp(true);
+
+          d3.select(this.container)
+            .selectAll(`polygon.interval-wlk${shape.walk.pid}`)
+            .style("opacity", 0)
+            .transition()
+            .duration(durationLength(walk.iids.length))
+            .delay(function (d, i) {
+              return (
+                walk.iids.findIndex(
+                  (e) => +e.iid === +d3.select(this).attr("iid")
+                ) * 500
+              );
+            })
+            .style("opacity", 1);
+
+          d3.select(this.container)
+            .selectAll(`path.connection-wlk${shape.walk.pid}`)
+            .style("opacity", 0)
+            .transition()
+            .duration(durationLength(walk.iids.length))
+            .delay(function (d, i) {
+              let con = walk.cids.find(
+                (e) =>
+                  Math.abs(+e.cid) === Math.abs(+d3.select(this).attr("cid"))
+              );
+              return (
+                walk.iids.findIndex((e) => +e.iid === Math.abs(con.source)) *
+                  500 +
+                250
+              );
+            })
+            .style("opacity", 1);
+        }
+      }
     );
-    annotated = merge(annotated);
-    this.props.updateDomains(cluster(annotated, this.props.genomeLength));
-  }
+  };
 
   handlePanelMouseMove = (e, panelIndex) => {
     panelIndex > -1 &&
@@ -558,9 +581,16 @@ class WalkPlot extends Component {
     panelIndex > -1 && this.props.updateHoveredLocation(null, panelIndex);
   };
 
+  handleMouseClick = (e) => {
+    let shapeClass = d3.select(e.target) && d3.select(e.target).attr("class");
+    if (shapeClass === "zoom-background") {
+      this.setState({ selectedWalkId: null });
+    }
+  };
+
   render() {
     const { width, selectedConnectionIds, height } = this.props;
-    const { stageWidth, tooltip } = this.state;
+    const { stageWidth, tooltip, selectedWalkId } = this.state;
 
     this.updatePanels();
 
@@ -570,6 +600,7 @@ class WalkPlot extends Component {
           width={width}
           height={height}
           onMouseMove={(e) => this.handleMouseMove(e)}
+          onClick={(e) => this.handleMouseClick(e)}
           ref={(elem) => (this.container = elem)}
         >
           <defs>
@@ -665,69 +696,81 @@ class WalkPlot extends Component {
                 <g clipPath={`url(#cuttOffViewPane-${panel.index})`}>
                   {panel.intervals.map((d, i) => {
                     return (
-                      <polygon
-                        id={d.primaryKey}
-                        iid={d.iid}
-                        title={d.fullTitle}
-                        type="interval"
-                        className={`shape interval-wlk${d.walk.pid} ${
-                          d.walk.pid === tooltip.walkId ? "highlighted" : ""
-                        }`}
-                        transform={`translate(${[
-                          panel.xScale(d.startPlace),
-                          this.yScale(d.y) - 0.5 * margins.bar,
-                        ]})`}
-                        points={d.points(panel.xScale)}
-                        onClick={(event) => this.handleIntervalClick(d)}
-                        style={{
-                          fill:
-                            (d.metadata && d.metadata.color) ||
-                            "url(#fill-tilted)",
-                          stroke: d3.rgb(d.color).darker(1),
-                          strokeWidth: 1,
-                          opacity: tooltip.walkId
-                            ? d.walk.pid === tooltip.walkId
-                              ? 1.0
-                              : 0.03
-                            : 1.0,
-                        }}
-                      />
+                      (!selectedWalkId || selectedWalkId === d.walk.pid) && (
+                        <polygon
+                          id={d.primaryKey}
+                          iid={d.iid}
+                          title={d.fullTitle}
+                          type="interval"
+                          className={`shape interval-wlk${d.walk.pid} ${
+                            selectedWalkId === d.walk.pid ||
+                            d.walk.pid === tooltip.walkId
+                              ? "highlighted"
+                              : ""
+                          }`}
+                          transform={`translate(${[
+                            panel.xScale(d.startPlace),
+                            this.yScale(d.y) - 0.5 * margins.bar,
+                          ]})`}
+                          xPos={panel.offset + panel.xScale(d.startPlace)}
+                          yPos={this.yScale(d.y) - 0.5 * margins.bar}
+                          points={d.points(panel.xScale)}
+                          onClick={(event) =>
+                            this.handleIntervalClick(event, d)
+                          }
+                          style={{
+                            fill:
+                              (d.metadata && d.metadata.color) ||
+                              "url(#fill-tilted)",
+                            stroke: d3.rgb(d.color).darker(1),
+                            strokeWidth: 1,
+                            opacity: tooltip.walkId
+                              ? d.walk.pid === tooltip.walkId
+                                ? 1.0
+                                : 0.3
+                              : 1.0,
+                          }}
+                        />
+                      )
                     );
                   })}
                 </g>
               </g>
             ))}
             <g clipPath="url(#cuttOffViewPaneii)">
-              {this.connections.map((d, i) => (
-                <path
-                  id={d.primaryKey}
-                  cid={d.cid}
-                  type="connection"
-                  key={d.identifier}
-                  transform={d.transform}
-                  className={`connection connection-wlk${d.walk.pid} ${
-                    d.primaryKey === tooltip.shapeId ? "highlighted" : ""
-                  } ${
-                    selectedConnectionIds.includes(d.cid)
-                      ? "phylogeny-annotated"
-                      : ""
-                  }`}
-                  d={d.render}
-                  onClick={(event) => this.handleConnectionClick(event, d)}
-                  style={{
-                    fill: d.fill,
-                    stroke: d.color,
-                    strokeWidth: d.strokeWidth,
-                    strokeDasharray: d.dash,
-                    pointerEvents: "all",
-                    opacity: tooltip.walkId
-                      ? d.walk.pid === tooltip.walkId
-                        ? d.opacity
-                        : 0.03
-                      : d.opacity,
-                  }}
-                />
-              ))}
+              {this.connections.map(
+                (d, i) =>
+                  (!selectedWalkId || selectedWalkId === d.walk.pid) && (
+                    <path
+                      id={d.primaryKey}
+                      cid={d.cid}
+                      type="connection"
+                      key={d.identifier}
+                      transform={d.transform}
+                      className={`connection connection-wlk${d.walk.pid} ${
+                        d.primaryKey === tooltip.shapeId ? "highlighted" : ""
+                      } ${
+                        selectedConnectionIds.includes(d.cid)
+                          ? "phylogeny-annotated"
+                          : ""
+                      }`}
+                      d={d.render}
+                      onClick={(event) => this.handleConnectionClick(event, d)}
+                      style={{
+                        fill: d.fill,
+                        stroke: d.color,
+                        strokeWidth: d.strokeWidth,
+                        strokeDasharray: d.dash,
+                        pointerEvents: "all",
+                        opacity: tooltip.walkId
+                          ? d.walk.pid === tooltip.walkId
+                            ? d.opacity
+                            : 0.3
+                          : d.opacity,
+                      }}
+                    />
+                  )
+              )}
             </g>
           </g>
           {tooltip.visible && (

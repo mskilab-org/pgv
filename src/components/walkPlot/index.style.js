@@ -10,8 +10,7 @@ const Wrapper = styled.div`
     fill: #ff7f0e !important;
   }
   path.connection.highlighted {
-    stroke-width: 3 !important;
-    opacity: 1;
+    stroke-width: 1.5 !important;
   }
   .phylogeny-annotated {
     fill-opacity: 0.33;
