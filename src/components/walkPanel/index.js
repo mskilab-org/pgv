@@ -5,7 +5,7 @@ import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
 import WalkPlot from "../walkPlot";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Button, Tooltip, message, Typography } from "antd";
+import { Card, Space, Button, Tooltip, message, Typography, Tag } from "antd";
 import * as d3 from "d3";
 import { GiPathDistance } from "react-icons/gi";
 import {
@@ -30,6 +30,7 @@ const margins = {
 };
 
 const { Text } = Typography;
+const TAG_COLOR = { binset: "#f50", walk: "#2db7f5" };
 
 class WalkPanel extends Component {
   container = null;
@@ -65,6 +66,7 @@ class WalkPanel extends Component {
       index,
       toggleVisibility,
       zoomedByCmd,
+      tag,
     } = this.props;
 
     return (
@@ -84,6 +86,13 @@ class WalkPanel extends Component {
                   count: walks.length,
                 })}
               </span>
+              {tag && (
+                <span className="ant-pro-menu-item-title">
+                  <Tag bordered={false} color={TAG_COLOR[tag]}>
+                    {tag}
+                  </Tag>
+                </span>
+              )}
             </Space>
           }
           extra={

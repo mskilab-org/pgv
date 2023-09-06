@@ -41,7 +41,16 @@
         "type": "walk",
         "source": "walks.json",
         "title": "Walks for sample 7K",
-        "visible": true
+        "visible": true,
+        "tag": "walk"
+      },
+      {
+        "sample": "7K",
+        "type": "walk",
+        "source": "walks.json",
+        "title": "Walks for sample 7K - Binset",
+        "visible": true,
+        "tag": "binset"
       },
       {
         "sample": "7E",

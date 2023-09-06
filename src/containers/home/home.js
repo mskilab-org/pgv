@@ -171,6 +171,7 @@ class Home extends Component {
               visible: d.visible,
               index,
               toggleVisibility: this.togglePlotVisibility,
+              tag: d.tag,
             }}
           />
         );

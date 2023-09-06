@@ -82,7 +82,7 @@ function* fetchHiglassData(action) {
   yield axios
     .all(
       bigwigs
-        .filter((plot) => plot.uuid)
+        .filter((plot) => plot.uuid !== undefined)
         .map((plot) =>
           axios.get(
             `${plot.server}/api/v1/tiles/?${newTilesets
@@ -136,32 +136,32 @@ function* fetchHiglassData(action) {
       console.log("got errors on loading dependencies", errors);
     });
 
-  let newGeneTilesets = action.domains.map((d, i) => {
-    let zoom = 0 + Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
-    let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);
-    let tile2 = Math.floor((Math.pow(2, zoom) * d[1]) / maxGenomeLength);
-    return { domain: d, zoom: zoom, tiles: d3.range(tile1, tile2 + 1) };
-  });
-  yield axios
-    .get(
-      `${higlassServer}/api/v1/tiles/?${newGeneTilesets
-        .map((d, i) =>
-          d.tiles.map((e, j) => `d=${higlassGeneFileUUID}.${d.zoom}.${e}`)
-        )
-        .flat()
-        .join("&")}`
-    )
-    .then((results) => {
-      Object.values(results.data)
-        .flat()
-        .forEach((gene, i) => {
-          genes.push(gene);
-        });
-    })
-    .catch((error) => {
-      console.log(higlassServer, error);
-      genes = [];
-    });
+  // let newGeneTilesets = action.domains.map((d, i) => {
+  //   let zoom = 0 + Math.floor(Math.log2(maxGenomeLength / (d[1] - d[0])));
+  //   let tile1 = Math.floor((Math.pow(2, zoom) * d[0]) / maxGenomeLength);
+  //   let tile2 = Math.floor((Math.pow(2, zoom) * d[1]) / maxGenomeLength);
+  //   return { domain: d, zoom: zoom, tiles: d3.range(tile1, tile2 + 1) };
+  // });
+  // yield axios
+  //   .get(
+  //     `${higlassServer}/api/v1/tiles/?${newGeneTilesets
+  //       .map((d, i) =>
+  //         d.tiles.map((e, j) => `d=${higlassGeneFileUUID}.${d.zoom}.${e}`)
+  //       )
+  //       .flat()
+  //       .join("&")}`
+  //   )
+  //   .then((results) => {
+  //     Object.values(results.data)
+  //       .flat()
+  //       .forEach((gene, i) => {
+  //         genes.push(gene);
+  //       });
+  //   })
+  //   .catch((error) => {
+  //     console.log(higlassServer, error);
+  //     genes = [];
+  //   });
   properties.bigwigsYRange = d3.extent(
     properties.plots
       .filter((d) => d.type === "bigwig" && d.tag === "bigwig_atac")
@@ -344,7 +344,7 @@ function* launchApplication(action) {
 
     // ensure walk intervals are aligned properly before pushing for rendering
     plots
-      .filter((d) => d.type === "walk")
+      .filter((d) => d.type === "walk" && d.tag !== "binset")
       .forEach((d) => {
         alignWalks(d.data.walks);
         d.data.maximumY = d3.max(

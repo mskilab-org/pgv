@@ -505,8 +505,64 @@ class WalkPlot extends Component {
     }
   }
 
+  handleIntervalRightClick = (e, shape) => {
+    e.preventDefault();
+
+    d3.select(this.container)
+      .select("g.tooltip")
+      .attr("transform", `translate(${[-1000, -1000]})`);
+
+    d3.select(this.container)
+      .selectAll(`polygon.interval-wlk${shape.walk.pid}`)
+      .interrupt();
+
+    d3.select(this.container)
+      .select("g.connections-container")
+      .selectAll(`.connection-wlk${shape.walk.pid}`)
+      .interrupt();
+
+    let walk = this.state.walksAll.find((d) => d.pid === shape.walk.pid);
+    let durationLength = d3
+      .scaleLinear()
+      .domain([1, walk.iids.length])
+      .range([1000, 4000])
+      .interpolate(d3.interpolateRound)
+      .clamp(true);
+
+    d3.select(this.container)
+      .selectAll(`polygon.interval-wlk${shape.walk.pid}`)
+      .style("opacity", 0.0)
+      .transition()
+      .ease(d3.easeSinInOut)
+      .duration(durationLength(walk.iids.length))
+      .delay(function (d, i) {
+        return (
+          walk.iids.findIndex((e) => +e.iid === +d3.select(this).attr("iid")) *
+          1000
+        );
+      })
+      .style("opacity", 1);
+
+    d3.select(this.container)
+      .select("g.connections-container")
+      .selectAll(`.connection-wlk${shape.walk.pid}`)
+      .style("opacity", 0.0)
+      .transition()
+      .duration(durationLength(walk.iids.length))
+      .ease(d3.easeSinInOut)
+      .delay(function (d, i) {
+        let con = walk.cids.find(
+          (e) => Math.abs(+e.cid) === Math.abs(+d3.select(this).attr("cid"))
+        );
+        return (
+          walk.iids.findIndex((e) => +e.iid === Math.abs(con.source)) * 1000 +
+          150
+        );
+      })
+      .style("opacity", 1);
+  };
+
   handleIntervalClick = (e, shape) => {
-    console.log(e.detail);
     this.setState(
       {
         selectedWalkId: shape.walk.pid,
@@ -523,48 +579,6 @@ class WalkPlot extends Component {
         annotated = merge(annotated);
         this.props.updateDomains(cluster(annotated, this.props.genomeLength));
         this.props.highlightPhylogenyNodes([]);
-
-        if (e.detail === 2) {
-          let walk = this.state.walksAll.find((d) => d.pid === shape.walk.pid);
-          let durationLength = d3
-            .scaleLinear()
-            .domain([1, walk.iids.length])
-            .range([1000, 2000])
-            .interpolate(d3.interpolateRound)
-            .clamp(true);
-
-          d3.select(this.container)
-            .selectAll(`polygon.interval-wlk${shape.walk.pid}`)
-            .style("opacity", 0)
-            .transition()
-            .duration(durationLength(walk.iids.length))
-            .delay(function (d, i) {
-              return (
-                walk.iids.findIndex(
-                  (e) => +e.iid === +d3.select(this).attr("iid")
-                ) * 500
-              );
-            })
-            .style("opacity", 1);
-
-          d3.select(this.container)
-            .selectAll(`path.connection-wlk${shape.walk.pid}`)
-            .style("opacity", 0)
-            .transition()
-            .duration(durationLength(walk.iids.length))
-            .delay(function (d, i) {
-              let con = walk.cids.find(
-                (e) =>
-                  Math.abs(+e.cid) === Math.abs(+d3.select(this).attr("cid"))
-              );
-              return (
-                walk.iids.findIndex((e) => +e.iid === Math.abs(con.source)) *
-                  500 +
-                250
-              );
-            })
-            .style("opacity", 1);
-        }
       }
     );
   };
@@ -718,6 +732,9 @@ class WalkPlot extends Component {
                           onClick={(event) =>
                             this.handleIntervalClick(event, d)
                           }
+                          onContextMenu={(event) =>
+                            this.handleIntervalRightClick(event, d)
+                          }
                           style={{
                             fill:
                               (d.metadata && d.metadata.color) ||
@@ -737,7 +754,7 @@ class WalkPlot extends Component {
                 </g>
               </g>
             ))}
-            <g clipPath="url(#cuttOffViewPaneii)">
+            <g class="connections-container" clipPath="url(#cuttOffViewPaneii)">
               {this.connections.map(
                 (d, i) =>
                   (!selectedWalkId || selectedWalkId === d.walk.pid) && (
