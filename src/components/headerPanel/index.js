@@ -13,10 +13,11 @@ import {
   Row,
   Col,
   Switch,
-  Divider,
   Menu,
   Dropdown,
   InputNumber,
+  Tabs,
+  Divider,
 } from "antd";
 import {
   AiOutlineDownload,
@@ -24,6 +25,7 @@ import {
   AiOutlineDown,
 } from "react-icons/ai";
 import { downloadCanvasAsPng } from "../../helpers/utility";
+import ListSort from "../../helpers/listsort";
 import html2canvas from "html2canvas";
 import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
@@ -75,9 +77,9 @@ class HeaderPanel extends Component {
       });
   };
 
-  onCheckChanged = (checked, index) => {
+  onCheckChanged = (checked, id) => {
     let plots = [...this.props.plots];
-    plots[index].visible = checked;
+    plots.find((e) => e.id === id).visible = checked;
     this.props.updatePlots(plots);
   };
 
@@ -114,6 +116,17 @@ class HeaderPanel extends Component {
 
   onGlobalBigwigYScaleChanged = (checked) => {
     this.props.updateGlobalBigwigYScale(checked);
+  };
+
+  onPlotListChanged = (items) => {
+    let plots = [
+      this.props.plots.filter((d) =>
+        ["genes", "phylogeny", "anatomy"].includes(d.type)
+      ),
+      items.map((d, i) => this.props.plots.find((e) => e.id === d.key)),
+    ].flat();
+
+    this.props.updatePlots(plots);
   };
 
   render() {
@@ -271,133 +284,235 @@ class HeaderPanel extends Component {
             onClose={this.onClose}
             visible={this.state.visible}
           >
-            <Row gutter={[16, 16]}>
-              <Col span={24}>
-                <Divider>{t("components.settings-panel.pinning")}</Divider>
-              </Col>
-              <Col span={24}>
-                <Space>
-                  <Switch
-                    onChange={(checked) => this.onZoomedByCmdChanged(checked)}
-                    size="small"
-                    checked={zoomedByCmd}
-                  />
-                  {t("components.settings-panel.zoomed-by-cmd")}
-                </Space>
-              </Col>
-              <Col span={24}>
-                <Space>
-                  <Switch
-                    onChange={(checked) => this.onLegendPinChanged(checked)}
-                    size="small"
-                    checked={legendPinned}
-                  />
-                  {t("components.settings-panel.legend-pinned")}
-                </Space>
-              </Col>
-              <Col span={24}>
-                <Space>
-                  <Switch
-                    disabled={!plots.find((d) => d.type === "genes")}
-                    onChange={(checked) => this.onGenesPinChanged(checked)}
-                    size="small"
-                    checked={genesPinned}
-                  />
-                  {t("components.settings-panel.genes-pinned")}
-                </Space>
-              </Col>
-              <Col span={24}>
-                <Space>
-                  <Switch
-                    disabled={
-                      !(
-                        (plots.find((d) => d.type === "phylogeny") &&
-                          plots.find((d) => d.type === "phylogeny").visible) ||
-                        (plots.find((d) => d.type === "anatomy") &&
-                          plots.find((d) => d.type === "anatomy").visible)
-                      )
-                    }
-                    onChange={(checked) => this.onPhylogenyPinChanged(checked)}
-                    size="small"
-                    checked={phylogenyPinned}
-                  />
-                  {t("components.settings-panel.phylogeny-pinned")}
-                </Space>
-              </Col>
-              <Col span={24}>
-                <Space>
-                  <InputNumber
-                    style={{ width: 55 }}
-                    size="small"
-                    min={PHYLOGENY_PANEL_HEIGHT.min}
-                    max={PHYLOGENY_PANEL_HEIGHT.max}
-                    value={phylogenyPanelHeight}
-                    step={PHYLOGENY_PANEL_HEIGHT.step}
-                    defaultValue={PHYLOGENY_PANEL_HEIGHT.default}
-                    bordered={false}
-                    onChange={(value) =>
-                      this.onPhylogenyPanelHeightChanged(value)
-                    }
-                  />
-                  {t("components.settings-panel.phylogeny-panel-height")}
-                </Space>
-              </Col>
-              <Col span={24}>
-                <Divider>
-                  {t("components.settings-panel.plot-visibility")}
-                </Divider>
-              </Col>
-              {plots.map((d, index) => (
-                <Col key={d.id} span={24}>
-                  <Space>
-                    <Switch
-                      onChange={(checked) =>
-                        this.onCheckChanged(checked, index)
-                      }
-                      size="small"
-                      checked={d.visible}
-                    />
-                    {d.title}
-                  </Space>
-                </Col>
-              ))}
-              <Col span={24}>
-                <Tooltip
-                  title={t(
-                    "components.settings-panel.render-outside-viewport-help"
-                  )}
-                >
-                  <Space>
-                    <Switch
-                      onChange={(checked) =>
-                        this.onRenderOutsideViewPortChanged(checked)
-                      }
-                      size="small"
-                      checked={renderOutsideViewPort}
-                    />
-                    {t("components.settings-panel.render-outside-viewport")}
-                  </Space>
-                </Tooltip>
-              </Col>
-              <Col span={24}>
-                <Tooltip
-                  title={t(
-                    "components.settings-panel.global-bigwig-y-scale-help"
-                  )}
-                >
-                  <Space>
-                    <Switch
-                      onChange={(checked) =>
-                        this.onGlobalBigwigYScaleChanged(checked)
-                      }
-                      size="small"
-                      checked={globalBigwigYScale}
-                    />
-                    {t("components.settings-panel.global-bigwig-y-scale")}
-                  </Space>
-                </Tooltip>
-              </Col>
-            </Row>
+            <Tabs
+              defaultActiveKey="1"
+              size="small"
+              items={[
+                {
+                  key: "1",
+                  label: t("components.settings-panel.general-settings"),
+                  children: (
+                    <Row gutter={[16, 16]}>
+                      <Col span={24}>
+                        <Space>
+                          <Switch
+                            onChange={(checked) =>
+                              this.onZoomedByCmdChanged(checked)
+                            }
+                            size="small"
+                            checked={zoomedByCmd}
+                          />
+                          {t("components.settings-panel.zoomed-by-cmd")}
+                        </Space>
+                      </Col>
+                      <Col span={24}>
+                        <Space>
+                          <Switch
+                            onChange={(checked) =>
+                              this.onLegendPinChanged(checked)
+                            }
+                            size="small"
+                            checked={legendPinned}
+                          />
+                          {t("components.settings-panel.legend-pinned")}
+                        </Space>
+                      </Col>
+                      <Col span={24}>
+                        <Tooltip
+                          title={t(
+                            "components.settings-panel.render-outside-viewport-help"
+                          )}
+                        >
+                          <Space>
+                            <Switch
+                              onChange={(checked) =>
+                                this.onRenderOutsideViewPortChanged(checked)
+                              }
+                              size="small"
+                              checked={renderOutsideViewPort}
+                            />
+                            {t(
+                              "components.settings-panel.render-outside-viewport"
+                            )}
+                          </Space>
+                        </Tooltip>
+                      </Col>
+                      <Col span={24}>
+                        <Tooltip
+                          title={t(
+                            "components.settings-panel.global-bigwig-y-scale-help"
+                          )}
+                        >
+                          <Space>
+                            <Switch
+                              onChange={(checked) =>
+                                this.onGlobalBigwigYScaleChanged(checked)
+                              }
+                              size="small"
+                              checked={globalBigwigYScale}
+                            />
+                            {t(
+                              "components.settings-panel.global-bigwig-y-scale"
+                            )}
+                          </Space>
+                        </Tooltip>
+                      </Col>
+                      <Divider orientation="left" plain>
+                        {t("components.settings-panel.genes.divider-text")}
+                      </Divider>
+                      {plots
+                        .filter((d) => ["genes"].includes(d.type))
+                        .map((d, i) => (
+                          <Col span={24}>
+                            <Space>
+                              <Switch
+                                onChange={(checked) =>
+                                  this.onCheckChanged(checked, d.id)
+                                }
+                                size="small"
+                                checked={d.visible}
+                              />
+                              {t("components.settings-panel.genes.switch")}
+                            </Space>
+                          </Col>
+                        ))}
+                      <Col span={24}>
+                        <Space>
+                          <Switch
+                            disabled={!plots.find((d) => d.type === "genes")}
+                            onChange={(checked) =>
+                              this.onGenesPinChanged(checked)
+                            }
+                            size="small"
+                            checked={genesPinned}
+                          />
+                          {t("components.settings-panel.genes.pinning")}
+                        </Space>
+                      </Col>
+                      <Divider orientation="left" plain>
+                        {t("components.settings-panel.phylogeny.divider-text")}
+                      </Divider>
+                      {plots
+                        .filter((d) => ["phylogeny"].includes(d.type))
+                        .map((d, i) => (
+                          <Col span={24}>
+                            <Space>
+                              <Switch
+                                onChange={(checked) =>
+                                  this.onCheckChanged(checked, d.id)
+                                }
+                                size="small"
+                                checked={d.visible}
+                              />
+                              {t("components.settings-panel.phylogeny.switch")}
+                            </Space>
+                          </Col>
+                        ))}
+                      <Col span={24}>
+                        <Space>
+                          <Switch
+                            disabled={
+                              !(
+                                (plots.find((d) => d.type === "phylogeny") &&
+                                  plots.find((d) => d.type === "phylogeny")
+                                    .visible) ||
+                                (plots.find((d) => d.type === "anatomy") &&
+                                  plots.find((d) => d.type === "anatomy")
+                                    .visible)
+                              )
+                            }
+                            onChange={(checked) =>
+                              this.onPhylogenyPinChanged(checked)
+                            }
+                            size="small"
+                            checked={phylogenyPinned}
+                          />
+                          {t("components.settings-panel.phylogeny.pinning")}
+                        </Space>
+                      </Col>
+                      <Col span={24}>
+                        <Space>
+                          <InputNumber
+                            style={{ width: 55 }}
+                            size="small"
+                            min={PHYLOGENY_PANEL_HEIGHT.min}
+                            max={PHYLOGENY_PANEL_HEIGHT.max}
+                            value={phylogenyPanelHeight}
+                            step={PHYLOGENY_PANEL_HEIGHT.step}
+                            defaultValue={PHYLOGENY_PANEL_HEIGHT.default}
+                            bordered={false}
+                            onChange={(value) =>
+                              this.onPhylogenyPanelHeightChanged(value)
+                            }
+                          />
+                          {t("components.settings-panel.phylogeny.height")}
+                        </Space>
+                      </Col>
+                      <Divider orientation="left" plain>
+                        {t("components.settings-panel.anatomy.divider-text")}
+                      </Divider>
+                      {plots
+                        .filter((d) => ["anatomy"].includes(d.type))
+                        .map((d, i) => (
+                          <Col span={24}>
+                            <Space>
+                              <Switch
+                                onChange={(checked) =>
+                                  this.onCheckChanged(checked, d.id)
+                                }
+                                size="small"
+                                checked={d.visible}
+                              />
+                              {t("components.settings-panel.anatomy.switch")}
+                            </Space>
+                          </Col>
+                        ))}
+                    </Row>
+                  ),
+                },
+                {
+                  key: "2",
+                  label: t("components.settings-panel.plot-configuration"),
+                  children: (
+                    <div className="list-sort-panel-wrapper">
+                      <div className="list-sort-panel">
+                        <ListSort
+                          dragClassName="list-drag-selected"
+                          appearAnim={{
+                            animConfig: { marginTop: [5, 30], opacity: [1, 0] },
+                          }}
+                          onChange={(e) => this.onPlotListChanged(e)}
+                        >
+                          {plots
+                            .filter(
+                              (d) =>
+                                !["genes", "phylogeny", "anatomy"].includes(
+                                  d.type
+                                )
+                            )
+                            .map((d, i) => (
+                              <div key={d.id} className="list-sort-panel-list">
+                                <div className="list-sort-panel-icon">
+                                  <Switch
+                                    onChange={(checked) =>
+                                      this.onCheckChanged(checked, d.id)
+                                    }
+                                    size="small"
+                                    checked={d.visible}
+                                  />
+                                </div>
+                                <div className={"list-sort-panel-text"}>
+                                  <p>{d.title}</p>
+                                </div>
+                              </div>
+                            ))}
+                        </ListSort>
+                      </div>
+                    </div>
+                  ),
+                },
+              ]}
+            />
           </Drawer>
         </PageHeader>
       </Wrapper>
@@ -408,7 +523,9 @@ HeaderPanel.propTypes = {
   selectedFiles: PropTypes.array,
   plots: PropTypes.array,
 };
-HeaderPanel.defaultProps = {};
+HeaderPanel.defaultProps = {
+  className: "list-sort-demo",
+};
 const mapDispatchToProps = (dispatch) => ({
   updatePlots: (plots) => dispatch(updatePlots(plots)),
   updateLegendPin: (legendPinned) => dispatch(updateLegendPin(legendPinned)),

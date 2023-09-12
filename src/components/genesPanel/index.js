@@ -85,7 +85,7 @@ class GenesPanel extends Component {
   };
 
   render() {
-    const { t, genes, genesList, genesOptionsList, domains } = this.props;
+    const { t, genes, genesOptionsList, domains } = this.props;
     if (!genes) return null;
     return (
       <Wrapper>
@@ -99,12 +99,6 @@ class GenesPanel extends Component {
                 </span>
                 <span className="ant-pro-menu-item-title">
                   {t("components.genes-panel.header")}
-                </span>
-                <span>
-                  <b>{d3.format(",")(genesList.length)}</b>{" "}
-                  {t("components.genes-panel.gene", {
-                    count: genesList.length,
-                  })}
                 </span>
               </Space>
             }

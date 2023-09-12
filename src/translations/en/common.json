@@ -156,16 +156,28 @@
     },
     "settings-panel": {
       "coordinates": { "label": "Reference" },
-      "pinning": "Pin to Viewport",
-      "plot-visibility": "Plot Visibility",
+      "general-settings": "General Settings",
+      "plot-configuration": "Plot Configuration",
       "render-outside-viewport": "Render outside the viewport",
       "render-outside-viewport-help": "When checked, plots outside the viewport will still be rendered. This is to faciliate the full page export to PNG.",
       "global-bigwig-y-scale-help": "When checked, a common scale on the Y axis will be applied all bigwig plots in this screen",
       "global-bigwig-y-scale": "Common Y-scale on Bigwig plots",
       "legend-pinned": "Reference Panel pinned",
-      "genes-pinned": "Genes Panel pinned",
-      "phylogeny-pinned": "Phylogeny Panel pinned",
-      "phylogeny-panel-height": "Phylogeny Height (px)",
+      "genes": {
+        "pinning": "Pin Plot",
+        "divider-text": "Genes Plot Properties",
+        "switch": "Toggle visibility"
+      },
+      "phylogeny": {
+        "pinning": "Pin Plot",
+        "divider-text": "Phylogeny & Anatomy Plot Properties",
+        "switch": "Toggle visibility",
+        "height": "Plot Height (px)"
+      },
+      "anatomy": {
+        "divider-text": "Anatomy Plot Properties",
+        "switch": "Toggle visibility"
+      },
       "zoomed-by-cmd": "⌘ + scroll to zoom",
       "panels": {
         "label": "Visible Panels"

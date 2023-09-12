@@ -201,3 +201,55 @@ html[dir='rtl'] .dz-hidden-input {
 .hidden {
   display: none !important;
 }
+
+.list-sort-panel-wrapper {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+.list-sort-panel {
+  margin: 10px auto;
+  width: 100%;
+  cursor: move;
+  position: relative;
+  height: 305px;
+}
+.list-sort-panel > div {
+  overflow: hidden;
+}
+
+.list-sort-panel-list {
+  background-color: #FFF;
+  border: 1px solid #F0F0F0;
+  border-radius: 6px;
+  margin: 5px auto;
+  padding: 15px;
+  height: 60px;
+  transition: box-shadow 0.5s, transform 0.5s;
+}
+
+.list-sort-panel-list.list-drag-selected {
+  box-shadow: 0 8px 20px #e6e6e6;
+  transform: scale(1.1) !important;
+}
+
+.list-sort-panel-icon {
+  width: 20%;
+  display: inline-block;
+  text-align: center;
+  font-size: 14px;
+  line-height: 20px;
+  vertical-align: top;
+}
+.list-sort-panel-text {
+  width: 80%;
+  display: inline-block;
+  text-align: left;
+  line-height: 20px;
+  vertical-align: middle;
+}
+
+.list-sort-panel-text p {
+  font-size: 12px;
+}

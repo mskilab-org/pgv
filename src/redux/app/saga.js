@@ -18,6 +18,7 @@ import {
   locationToDomains,
   getFloatArray,
   alignWalks,
+  guid,
 } from "../../helpers/utility";
 import { getCurrentState } from "./selectors";
 
@@ -202,6 +203,7 @@ function* launchApplication(action) {
           plots: d.plots.map((e) => {
             return {
               ...e,
+              id: guid(),
               title: `${key} ${e.title}`,
               path: `data/${key}/${e.source}`,
             };
@@ -299,6 +301,7 @@ function* launchApplication(action) {
     );
     let plots = [
       {
+        id: guid(),
         type: "genes",
         title: "Genes",
         source: `genes/${selectedCoordinate}.arrow`,
