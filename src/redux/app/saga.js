@@ -226,8 +226,8 @@ function* launchApplication(action) {
       filteredFiles = files
         .filter(
           (d) =>
-            d.tags.filter((e) => action.selectedTags.includes(e)).length ===
-            action.selectedTags.length
+            (d.tags || []).filter((e) => action.selectedTags.includes(e))
+              .length === action.selectedTags.length
         )
         .sort((a, b) => d3.ascending(a.file, b.file));
     }
