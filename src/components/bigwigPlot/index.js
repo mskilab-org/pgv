@@ -229,16 +229,23 @@ class BigwigPlot extends Component {
         .domain(defaultDomain)
         .range([0, panelWidth]);
 
-      let yExtent =
-        tag === "bigwig_atac" && globalBigwigYScale
-          ? bigwigsYRange
-          : d3.extent(dataPoints, (e) => e.y);
+      let yExtent = [
+        d3.min(dataPoints, (e) => e.y),
+        d3.quantile(
+          d3.map(dataPoints, (e) => e.y),
+          0.99
+        ),
+      ];
+
+      yExtent =
+        tag === "bigwig_atac" && globalBigwigYScale ? bigwigsYRange : yExtent;
 
       let yScale = d3
         .scaleLinear()
         .domain(yExtent)
         .range([panelHeight, 0])
-        .nice();
+        .nice()
+        .clamp(true);
 
       let xScale = d3.scaleLinear().domain(xDomain).range([0, panelWidth]);
       let yTicks = yScale.ticks(margins.yTicksCount);
@@ -263,6 +270,7 @@ class BigwigPlot extends Component {
         .scaleLinear()
         .domain(extent)
         .range([panelHeight, 0])
+        .clamp(true)
         .nice();
       let commonYTicks = commonYScale.ticks(margins.yTicksCount);
       commonYTicks[commonYTicks.length - 1] = commonYScale.domain()[1];

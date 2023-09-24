@@ -272,23 +272,21 @@ class ScatterPlot extends Component {
         ])
         .on("zoom", (event) => this.zooming(event, index))
         .on("end", (event) => this.zoomEnded(event, index));
+
       let panelGenomeScale = d3
         .scaleLinear()
         .domain(defaultDomain)
         .range([0, panelWidth]);
-      let points = [
-        ...new Set(matched.map((e, j) => Math.round(e * 10) / 10)),
-      ].sort((a, b) => d3.descending(a, b));
-      let yExtent = [
-        0,
-        points[Math.floor(0.1 * points.length)] || this.maxDataPointsY,
-      ];
+
+      let yExtent = [0, d3.quantile(matched, 0.99)];
 
       let yScale = d3
         .scaleLinear()
         .domain(yExtent)
         .range([panelHeight, 0])
+        .clamp(true)
         .nice();
+
       let xScale = d3.scaleLinear().domain(xDomain).range([0, panelWidth]);
       let yTicks = yScale.ticks(margins.yTicksCount);
       yTicks[yTicks.length - 1] = yScale.domain()[1];
