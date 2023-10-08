@@ -191,6 +191,7 @@ class BigwigPlot extends Component {
       bigwigsYRange,
       globalBigwigYScale,
       commonYScale,
+      optimisedYScale,
     } = this.props;
 
     let stageWidth = width - 2 * margins.gapX;
@@ -229,13 +230,15 @@ class BigwigPlot extends Component {
         .domain(defaultDomain)
         .range([0, panelWidth]);
 
-      let yExtent = [
-        d3.min(dataPoints, (e) => e.y),
-        d3.quantile(
-          d3.map(dataPoints, (e) => e.y),
-          0.99
-        ),
-      ];
+      let yExtent = optimisedYScale
+        ? [
+            d3.min(dataPoints, (e) => e.y),
+            d3.quantile(
+              d3.map(dataPoints, (e) => e.y),
+              0.99
+            ),
+          ]
+        : d3.extent(dataPoints, (e) => e.y);
 
       yExtent =
         tag === "bigwig_atac" && globalBigwigYScale ? bigwigsYRange : yExtent;
@@ -398,6 +401,8 @@ BigwigPlot.propTypes = {
   height: PropTypes.number.isRequired,
   data: PropTypes.array,
   chromoBins: PropTypes.object,
+  commonYScale: PropTypes.bool,
+  optimisedYScale: PropTypes.bool,
 };
 BigwigPlot.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({

@@ -132,10 +132,16 @@
       "datapoint": "datapoint",
       "datapoint_plural": "datapoints",
       "title": "Area data Track",
-      "common-yscale": "Common",
-      "distinct-yscale": "Distinct",
+      "scatterplot-help": "Show values in Scatter Plot",
+      "areaplot-help": "Show values in Area Plot",
+      "common-yscale": "Common Y-Axis Range",
+      "distinct-yscale": "Distinct Y-Axis Range",
       "common-yscale-help": "The same Y-axis range is applied on all panels in this track",
-      "distinct-yscale-help": "Each panel in this track has an optimised Y-axis range"
+      "distinct-yscale-help": "Each panel in this track has an optimised Y-axis range",
+      "optimised-yscale": "Flatten Outliers",
+      "non-optimised-yscale": "Full Spectrum",
+      "optimised-yscale-help": "Outliers are maxed to the 99% of values",
+      "non-optimised-yscale-help": "Y-Axis shows full range of values"
     },
     "genes-panel": {
       "header": "Genes",

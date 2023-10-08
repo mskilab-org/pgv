@@ -13,7 +13,7 @@ import {
   Col,
   Alert,
   Typography,
-  Segmented,
+  Select,
   Tag,
 } from "antd";
 import * as d3 from "d3";
@@ -53,6 +53,7 @@ class BigwigPlotPanel extends Component {
     this.state = {
       plotType: props.defaultChartType,
       commonYScale: false,
+      optimisedYScale: true,
     };
   }
 
@@ -83,6 +84,10 @@ class BigwigPlotPanel extends Component {
     this.setState({ commonYScale });
   };
 
+  handleOptimisedYScaleChange = (optimisedYScale) => {
+    this.setState({ optimisedYScale });
+  };
+
   render() {
     const {
       t,
@@ -98,7 +103,7 @@ class BigwigPlotPanel extends Component {
       toggleVisibility,
       zoomedByCmd,
     } = this.props;
-    const { plotType, commonYScale } = this.state;
+    const { plotType, commonYScale, optimisedYScale } = this.state;
     return (
       <Wrapper visible={visible}>
         <Card
@@ -137,31 +142,47 @@ class BigwigPlotPanel extends Component {
             </Space>
           }
           extra={
-            <Space>
+            <Space wrap>
               {zoomedByCmd && (
                 <Text type="secondary">{t("components.zoom-help")}</Text>
               )}
               {
-                <Segmented
-                  size="small"
+                <Select
                   defaultValue={plotType}
-                  onChange={(plotType) => this.handleSegmentedChange(plotType)}
+                  bordered={false}
+                  onChange={(pType) => this.handleSegmentedChange(pType)}
                   options={[
                     {
                       value: "area",
-                      icon: <AiOutlineAreaChart />,
+                      label: (
+                        <Tooltip
+                          title={t("components.area-panel.areaplot-help")}
+                        >
+                          <Space>
+                            <AiOutlineAreaChart />
+                          </Space>
+                        </Tooltip>
+                      ),
                     },
                     {
                       value: "scatterplot",
-                      icon: <AiOutlineDotChart />,
+                      label: (
+                        <Tooltip
+                          title={t("components.area-panel.scatterplot-help")}
+                        >
+                          <Space>
+                            <AiOutlineDotChart />
+                          </Space>
+                        </Tooltip>
+                      ),
                     },
                   ]}
                 />
               }
               {
-                <Segmented
-                  size="small"
+                <Select
                   defaultValue={commonYScale}
+                  bordered={false}
                   onChange={(commonYScale) =>
                     this.handleCommonYScaleChange(commonYScale)
                   }
@@ -172,10 +193,11 @@ class BigwigPlotPanel extends Component {
                         <Tooltip
                           title={t("components.area-panel.common-yscale-help")}
                         >
-                          {t("components.area-panel.common-yscale")}
+                          <Space>
+                            {t("components.area-panel.common-yscale")}
+                          </Space>
                         </Tooltip>
                       ),
-                      icon: <TbAxisY />,
                     },
                     {
                       value: false,
@@ -185,10 +207,50 @@ class BigwigPlotPanel extends Component {
                             "components.area-panel.distinct-yscale-help"
                           )}
                         >
-                          {t("components.area-panel.distinct-yscale")}
+                          <Space>
+                            {t("components.area-panel.distinct-yscale")}
+                          </Space>
                         </Tooltip>
                       ),
-                      icon: <TbAxisY />,
+                    },
+                  ]}
+                />
+              }
+              {
+                <Select
+                  defaultValue={optimisedYScale}
+                  bordered={false}
+                  onChange={(optimisedYScale) =>
+                    this.handleOptimisedYScaleChange(optimisedYScale)
+                  }
+                  options={[
+                    {
+                      value: true,
+                      label: (
+                        <Tooltip
+                          title={t(
+                            "components.area-panel.optimised-yscale-help"
+                          )}
+                        >
+                          <Space>
+                            {t("components.area-panel.optimised-yscale")}
+                          </Space>
+                        </Tooltip>
+                      ),
+                    },
+                    {
+                      value: false,
+                      label: (
+                        <Tooltip
+                          title={t(
+                            "components.area-panel.non-optimised-yscale-help"
+                          )}
+                        >
+                          <Space>
+                            {t("components.area-panel.non-optimised-yscale")}
+                          </Space>
+                        </Tooltip>
+                      ),
                     },
                   ]}
                 />
@@ -253,6 +315,7 @@ class BigwigPlotPanel extends Component {
                                 tag,
                                 plotType,
                                 commonYScale,
+                                optimisedYScale,
                               }}
                             />
                           ) : (
