@@ -3,7 +3,7 @@ import { PropTypes } from "prop-types";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
 import * as d3 from "d3";
-import { magnitude } from "../../helpers/utility";
+import { magnitude, measureText } from "../../helpers/utility";
 import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
 const { updateDomains } = appActions;
@@ -28,8 +28,16 @@ class Grid extends Component {
     if (!scaleY) {
       return;
     }
+
+    let maxTicksTextLength = Math.max(
+      ...scaleY.ticks().map((tick) => measureText(String(tick)))
+    );
     let yAxisContainer = d3.select(this.container).select(".y-axis-container");
-    let yAxis = d3.axisLeft(scaleY).tickSize(-axisWidth);
+    let yAxis = d3
+      .axisLeft(scaleY)
+      .tickSize(-axisWidth)
+      .tickPadding(maxTicksTextLength < 22 ? 3 : 18 - maxTicksTextLength);
+
     yAxisContainer.call(yAxis);
   }
 
