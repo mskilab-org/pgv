@@ -85,6 +85,7 @@ class GenomePanel extends Component {
       activeAnnotation: null,
       intervals,
       connections: frameConnections,
+      commonYScale: false,
     };
   }
 
@@ -105,6 +106,10 @@ class GenomePanel extends Component {
       .catch((error) => {
         message.error(this.props.t("general.error", { error }));
       });
+  };
+
+  handleCommonYScaleChange = (commonYScale) => {
+    this.setState({ commonYScale });
   };
 
   onAnnotationSelectChange = (value) => {
@@ -150,7 +155,7 @@ class GenomePanel extends Component {
       index,
       zoomedByCmd,
     } = this.props;
-    let { activeAnnotation } = this.state;
+    let { activeAnnotation, commonYScale } = this.state;
     if (Object.keys(genome).length < 1) return null;
     let intervalAnnotations = genome.intervals
       .map((d) => new Interval(d).annotationArray)
@@ -197,6 +202,45 @@ class GenomePanel extends Component {
           }
           extra={
             <Space>
+              {
+                <Select
+                  defaultValue={commonYScale}
+                  bordered={false}
+                  onChange={(commonYScale) =>
+                    this.handleCommonYScaleChange(commonYScale)
+                  }
+                  options={[
+                    {
+                      value: true,
+                      label: (
+                        <Tooltip
+                          title={t(
+                            "components.genome-panel.common-yscale-help"
+                          )}
+                        >
+                          <Space>
+                            {t("components.genome-panel.common-yscale")}
+                          </Space>
+                        </Tooltip>
+                      ),
+                    },
+                    {
+                      value: false,
+                      label: (
+                        <Tooltip
+                          title={t(
+                            "components.genome-panel.distinct-yscale-help"
+                          )}
+                        >
+                          <Space>
+                            {t("components.genome-panel.distinct-yscale")}
+                          </Space>
+                        </Tooltip>
+                      ),
+                    },
+                  ]}
+                />
+              }
               {zoomedByCmd && (
                 <Text type="secondary">{t("components.zoom-help")}</Text>
               )}
@@ -254,6 +298,7 @@ class GenomePanel extends Component {
                           height,
                           genome,
                           annotation: activeAnnotation,
+                          commonYScale,
                         }}
                       />
                     )

@@ -27,6 +27,7 @@ const {
 const margins = {
   gap: 24,
   bar: 10,
+  yTicksCount: 10,
 };
 
 class WalkPlot extends Component {
@@ -38,7 +39,6 @@ class WalkPlot extends Component {
     const { chromoBins, walks } = this.props;
 
     let currentTransform = null;
-    this.yScale = d3.scaleLinear();
     let intervals = [];
     let frameConnections = [];
 
@@ -98,6 +98,7 @@ class WalkPlot extends Component {
 
   updatePanels() {
     const { intervals, frameConnections } = this.state;
+    const { commonYScale } = this.props;
     let { domains, width, defaultDomain, height } = this.props;
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 3 * margins.gap;
@@ -138,6 +139,14 @@ class WalkPlot extends Component {
         ])
         .on("zoom", (event) => this.zooming(event, index))
         .on("end", (event) => this.zoomEnded(event, index));
+      let yDomain = [0, d3.max(filteredIntervals, (d) => d.y) + 0.5];
+      let yScale = d3
+        .scaleLinear()
+        .domain(yDomain)
+        .range([panelHeight, 0])
+        .nice();
+      let yTicks = yScale.ticks(margins.yTicksCount);
+      yTicks[yTicks.length - 1] = yScale.domain()[1];
       let panel = {
         index,
         zoom,
@@ -145,6 +154,8 @@ class WalkPlot extends Component {
         panelWidth,
         panelHeight,
         xScale,
+        yScale,
+        yTicks,
         panelGenomeScale,
         offset,
         intervals: filteredIntervals,
@@ -155,15 +166,23 @@ class WalkPlot extends Component {
       };
       return panel;
     });
-    this.yDomain = d3.extent(
-      this.panels.map((d) => d.intervals).flat(),
-      (d) => d.y
-    );
-    this.yScale = d3
-      .scaleLinear()
-      .domain(this.yDomain)
-      .range([panelHeight - margins.bar, margins.bar])
-      .nice();
+
+    if (commonYScale) {
+      let extent = d3.extent(this.panels.map((d) => d.yScale.domain()).flat());
+      let commonYScale = d3
+        .scaleLinear()
+        .domain(extent)
+        .range([panelHeight, 0])
+        .clamp(true)
+        .nice();
+      let commonYTicks = commonYScale.ticks(margins.yTicksCount);
+      commonYTicks[commonYTicks.length - 1] = commonYScale.domain()[1];
+      this.panels.forEach((d) => {
+        d.yScale = commonYScale;
+        d.yTicks = commonYTicks;
+      });
+    }
+
     this.panels.forEach((panel, i) => {
       let { domain, scale } = panel;
       // filter the connections on same panel
@@ -176,7 +195,7 @@ class WalkPlot extends Component {
               (e.sink.place <= domain[1] && e.sink.place >= domain[0]))
         )
         .forEach((connection, j) => {
-          connection.yScale = this.yScale;
+          connection.fragment = panel.fragment;
           if (connection.source) {
             connection.source.scale = scale;
             connection.source.fragment = panel;
@@ -206,7 +225,6 @@ class WalkPlot extends Component {
                 e.sink.place >= pair[0].domain[0]))
         )
         .forEach((connection, j) => {
-          connection.yScale = this.yScale;
           if (
             connection.source.place <= pair[0].domain[1] &&
             connection.source.place >= pair[0].domain[0]
@@ -250,7 +268,6 @@ class WalkPlot extends Component {
             new WalkConnection(con, con.walk),
             con
           );
-          connection.yScale = this.yScale;
           connection.locateAnchor(fragment);
           this.connections.push(connection);
         });
@@ -271,7 +288,8 @@ class WalkPlot extends Component {
       nextProps.height !== this.props.height ||
       nextProps.hoveredLocation !== this.props.hoveredLocation ||
       nextProps.hoveredLocationPanelIndex !==
-        this.props.hoveredLocationPanelIndex
+        this.props.hoveredLocationPanelIndex ||
+      nextProps.commonYScale !== this.props.commonYScale
     );
   }
 
@@ -724,10 +742,10 @@ class WalkPlot extends Component {
                           }`}
                           transform={`translate(${[
                             panel.xScale(d.startPlace),
-                            this.yScale(d.y) - 0.5 * margins.bar,
+                            panel.yScale(d.y) - 0.5 * margins.bar,
                           ]})`}
                           xPos={panel.offset + panel.xScale(d.startPlace)}
-                          yPos={this.yScale(d.y) - 0.5 * margins.bar}
+                          yPos={panel.yScale(d.y) - 0.5 * margins.bar}
                           points={d.points(panel.xScale)}
                           onClick={(event) =>
                             this.handleIntervalClick(event, d)
@@ -837,6 +855,7 @@ WalkPlot.propTypes = {
 WalkPlot.defaultProps = {
   xDomain: [],
   defaultDomain: [],
+  commonYScale: false,
 };
 const mapDispatchToProps = (dispatch) => ({
   updateDomains: (domains) => dispatch(updateDomains(domains)),

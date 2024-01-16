@@ -153,7 +153,11 @@
       "header": "Genome Graph",
       "interval": "interval",
       "interval_plural": "intervals",
-      "select-annotation-placeholder": "Select an annotation"
+      "select-annotation-placeholder": "Select an annotation",
+      "common-yscale": "Common Y-Axis Range",
+      "distinct-yscale": "Distinct Y-Axis Range",
+      "common-yscale-help": "The same Y-axis range is applied on all panels in this track",
+      "distinct-yscale-help": "Each panel in this track has an optimised Y-axis range"
     },
     "walk-panel": {
       "header": "Walks Graph",

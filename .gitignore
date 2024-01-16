@@ -57,7 +57,7 @@ packages/react-devtools-scheduling-profiler/dist# See https://help.github.com/ar
 .env.development.local
 .env.test.local
 .env.production.local
-
+.prettierrc
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

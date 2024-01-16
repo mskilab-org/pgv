@@ -26,6 +26,7 @@ const {
 const margins = {
   gap: 24,
   bar: 10,
+  yTicksCount: 10,
 };
 
 class GenomePlot extends Component {
@@ -55,7 +56,6 @@ class GenomePlot extends Component {
       intervalBins[d.iid] = interval;
       intervals.push(interval);
     });
-    this.yScale = d3.scaleLinear();
     let frameConnections = genome.connections.map((d, i) => {
       let connection = new Connection(d);
       connection.pinpoint(intervalBins);
@@ -86,7 +86,7 @@ class GenomePlot extends Component {
 
   updatePanels() {
     const { intervals, defaultDomain, frameConnections } = this.state;
-    let { domains, width, height } = this.props;
+    let { domains, width, height, commonYScale } = this.props;
     let stageWidth = width - 2 * margins.gap;
     let stageHeight = height - 3 * margins.gap;
     let panelWidth =
@@ -124,6 +124,14 @@ class GenomePlot extends Component {
         ])
         .on("zoom", (event) => this.zooming(event, index))
         .on("end", (event) => this.zoomEnded(event, index));
+      let yDomain = [0, d3.max(filteredIntervals, (d) => d.y) + 1];
+      let yScale = d3
+        .scaleLinear()
+        .domain(yDomain)
+        .range([panelHeight, 0])
+        .nice();
+      let yTicks = yScale.ticks(margins.yTicksCount);
+      yTicks[yTicks.length - 1] = yScale.domain()[1];
       let panel = {
         index,
         zoom,
@@ -131,6 +139,8 @@ class GenomePlot extends Component {
         panelWidth,
         panelHeight,
         xScale,
+        yScale,
+        yTicks,
         panelGenomeScale,
         offset,
         intervals: filteredIntervals,
@@ -141,15 +151,23 @@ class GenomePlot extends Component {
       };
       return panel;
     });
-    this.yDomain = [
-      0,
-      d3.max(this.panels.map((d) => d.intervals).flat(), (d) => d.y) + 3,
-    ];
-    this.yScale = d3
-      .scaleLinear()
-      .domain(this.yDomain)
-      .range([panelHeight, 0])
-      .nice();
+
+    if (commonYScale) {
+      let extent = d3.extent(this.panels.map((d) => d.yScale.domain()).flat());
+      let commonYScale = d3
+        .scaleLinear()
+        .domain(extent)
+        .range([panelHeight, 0])
+        .clamp(true)
+        .nice();
+      let commonYTicks = commonYScale.ticks(margins.yTicksCount);
+      commonYTicks[commonYTicks.length - 1] = commonYScale.domain()[1];
+      this.panels.forEach((d) => {
+        d.yScale = commonYScale;
+        d.yTicks = commonYTicks;
+      });
+    }
+
     this.panels.forEach((panel, i) => {
       let { domain, scale } = panel;
       // filter the connections on same panel
@@ -162,7 +180,7 @@ class GenomePlot extends Component {
               (e.sink.place <= domain[1] && e.sink.place >= domain[0]))
         )
         .forEach((connection, j) => {
-          connection.yScale = this.yScale;
+          connection.fragment = panel;
           if (connection.source) {
             connection.source.scale = scale;
             connection.source.fragment = panel;
@@ -192,7 +210,6 @@ class GenomePlot extends Component {
                 e.sink.place >= pair[0].domain[0]))
         )
         .forEach((connection, j) => {
-          connection.yScale = this.yScale;
           if (
             connection.source.place <= pair[0].domain[1] &&
             connection.source.place >= pair[0].domain[0]
@@ -233,7 +250,6 @@ class GenomePlot extends Component {
         })
         .forEach((con, j) => {
           let connection = Object.assign(new Connection(con), con);
-          connection.yScale = this.yScale;
           connection.locateAnchor(fragment);
           this.connections.push(connection);
         });
@@ -251,7 +267,8 @@ class GenomePlot extends Component {
       nextProps.height !== this.props.height ||
       nextProps.hoveredLocation !== this.props.hoveredLocation ||
       nextProps.hoveredLocationPanelIndex !==
-        this.props.hoveredLocationPanelIndex
+        this.props.hoveredLocationPanelIndex ||
+      nextProps.commonYScale !== this.props.commonYScale
     );
   }
 
@@ -570,7 +587,7 @@ class GenomePlot extends Component {
                     <>
                       <Grid
                         scaleX={panel.xScale}
-                        scaleY={this.yScale}
+                        scaleY={panel.yScale}
                         axisWidth={panel.panelWidth}
                         axisHeight={panel.panelHeight}
                       />
@@ -606,7 +623,7 @@ class GenomePlot extends Component {
                         }`}
                         transform={`translate(${[
                           panel.xScale(d.startPlace),
-                          this.yScale(d.y) - 0.5 * margins.bar,
+                          panel.yScale(d.y) - 0.5 * margins.bar,
                         ]})`}
                         width={
                           panel.xScale(d.endPlace) - panel.xScale(d.startPlace)

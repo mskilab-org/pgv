@@ -100,6 +100,7 @@ class Connection {
   }
 
   locateAnchor(fragment) {
+    this.fragment = fragment;
     this.kind = "ANCHOR";
     this.styleClass = `popovered connection anchor`;
     if (
@@ -107,6 +108,7 @@ class Connection {
       this.source.place >= fragment.domain[0]
     ) {
       this.source.scale = fragment.scale;
+      this.source.yScale = fragment.yScale;
       this.touchPlaceX =
         this.source.sign > 0
           ? this.source.interval.endPlace
@@ -122,6 +124,7 @@ class Connection {
       this.otherEnd = this.sink;
     } else {
       this.sink.scale = fragment.scale;
+      this.sink.yScale = fragment.yScale;
       this.touchPlaceX =
         this.sink.sign > 0
           ? this.sink.interval.endPlace
@@ -145,7 +148,7 @@ class Connection {
     if (this.kind === "ANCHOR") {
       this.points = [
         this.touchScale(this.touchPlaceX),
-        this.yScale(this.touchPlaceY),
+        this.fragment.yScale(this.touchPlaceY),
       ];
       return "translate(" + this.points + ")";
     } else {
@@ -188,57 +191,65 @@ class Connection {
       origin === this.source.scale(this.source.place)
         ? this.source.y
         : this.sink.y;
+    var originYScale =
+      origin === this.source.scale(this.source.place)
+        ? this.source.fragment.yScale
+        : this.sink.fragment.yScale;
     var targetY = originY === this.source.y ? this.sink.y : this.source.y;
+    var targetYScale =
+      originY === this.source.y
+        ? this.sink.fragment.yScale
+        : this.source.fragment.yScale;
     var midPointX = 0.5 * origin + 0.5 * target;
     var midPointY = 0.5 * originY + 0.5 * targetY;
 
     if (this.type === "ALT" && this.mode !== "subconnection") {
       if (Math.abs(this.source.y) === Math.abs(this.sink.y)) {
         points = [
-          [origin, this.yScale(originY)],
+          [origin, originYScale(originY)],
           [
             d3.min([origin + Math.sign(originSign) * 5, midPointX - 5]),
-            this.yScale(originY + 0.06),
+            originYScale(originY + 0.06),
           ],
           [
             d3.min([origin + Math.sign(originSign) * 25, midPointX - 5]),
-            this.yScale(originY + 0.36),
+            originYScale(originY + 0.36),
           ],
-          [midPointX, this.yScale(midPointY + 0.5)],
+          [midPointX, originYScale(midPointY + 0.5)],
           [
             d3.max([target + Math.sign(targetSign) * 25, midPointX + 5]),
-            this.yScale(targetY + 0.36),
+            targetYScale(targetY + 0.36),
           ],
           [
             d3.max([target + Math.sign(targetSign) * 5, midPointX + 5]),
-            this.yScale(targetY + 0.06),
+            targetYScale(targetY + 0.06),
           ],
-          [target, this.yScale(targetY)],
+          [target, targetYScale(targetY)],
         ];
       } else {
         points = [
-          [origin, this.yScale(originY)],
-          [origin + Math.sign(originSign) * 5, this.yScale(originY)],
+          [origin, originYScale(originY)],
+          [origin + Math.sign(originSign) * 5, originYScale(originY)],
           [
             origin + Math.sign(originSign) * 25,
-            this.yScale(
+            originYScale(
               originY + Math.sign(targetY - originY) * (originY < 10 ? 0.25 : 2)
             ),
           ],
           [
             target + Math.sign(targetSign) * 25,
-            this.yScale(
+            targetYScale(
               targetY - Math.sign(targetY - originY) * (targetY < 10 ? 0.25 : 2)
             ),
           ],
-          [target + Math.sign(targetSign) * 5, this.yScale(targetY)],
-          [target, this.yScale(targetY)],
+          [target + Math.sign(targetSign) * 5, targetYScale(targetY)],
+          [target, targetYScale(targetY)],
         ];
       }
     } else {
       points = [
-        [origin, this.yScale(originY)],
-        [target, this.yScale(targetY)],
+        [origin, originYScale(originY)],
+        [target, targetYScale(targetY)],
       ];
     }
     return points;
@@ -247,14 +258,17 @@ class Connection {
   // The array of points forming the loose connections with one endpoint missing
   get looseConnectorEndpoints() {
     return [
-      [this.touchScale(this.touchPlaceX), this.yScale(this.touchPlaceY)],
+      [
+        this.touchScale(this.touchPlaceX),
+        this.fragment.yScale(this.touchPlaceY),
+      ],
       [
         this.touchScale(this.touchPlaceX) + this.touchPlaceSign * 15,
-        this.yScale(this.touchPlaceY) - 5,
+        this.fragment.yScale(this.touchPlaceY) - 5,
       ],
       [
         this.touchScale(this.touchPlaceX) + this.touchPlaceSign * 5,
-        this.yScale(this.touchPlaceY) - 15,
+        this.fragment.yScale(this.touchPlaceY) - 15,
       ],
     ];
   }
