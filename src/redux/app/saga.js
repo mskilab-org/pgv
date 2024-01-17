@@ -199,7 +199,14 @@ function* launchApplication(action) {
         let d = datafiles[key];
         return {
           file: key,
-          tags: d.description,
+          tags: [d.description].flat(Infinity).filter((item) => {
+            return (
+              typeof item === "string" &&
+              item.trim() !== "" &&
+              item !== "{}" &&
+              item !== "[]"
+            );
+          }),
           plots: d.plots.map((e) => {
             return {
               ...e,
