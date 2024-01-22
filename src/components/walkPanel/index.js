@@ -36,7 +36,7 @@ const margins = {
   gap: 24,
   bar: 10,
   minHeight: 400,
-  maxHeight: 1600,
+  maxHeight: 8000,
   step: 10,
 };
 
