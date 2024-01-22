@@ -5,7 +5,16 @@ import { withTranslation } from "react-i18next";
 import ContainerDimensions from "react-container-dimensions";
 import WalkPlot from "../walkPlot";
 import handleViewport from "react-in-viewport";
-import { Card, Space, Button, Tooltip, message, Typography, Tag } from "antd";
+import {
+  Card,
+  Space,
+  Button,
+  Tooltip,
+  message,
+  Typography,
+  Tag,
+  InputNumber,
+} from "antd";
 import * as d3 from "d3";
 import { GiPathDistance } from "react-icons/gi";
 import {
@@ -27,12 +36,16 @@ const margins = {
   gap: 24,
   bar: 10,
   minHeight: 400,
+  maxHeight: 1600,
+  step: 10,
 };
 
 const { Text } = Typography;
 const TAG_COLOR = { binset: "#f50", walk: "#2db7f5" };
 
 class WalkPanel extends Component {
+  state = { plotHeight: 400 };
+
   container = null;
 
   onDownloadButtonClicked = () => {
@@ -54,6 +67,10 @@ class WalkPanel extends Component {
       });
   };
 
+  onMinHeightInputChanged = (plotHeight) => {
+    this.setState({ plotHeight });
+  };
+
   render() {
     const {
       t,
@@ -69,8 +86,11 @@ class WalkPanel extends Component {
       tag,
     } = this.props;
 
+    const { plotHeight } = this.state;
+    const { minHeight, maxHeight, step } = margins;
+
     return (
-      <Wrapper visible={visible} minHeight={margins.minHeight}>
+      <Wrapper visible={visible} minHeight={minHeight}>
         <Card
           style={transitionStyle(inViewport || renderOutsideViewPort)}
           size="small"
@@ -97,6 +117,25 @@ class WalkPanel extends Component {
           }
           extra={
             <Space>
+              {tag === "binset" && (
+                <Tooltip
+                  title={t("components.walk-panel.input-height-tooltip", {
+                    minHeight,
+                    maxHeight,
+                  })}
+                >
+                  <InputNumber
+                    style={{ width: 170 }}
+                    min={minHeight}
+                    max={maxHeight}
+                    step={step}
+                    defaultValue={minHeight}
+                    prefix={t("components.walk-panel.input-height-prefix")}
+                    bordered={false}
+                    onChange={(value) => this.onMinHeightInputChanged(value)}
+                  />
+                </Tooltip>
+              )}
               {zoomedByCmd && (
                 <Text type="secondary">{t("components.zoom-help")}</Text>
               )}
@@ -153,7 +192,7 @@ class WalkPanel extends Component {
                           width: width - 2 * margins.padding,
                           height: d3.max([
                             maximumY * margins.bar * 1.5 + 3 * margins.gap,
-                            margins.minHeight,
+                            plotHeight,
                           ]),
                           walks,
                         }}

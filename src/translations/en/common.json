@@ -162,7 +162,9 @@
     "walk-panel": {
       "header": "Walks Graph",
       "walk": "walk",
-      "walk_plural": "walks"
+      "walk_plural": "walks",
+      "input-height-prefix": "Plot height (px):",
+      "input-height-tooltip": "Explicitly set the height for the walks plot between {{minHeight}}px and {{maxHeight}}px"
     },
     "settings-panel": {
       "coordinates": { "label": "Reference" },
