@@ -50,7 +50,7 @@ function* fetchHiglassTileset(plot) {
     .get(`${plot.server}/api/v1/tileset_info/?d=${plot.uuid}`)
     .then((results) => {
       plot.tilesetInfo = results.data[plot.uuid];
-      plot.title = plot.tilesetInfo.name;
+      plot.title = plot.name ? plot.title : plot.tilesetInfo.name;
       plot.path = `${plot.server}/api/v1/tiles/?${d3
         .range(0, Math.pow(2, ZOOM))
         .map((d, i) => `d=${plot.uuid}.${ZOOM}.${d}`)
@@ -212,6 +212,7 @@ function* launchApplication(action) {
               ...e,
               id: guid(),
               title: `${key} ${e.title}`,
+              name: e.title,
               path: `data/${key}/${e.source}`,
             };
           }),
