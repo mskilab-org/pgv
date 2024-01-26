@@ -62,6 +62,13 @@ class Connection {
     return this.source.place && this.sink.place;
   }
 
+  isValid(intervalBins) {
+    return (
+      (!this.source || intervalBins[this.source.intervalId]) &&
+      (!this.sink || intervalBins[this.sink.intervalId])
+    );
+  }
+
   pinpoint(intervalBins) {
     if (this.source) {
       this.source.interval = intervalBins[this.source.intervalId];

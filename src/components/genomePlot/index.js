@@ -56,16 +56,19 @@ class GenomePlot extends Component {
       intervalBins[d.iid] = interval;
       intervals.push(interval);
     });
-    let frameConnections = genome.connections.map((d, i) => {
+    let frameConnections = [];
+    genome.connections.forEach((d, i) => {
       let connection = new Connection(d);
-      connection.pinpoint(intervalBins);
-      connection.arc = d3
-        .arc()
-        .innerRadius(0)
-        .outerRadius(margins.bar / 2)
-        .startAngle(0)
-        .endAngle((e, j) => e * Math.PI);
-      return connection;
+      if (connection.isValid(intervalBins)) {
+        connection.pinpoint(intervalBins);
+        connection.arc = d3
+          .arc()
+          .innerRadius(0)
+          .outerRadius(margins.bar / 2)
+          .startAngle(0)
+          .endAngle((e, j) => e * Math.PI);
+        frameConnections.push(connection);
+      }
     });
     this.state = {
       intervals,
