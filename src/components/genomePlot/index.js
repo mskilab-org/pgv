@@ -633,7 +633,7 @@ class GenomePlot extends Component {
                         }
                         height={margins.bar}
                         style={{
-                          fill: d.color,
+                          fill: d.fill || d.color,
                           stroke: d.stroke,
                           strokeWidth: 1,
                         }}

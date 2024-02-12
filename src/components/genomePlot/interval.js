@@ -2,7 +2,6 @@ import * as d3 from "d3";
 import { humanize, guid } from "../../helpers/utility";
 
 class Interval {
-
   constructor(inter) {
     this.identifier = guid();
     this.primaryKey = `iid-${inter.iid}`;
@@ -13,7 +12,8 @@ class Interval {
     this.endPoint = inter.endPoint;
     this.annotation = inter.annotation;
     this.metadata = inter.metadata || {};
-    this.annotationArray = inter.annotation ? inter.annotation.split('|') : [];
+    this.fill = this.metadata.color;
+    this.annotationArray = inter.annotation ? inter.annotation.split("|") : [];
     this.intervalLength = this.endPoint - this.startPoint;
     this.y = inter.y;
     this.title = inter.title;
@@ -22,21 +22,28 @@ class Interval {
     this.sequence = inter.sequence;
     this.errors = [];
     this.attributes = [
-      {label: 'Chromosome', value: this.chromosome}, 
-      {label: 'Y', value: this.y}, 
-      {label: 'Start Point (chromosome)', value: d3.format(',')(this.startPoint)},
-      {label: 'End Point (chromosome)', value: d3.format(',')(this.endPoint - 1)}, // because endpoint is inclusive 
-      {label: 'Interval Length', value: d3.format(',')(this.intervalLength)}];
+      { label: "Chromosome", value: this.chromosome },
+      { label: "Y", value: this.y },
+      {
+        label: "Start Point (chromosome)",
+        value: d3.format(",")(this.startPoint),
+      },
+      {
+        label: "End Point (chromosome)",
+        value: d3.format(",")(this.endPoint - 1),
+      }, // because endpoint is inclusive
+      { label: "Interval Length", value: d3.format(",")(this.intervalLength) },
+    ];
     if (this.strand) {
-      this.attributes.push({label: 'Strand', value: this.strand});
+      this.attributes.push({ label: "Strand", value: this.strand });
     }
     if (this.sequence) {
-      this.attributes.push({label: 'Sequence', value: this.sequence});
+      this.attributes.push({ label: "Sequence", value: this.sequence });
     }
   }
 
   get isSubInterval() {
-    return this.mode === 'subinterval';
+    return this.mode === "subinterval";
   }
 
   get location() {

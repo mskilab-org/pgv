@@ -5,7 +5,7 @@
       "visible": true
     },
     "y.axis": "cn",
-    "description": "<h3>DO234435 (0055e71c7c03d4ff4d57cd363f052914434bd306aff231125413c4703a30c84e)<\/h3> tumor_type=ESAD, dataset=ESAD-UK, organ=Esophagus, lineage=Esophageal columnar epithelium, gender=female, cluster=INVDUP, PLAG1 mut, KRAS amp, MUTYH germline pathogenic, CDKN2A homdel"
+    "description": "<h3>DO234435 (0055e71c7c03d4ff4d57cd363f052914434bd306aff231125413c4703a30c84e)</h3> tumor_type=ESAD, dataset=ESAD-UK, organ=Esophagus, lineage=Esophageal columnar epithelium, gender=female, cluster=INVDUP, PLAG1 mut, KRAS amp, MUTYH germline pathogenic, CDKN2A homdel"
   },
   "intervals": [
     {
@@ -72,7 +72,10 @@
       "annotation": "",
       "title": "6",
       "type": "interval",
-      "strand": "*"
+      "strand": "*",
+      "metadata": {
+        "color": "#800080"
+      }
     },
     {
       "chromosome": "1",
@@ -11632,5 +11635,4 @@
       "annotation": ""
     }
   ]
-
 }
