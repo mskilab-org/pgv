@@ -65,6 +65,93 @@ export function getFloatArray(dense, length, dtype) {
   return fAry;
 }
 
+// returns the maximum Y value within the domains array as applied to the dataPointsX
+export function findMaxInRanges(
+  domains,
+  dataPointsX,
+  dataPointsY,
+  usePercentile = false,
+  p = 0.99 // 99th percentile by default
+) {
+  return domains.map(([start, end]) => {
+    let left = 0,
+      right = dataPointsX.length - 1;
+
+    // // Binary search for the first element >= start
+    // while (left <= right) {
+    //   const mid = Math.floor((left + right) / 2);
+    //   if (dataPointsX[mid] < start) left = mid + 1;
+    //   else right = mid - 1;
+    // }
+
+    left = findIndexForNum(dataPointsX, start);
+    right = findIndexForNum(dataPointsX, end);
+
+    // Collect values within the specified range using slice
+    //const sliceEnd = dataPointsX.findIndex((d) => d > end); // Find first index greater than end
+    const valuesInRangeSlice = dataPointsY.slice(left, right);
+
+    // Calculate either max or 99th percentile
+    let resultValue;
+    if (usePercentile && valuesInRangeSlice.length > 0) {
+      // After sorting:
+      valuesInRangeSlice.sort((a, b) => a - b);
+
+      // "Continuous" approach with optional interpolation:
+      const n = valuesInRangeSlice.length;
+      const i = (n - 1) * p; // fractional index
+      const iLow = Math.floor(i);
+      const iHigh = Math.ceil(i);
+      if (iLow === iHigh) {
+        // If i is an integer, no interpolation needed
+        resultValue = valuesInRangeSlice[iLow];
+      } else {
+        // Linear interpolation (optional, for a more precise percentile):
+        const fraction = i - iLow;
+        resultValue =
+          valuesInRangeSlice[iLow] * (1 - fraction) +
+          valuesInRangeSlice[iHigh] * fraction;
+      }
+    } else {
+      resultValue =
+        valuesInRangeSlice.length > 0 ? d3.max(valuesInRangeSlice) : -Infinity;
+    }
+
+    return resultValue;
+  });
+}
+
+/**
+ * findIndexForNum(sortedArray, num):
+ *
+ * Returns the smallest index i such that sortedArray[i] >= num.
+ * That implies:
+ *    - For i > 0: sortedArray[i - 1] < num <= sortedArray[i]
+ *    - If i === 0: then sortedArray[0] is already >= num
+ *    - If i === sortedArray.length: all elements are < num
+ *
+ * sortedArray must be sorted in ascending order (no duplicates needed, but it’s typical).
+ */
+export function findIndexForNum(sortedArray, num) {
+  let left = 0;
+  let right = sortedArray.length; // note: we use right = length (one past last index)
+
+  while (left < right) {
+    const mid = (left + right) >>> 1; // floor((left+right)/2)
+    if (sortedArray[mid] < num) {
+      // num is bigger, so we must look right of mid
+      left = mid + 1;
+    } else {
+      // sortedArray[mid] >= num, so tighten to [left .. mid]
+      right = mid;
+    }
+  }
+
+  // After the loop, 'left' is the smallest index where sortedArray[left] >= num
+  // or left === sortedArray.length if all elements < num
+  return left;
+}
+
 export function measureText(string, fontSize = 10) {
   const widths = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

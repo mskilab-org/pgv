@@ -3,6 +3,7 @@ import { PropTypes } from "prop-types";
 import * as d3 from "d3";
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
+import { findMaxInRanges } from "../../helpers/utility";
 import Grid from "../grid/index";
 import Points from "./points";
 import Wrapper from "./index.style";
@@ -23,6 +24,7 @@ class ScatterPlot extends Component {
   dataPointsX = null;
   dataPointsY = null;
   maxDataPointsY = null;
+  maxY2Values = null;
   zoom = null;
 
   constructor(props) {
@@ -44,7 +46,7 @@ class ScatterPlot extends Component {
         antialias: true,
         depth: false,
         stencil: false,
-        preserveDrawingBuffer: true,
+        preserveDrawingBuffer: false,
       },
     });
 
@@ -54,6 +56,8 @@ class ScatterPlot extends Component {
 
     this.regl.on("restore", () => {
       console.log("webgl context restored");
+      this.points = new Points(this.regl, margins.gapX, 0);
+      this.updateStage(true);
     });
 
     this.points = new Points(this.regl, margins.gapX, 0);
@@ -84,7 +88,18 @@ class ScatterPlot extends Component {
             .translate(-s[0], 0)
         );
     });
-    this.updateStage();
+    this.updateStage(true);
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return (
+      nextProps.domains.toString() !== this.props.domains.toString() ||
+      nextProps.width !== this.props.width ||
+      nextProps.height !== this.props.height ||
+      nextProps.hoveredLocation !== this.props.hoveredLocation ||
+      nextProps.hoveredLocationPanelIndex !==
+        this.props.hoveredLocationPanelIndex
+    );
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -127,13 +142,17 @@ class ScatterPlot extends Component {
       .attr(
         "transform",
         `translate(${[
-          this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation),
+          this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation) ||
+            -10000,
           0,
         ]})`
       );
     d3.select(this.plotContainer)
       .select(`#hovered-location-text-${hoveredLocationPanelIndex}`)
-      .attr("x", this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation))
+      .attr(
+        "x",
+        this.panels[hoveredLocationPanelIndex].xScale(hoveredLocation) || -10000
+      )
       .text(
         Object.values(chromoBins)
           .filter(
@@ -147,35 +166,50 @@ class ScatterPlot extends Component {
             )
           )
       );
-    if (prevProps.width !== this.props.width) {
+    if (
+      prevProps?.width !== this.props.width ||
+      prevProps?.height !== this.props.height
+    ) {
       this.componentWillUnmount();
       this.componentDidMount();
     } else {
-      this.points.rescaleXY(domains);
+      this.updateStage(prevProps.data.numRows !== this.props.data.numRows);
     }
   }
 
   componentWillUnmount() {
-    if (this.regl) {
-      this.regl.destroy();
-      this.regl._gl.clear(this.regl._gl.COLOR_BUFFER_BIT);
-      this.regl._gl.clear(this.regl._gl.DEPTH_BUFFER_BIT);
-      this.regl._gl.clear(this.regl._gl.STENCIL_BUFFER_BIT);
+    try {
+      if (this.regl) {
+        this.regl.destroy();
+        this.regl._gl.clear(this.regl._gl.COLOR_BUFFER_BIT);
+        this.regl._gl.clear(this.regl._gl.DEPTH_BUFFER_BIT);
+        this.regl._gl.clear(this.regl._gl.STENCIL_BUFFER_BIT);
+      }
+    } catch (err) {
+      console.log(`Scatterplot webgl failed with error: ${err}`);
     }
   }
 
-  updateStage() {
-    let { domains, width, height } = this.props;
-    let stageWidth = width - 2 * margins.gapX;
-    let stageHeight = height - 3 * margins.gapY;
+  updateStage(reloadData = false) {
+    const { domains, width, height } = this.props;
 
-    this.points.load(
+    const stageWidth = width - 2 * margins.gapX;
+    const stageHeight = height - 3 * margins.gapY;
+
+    if (reloadData) {
+      console.log("Reloading data");
+      this.points.setData(
+        this.dataPointsX,
+        this.dataPointsY,
+        this.dataPointsColor
+      );
+    }
+
+    this.points.updateDomains(
       stageWidth,
       stageHeight,
-      this.dataPointsX,
-      this.dataPointsY,
-      this.dataPointsColor,
-      domains
+      domains,
+      this.maxY2Values
     );
     this.points.render();
   }
@@ -251,6 +285,11 @@ class ScatterPlot extends Component {
       (stageWidth - (domains.length - 1) * margins.gapX) / domains.length;
     let panelHeight = stageHeight;
     this.panels = [];
+    this.maxY2Values = findMaxInRanges(
+      domains,
+      this.dataPointsX,
+      this.dataPointsY
+    );
     domains.forEach((xDomain, index) => {
       let matched = [];
       this.dataPointsX.forEach((d, i) => {
@@ -278,7 +317,7 @@ class ScatterPlot extends Component {
         .domain(defaultDomain)
         .range([0, panelWidth]);
 
-      let yExtent = [0, d3.quantile(matched, 0.99)];
+      let yExtent = [0, this.maxY2Values[index]];
 
       let yScale = d3
         .scaleLinear()
