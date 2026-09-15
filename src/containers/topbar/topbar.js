@@ -84,6 +84,7 @@ class Topbar extends Component {
                         mode="multiple"
                         showSearch={true}
                         value={selectedFiles.map((d) => d.file)}
+                        maxTagCount="responsive"
                         className="files-select"
                         allowClear={true}
                         loading={loading}

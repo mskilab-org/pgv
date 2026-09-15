@@ -46,9 +46,10 @@ const TopbarWrapper = styled.div`
             }
           }
           .tags-select {
-            min-width: 500px;
+            min-width: 380px;
           }
           .files-select {
+            width: 320px;
             min-width: 200px;
           }
         }

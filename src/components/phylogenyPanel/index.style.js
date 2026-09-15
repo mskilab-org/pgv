@@ -5,6 +5,23 @@ const Wrapper = styled.div`
     background: white;
     padding: 0px;
   }
+  .phylogeny-toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+  .phylogeny-control-groups { display: flex; flex-wrap: wrap; gap: 12px; }
+  .phylogeny-control-group { flex: 1 1 420px; min-width: 0; padding: 8px 12px 10px; border: 1px solid #e8e8e8; border-radius: 3px; background: #fafafa; }
+  .phylogeny-selection-group { flex: 1.2 1 460px; }
+  .phylogeny-group-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 8px; }
+  .phylogeny-group-title { color: #666; font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; }
+  .phylogeny-group-counts { color: #666; font-size: 11px; }
+  .phylogeny-selection-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+  .phylogeny-control { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+  .phylogeny-control-group .ant-checkbox-wrapper { font-size: 12px; }
+  .phylogeny-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .phylogeny-gesture-help { font-size: 11px; line-height: 1.6; }
+  .phylogeny-load-status { padding: 4px 0; font-size: 12px; }
+  .phylogeny-load-status button { margin-left: 12px; }
+  .phylogeny-warnings { font-size: 12px; padding: 4px; margin-bottom: 8px; background: #fffbe6; }
+  .phylogeny-warnings ul { max-height: 120px; overflow: auto; }
+  &.phylogeny-linked-panel .ant-card-head-title { min-width: 0; white-space: normal; }
   .tooltip-box {
     .header {
       font-size: 16px;

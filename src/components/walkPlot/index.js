@@ -16,6 +16,7 @@ import {
 } from "../../helpers/utility";
 import Grid from "../grid/index";
 import appActions from "../../redux/app/actions";
+import { allowPlotNavigation } from "../../helpers/plotNavigation";
 
 const {
   updateDomains,
@@ -306,14 +307,14 @@ class WalkPlot extends Component {
         .attr("preserveAspectRatio", "xMinYMin meet")
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           )
         );
       d3.select(this.container)
         .select(`#panel-rect-${index}`)
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           ).transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))
@@ -341,14 +342,14 @@ class WalkPlot extends Component {
         .attr("preserveAspectRatio", "xMinYMin meet")
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           )
         );
       d3.select(this.container)
         .select(`#panel-rect-${index}`)
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           ).transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))

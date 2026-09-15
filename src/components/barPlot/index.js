@@ -7,6 +7,7 @@ import Grid from "../grid/index";
 import Bars from "./bars";
 import Wrapper from "./index.style";
 import appActions from "../../redux/app/actions";
+import { allowPlotNavigation } from "../../helpers/plotNavigation";
 
 const { updateDomains, updateHoveredLocation } = appActions;
 
@@ -70,14 +71,14 @@ class BarPlot extends Component {
         .attr("preserveAspectRatio", "xMinYMin meet")
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           )
         );
       d3.select(this.plotContainer)
         .select(`#panel-rect-${index}`)
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           ).transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))
@@ -107,14 +108,14 @@ class BarPlot extends Component {
         .attr("preserveAspectRatio", "xMinYMin meet")
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           )
         );
       d3.select(this.plotContainer)
         .select(`#panel-rect-${index}`)
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           ).transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))

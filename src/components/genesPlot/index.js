@@ -7,6 +7,7 @@ import Wrapper from "./index.style";
 import { humanize, measureText } from "../../helpers/utility";
 import Plot from "./plot";
 import appActions from "../../redux/app/actions";
+import { allowPlotNavigation } from "../../helpers/plotNavigation";
 
 const { updateDomains } = appActions;
 
@@ -93,14 +94,14 @@ class GenesPlot extends Component {
         .attr("preserveAspectRatio", "xMinYMin meet")
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           )
         );
       d3.select(this.plotContainer)
         .select(`#panel-rect-${index}`)
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           ).transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))
@@ -141,14 +142,14 @@ class GenesPlot extends Component {
         .attr("preserveAspectRatio", "xMinYMin meet")
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           )
         );
       d3.select(this.plotContainer)
         .select(`#panel-rect-${index}`)
         .call(
           panel.zoom.filter(
-            (event) => !zoomedByCmd || (!event.button && event.metaKey)
+            (event) => allowPlotNavigation(event, zoomedByCmd)
           ).transform,
           d3.zoomIdentity
             .scale(panel.panelWidth / (s[1] - s[0]))

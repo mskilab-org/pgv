@@ -43,7 +43,7 @@ const {
   updateGlobalBigwigYScale,
 } = appActions;
 
-const PHYLOGENY_PANEL_HEIGHT = { min: 50, max: 500, default: 200, step: 10 };
+const PHYLOGENY_PANEL_HEIGHT = { min: 140, max: 1600, default: 640, step: 20 };
 
 class HeaderPanel extends Component {
   state = { visible: false };

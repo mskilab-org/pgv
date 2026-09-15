@@ -77,6 +77,11 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
+## Phylogeny-linked CN and mutation heatmap
+
+See [the phylogeny guide](docs/phylogeny.md) for existing-format inputs, the optional
+mutation adapter, selection/confirmation, aligned tracks, and full-matrix verification.
+
 ## Converting CSV files for coverage data to Apache Arrow
 
 Coverage data CSV files need to have the following structure
