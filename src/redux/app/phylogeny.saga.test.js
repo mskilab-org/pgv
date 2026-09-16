@@ -53,6 +53,110 @@ test.each([[["a"]], [["a", "b"]]])("unconfirmed %j performs no effects", async (
   expect(loadArrowTable).not.toHaveBeenCalled();
 });
 
+test("overview merges optional allelic.json channels onto the matching total-CN intervals", async () => {
+  const file = manifest("a");
+  file.plots.push({ id: "a-allelic", ownerFile: "a", sample: "a", reference: "ref", type: "allelic", source: "allelic.json", path: "data/a/allelic.json", visible: false });
+  const oneCellTree = { ...tree, data: "(a);" };
+  axios.get.mockImplementation(async source => ({ data: source.endsWith("allelic.json")
+    ? { intervals: [{ iid: 1, chromosome: "chr1", startPoint: 1, endPoint: 20, majorCn: 2, minorCn: 0 }] }
+    : genome }));
+  const s = execute(loadPhylogenyHeatmap, app({ plots: [oneCellTree], datafiles: [cohortFile, file] }), actions.loadPhylogenyHeatmap(oneCellTree.id));
+  await s.task.toPromise();
+  expect(s.state().phylogenyHeatmap.status).toBe("ready");
+  expect(s.state().phylogenyHeatmap.cnByCell.a[0]).toMatchObject({ cn: 2, majorCn: 2, minorCn: 0 });
+  expect(axios.get.mock.calls.map(([source]) => source)).toEqual(["data/a/g.json", "data/a/allelic.json"]);
+});
+
+test("legacy paired alleles join Total only by coordinates, never drawing IID or color", async () => {
+  const file = manifest("a");
+  file.plots[0].allelicSource = "allelic.json";
+  const second = { ...genome.intervals[0], iid: 2, startPoint: 21, endPoint: 40, y: 3 };
+  const alleles = [
+    { ...genome.intervals[0], iid: 101, y: 0, metadata: { color: "red" } },
+    { ...second, iid: 102, y: 2, metadata: { color: "blue" } },
+    { ...genome.intervals[0], iid: 201, y: 2, metadata: { color: "blue" } },
+    { ...second, iid: 202, y: null, metadata: { color: "red" } },
+  ];
+  axios.get.mockImplementation(async path => ({ data: { intervals: path.endsWith("allelic.json") ? alleles : [...genome.intervals, second] } }));
+  const s = execute(loadPhylogenyHeatmap, app({ plots: [{ ...tree, data: "(a);" }], datafiles: [file] }), actions.loadPhylogenyHeatmap(tree.id));
+  await s.task.toPromise();
+  expect(s.state().phylogenyHeatmap.status).toBe("ready");
+  expect(s.state().phylogenyHeatmap.cnByCell.a).toEqual([
+    { chromosome: "chr1", start: 1, end: 20, startPoint: 1, endPoint: 20, iid: 1, cn: 2, majorCn: 2, minorCn: 0 },
+    { chromosome: "chr1", start: 21, end: 40, startPoint: 21, endPoint: 40, iid: 2, cn: 3, majorCn: null, minorCn: null },
+  ]);
+});
+
+test.each(["exact sample", "genome source", "ambiguous owner"])("allelic descriptor resolution protects multi-genome owners: %s", async match => {
+  const file = manifest("multi", "a");
+  const ownerAllele = { type: "allelic", sample: "multi", source: "owner-allelic.json" };
+  const noSampleAllele = { type: "allelic", source: "unscoped-allelic.json" };
+  file.plots.push({ ...file.plots[0], id: "b-g", sample: "b", source: "b.json", path: "data/multi/b.json" }, ownerAllele, noSampleAllele);
+  if (match === "exact sample") file.plots.push({ type: "allelic", sample: "a", source: "a-allelic.json" });
+  if (match === "genome source") file.plots[0].allelicSource = "a-allelic.json";
+  const allele = { intervals: [{ ...genome.intervals[0], majorCn: 2, minorCn: 0 }] };
+  axios.get.mockImplementation(async path => ({ data: path.endsWith("allelic.json") ? allele : genome }));
+  const s = execute(loadPhylogenyHeatmap, app({ plots: [{ ...tree, data: "(a);" }], datafiles: [file] }), actions.loadPhylogenyHeatmap(tree.id));
+  await s.task.toPromise();
+  expect(axios.get.mock.calls.map(([path]) => path)).toEqual(match === "ambiguous owner" ? ["data/multi/g.json"] : ["data/multi/g.json", "data/multi/a-allelic.json"]);
+  expect(s.state().phylogenyHeatmap.cnByCell.a[0].cn).toBe(2);
+  expect(s.state().phylogenyHeatmap.cnByCell.a[0].majorCn).toBe(match === "ambiguous owner" ? undefined : 2);
+});
+
+test("single-genome owner fallback remains available for sample aliases", async () => {
+  const file = manifest("owner", "a");
+  file.plots.push({ type: "allelic", sample: "owner", source: "allelic.json" });
+  axios.get.mockImplementation(async path => ({ data: path.endsWith("allelic.json")
+    ? { intervals: [{ ...genome.intervals[0], majorCn: 1, minorCn: 1 }] } : genome }));
+  const s = execute(loadPhylogenyHeatmap, app({ plots: [{ ...tree, data: "(a);" }], datafiles: [file] }), actions.loadPhylogenyHeatmap(tree.id));
+  await s.task.toPromise();
+  expect(s.state().phylogenyHeatmap.cnByCell.a[0]).toMatchObject({ cn: 2, majorCn: 1, minorCn: 1 });
+});
+
+test("allelic joins require matching coordinates and compatible IDs, and reject ambiguous matches", async () => {
+  const file = manifest("a");
+  file.plots[0].allelicSource = "allelic.json";
+  const intervals = [
+    { iid: 1, chromosome: "chr1", startPoint: 1, endPoint: 20, y: 2 },
+    { iid: 1, chromosome: "chr1", startPoint: 21, endPoint: 40, y: 3 },
+    { chromosome: "chr1", startPoint: 41, endPoint: 60, y: 4 },
+    { iid: 4, chromosome: "chr1", startPoint: 61, endPoint: 80, y: 5 },
+    { iid: 5, chromosome: "chr1", startPoint: 81, endPoint: 90, y: 6 },
+  ];
+  const alleles = [
+    { ...intervals[1], majorCn: 2, minorCn: 1 },
+    { ...intervals[2], majorCn: 3, minorCn: 1 },
+    { ...intervals[3], iid: 99, majorCn: 4, minorCn: 1 },
+    { ...intervals[4], majorCn: 5, minorCn: 1 },
+    { ...intervals[4], majorCn: 4, minorCn: 2 },
+  ];
+  axios.get.mockImplementation(async path => ({ data: { intervals: path.endsWith("allelic.json") ? alleles : intervals } }));
+  const s = execute(loadPhylogenyHeatmap, app({ plots: [{ ...tree, data: "(a);" }], datafiles: [file] }), actions.loadPhylogenyHeatmap(tree.id));
+  await s.task.toPromise();
+  expect(s.state().phylogenyHeatmap.cnByCell.a.map(({ cn, majorCn, minorCn }) => [cn, majorCn, minorCn])).toEqual([
+    [2, undefined, undefined], [3, 2, 1], [4, 3, 1], [5, undefined, undefined], [6, undefined, undefined],
+  ]);
+});
+
+test.each(["transport", "invalid data"])("allelic %s failure retains every Total value and remains retryable", async failure => {
+  const file = manifest("a");
+  file.plots[0].allelicSource = "allelic.json";
+  axios.get.mockImplementation(path => path.endsWith("allelic.json")
+    ? failure === "transport" ? Promise.reject(new Error("missing alleles")) : Promise.resolve({ data: { intervals: [{ ...genome.intervals[0], majorCn: -1 }] } })
+    : Promise.resolve({ data: genome }));
+  const s = execute(loadPhylogenyHeatmap, app({ plots: [{ ...tree, data: "(a);" }], datafiles: [file] }), actions.loadPhylogenyHeatmap(tree.id));
+  await s.task.toPromise();
+  const total = s.state().phylogenyHeatmap.cnByCell.a;
+  expect(total).toEqual([{ chromosome: "chr1", start: 1, end: 20, cn: 2, iid: 1, startPoint: 1, endPoint: 20 }]);
+  expect(s.state().phylogenyHeatmap.errors.join(" ")).toContain("Allelic CN:");
+  axios.get.mockResolvedValue({ data: { intervals: [{ ...genome.intervals[0], majorCn: 2, minorCn: 0 }] } });
+  const retry = execute(loadPhylogenyHeatmap, s.state(), actions.loadPhylogenyHeatmap(tree.id));
+  await retry.task.toPromise();
+  expect(retry.state().phylogenyHeatmap.status).toBe("ready");
+  expect(retry.state().phylogenyHeatmap.cnByCell.a[0]).toEqual({ ...total[0], majorCn: 2, minorCn: 0 });
+  expect(axios.get).toHaveBeenCalledTimes(3);
+});
+
 test("overview loads every matched CN with max three cells; full hidden mutations are parsed relative to owner", async () => {
   let active = 0, peak = 0;
   const figure = { allEntries: Array.from({ length: 92000 }, (_, i) => i) };
@@ -111,6 +215,89 @@ test.each([[["a"]], [["a", "b", "c", "d"]]])("confirmed single/bulk %j append de
   expect(document.location.href).toBe(url);
 });
 
+const junctionSource = { schemaVersion: 1, cellIds: ["d", "a"], junctions: [{ id: "2:20+ <-> 1:10-" }, { id: "1:10- <-> 3:30+" }], values: [[null, 2], [3, 0]] };
+
+test.each([true, false])("optional junctions use source order and shared cache/path resolution (owner=%p)", async owner => {
+  const plot = { ...tree, ownerFile: owner ? "cohort" : undefined, path: "data/fallback/nested/tree.nwk", heatmap: { junctionSource: "matrices/jcn.json" } };
+  const expectedPath = owner ? "data/cohort/matrices/jcn.json" : "data/fallback/nested/matrices/jcn.json";
+  axios.get.mockImplementation(async path => ({ data: path.endsWith("jcn.json") ? junctionSource : genome }));
+  const s = execute(loadPhylogenyHeatmap, app({ plots: [plot] }), actions.loadPhylogenyHeatmap(tree.id));
+  await s.task.toPromise();
+  const result = s.state().phylogenyHeatmap;
+  expect(result.status).toBe("ready");
+  expect(result.mutations).toBeNull();
+  expect(result.junctions).toMatchObject({ cellIds: ["d", "a"], variants: junctionSource.junctions, format: "junction" });
+  expect(result.junctions.values).toEqual(new Float64Array([NaN, 2, 3, 0]));
+  expect(result.junctions.missing).toEqual(new Uint8Array([1, 0, 0, 0]));
+  expect(axios.get.mock.calls.map(([path]) => path)).toContain(expectedPath);
+  const retry = execute(loadPhylogenyHeatmap, s.state(), actions.loadPhylogenyHeatmap(tree.id));
+  await retry.task.toPromise();
+  expect(axios.get).toHaveBeenCalledTimes(5);
+  expect(parsePlotlyMutations).not.toHaveBeenCalled();
+});
+
+test.each(["mutations", "junction transport", "junction dimensions"])("%s failure is independent of the other matrix and only the failed source retries", async failure => {
+  const matrix = { stats: { entries: 92000 } };
+  parsePlotlyMutations.mockReturnValue(matrix);
+  if (failure === "mutations") parsePlotlyMutations.mockImplementationOnce(() => { throw new Error("bad VAF"); });
+  const plot = { ...tree, heatmap: { mutationSource: "mutations.json", junctionSource: "junctions.json" } };
+  axios.get.mockImplementation(async path => {
+    if (path.endsWith("junctions.json")) {
+      if (failure === "junction transport") throw new Error("no junctions");
+      return { data: failure === "junction dimensions" ? { ...junctionSource, values: [] } : junctionSource };
+    }
+    return { data: genome };
+  });
+  const s = execute(loadPhylogenyHeatmap, app({ plots: [plot] }), actions.loadPhylogenyHeatmap(tree.id));
+  await s.task.toPromise();
+  const first = s.state().phylogenyHeatmap;
+  expect(first.status).toBe("error");
+  expect(Object.keys(first.cnByCell)).toHaveLength(4);
+  expect(first.errors).toHaveLength(1);
+  expect(first.errors[0]).toContain(failure === "mutations" ? "Mutations:" : "Junctions:");
+  if (failure === "mutations") {
+    expect(first.mutations).toBeNull();
+    expect(first.junctions.stats.entries).toBe(4);
+  } else {
+    expect(first.mutations).toBe(matrix);
+    expect(first.junctions).toBeNull();
+  }
+  axios.get.mockImplementation(async path => ({ data: path.endsWith("junctions.json") ? junctionSource : genome }));
+  const retry = execute(loadPhylogenyHeatmap, s.state(), actions.loadPhylogenyHeatmap(tree.id));
+  await retry.task.toPromise();
+  expect(retry.state().phylogenyHeatmap).toMatchObject({ status: "ready", mutations: matrix, errors: [], junctions: { stats: { entries: 4 } } });
+  expect(axios.get).toHaveBeenCalledTimes(7);
+});
+
+test("loaded mutations publish immediately even while the optional junction request is pending", async () => {
+  const pending = deferred();
+  const matrix = { stats: { entries: 92000 } };
+  parsePlotlyMutations.mockReturnValue(matrix);
+  const plot = { ...tree, data: "(a);", heatmap: { mutationSource: "mutations.json", junctionSource: "junctions.json" } };
+  axios.get.mockImplementation(path => path.endsWith("junctions.json") ? pending.promise : Promise.resolve({ data: genome }));
+  const s = execute(loadPhylogenyHeatmap, app({ plots: [plot] }), actions.loadPhylogenyHeatmap(tree.id));
+  await tick();
+  expect(s.state().phylogenyHeatmap).toMatchObject({ status: "loading", mutations: matrix, junctions: null });
+  pending.resolve({ data: junctionSource });
+  await s.task.toPromise();
+  expect(s.state().phylogenyHeatmap).toMatchObject({ status: "ready", mutations: matrix, junctions: { stats: { entries: 4 } } });
+});
+
+test("cancelling a pending junction load ignores its late result", async () => {
+  const pending = deferred();
+  const plot = { ...tree, data: "(a);", heatmap: { junctionSource: "junctions.json" } };
+  axios.get.mockImplementation(path => path.endsWith("junctions.json") ? pending.promise : Promise.resolve({ data: genome }));
+  const s = execute(loadPhylogenyHeatmap, app({ plots: [plot] }), actions.loadPhylogenyHeatmap(tree.id));
+  await tick();
+  expect(axios.get.mock.calls.map(([path]) => path)).toContain("data/cohort/junctions.json");
+  s.task.cancel();
+  const count = s.events.length;
+  pending.resolve({ data: junctionSource });
+  await s.task.toPromise(); await tick();
+  expect(s.events).toHaveLength(count);
+  expect(s.state().phylogenyHeatmap.junctions).toBeNull();
+});
+
 test("manifest sample aliases match exact leaf IDs and reject reference mismatches", async () => {
   const state = app({ datafiles: [manifest("sample-file", "a"), manifest("wrong-reference", "b", "other"), manifest("not-a-leaf")] });
   const s = execute(openPhylogenyCells, state, actions.openPhylogenyCells(["a", "b", "not-a-leaf"], true));
@@ -142,6 +329,30 @@ test("one failed cell does not block peers and can retry without reloading succe
   expect(axios.get).toHaveBeenCalledTimes(3);
 });
 
+test("launch exposes one panel per selected cohort and groups alternate Newicks as a selector", async () => {
+  const files = {
+    cohortA: { description: [], reference: "ref", plots: [
+      { type: "phylogeny", source: "without.newick", title: "Without normal", visible: true },
+      { type: "phylogeny", source: "with.newick", title: "With normal", visible: true },
+    ] },
+    cohortB: { description: [], reference: "ref", plots: [
+      { type: "phylogeny", source: "tree.newick", title: "BWH69", visible: true },
+    ] },
+  };
+  const settings = { coordinates: { sets: { ref: [{ chromosome: "chr1", startPoint: 1, endPoint: 100, color: "red" }] }, higlassMap: { ref: "ref" } }, geography: [], geneAnnotations: { ref: "genes" }, higlassServer: "server" };
+  axios.get.mockImplementation(async source => ({ data:
+    source.includes("tilesets/?") ? { results: [] } : source.endsWith("without.newick") ? "(a);" : source.endsWith("with.newick") ? "(a);" : "(b);" }));
+  loadArrowTable.mockResolvedValue({ getChild: () => ({ toArray: () => [] }) });
+  const s = execute(launchApplication, app({ settings, datafilesJSON: files }), actions.launchApp(["cohortA", "cohortB"], []));
+  await s.task.toPromise();
+  const phylogenies = s.state().plots.filter(plot => plot.type === "phylogeny");
+  expect(phylogenies).toHaveLength(2);
+  expect(phylogenies[0].treeOptions.map(option => option.title)).toEqual(["Without normal", "With normal"]);
+  expect(phylogenies[0].activeTreeId).toBe(phylogenies[0].treeOptions[0].id);
+  expect(phylogenies[1].treeOptions).toHaveLength(1);
+  expect(s.events.filter(event => event.type === actions.LOAD_PHYLOGENY_HEATMAP).map(event => event.plotId)).toEqual(phylogenies.map(plot => plot.id));
+});
+
 test("hidden optional Arrow is lazy on explicit expansion, failures surfaced and later expansion retries", async () => {
   const opened = execute(openPhylogenyCells, app(), actions.openPhylogenyCells(["a"], true));
   await opened.task.toPromise();
@@ -171,6 +382,94 @@ test("tree-only unmatched datasets retain null legacy fallback; bad trees and mu
   await badMutation.task.toPromise();
   expect(badMutation.state().phylogenyHeatmap).toMatchObject({ status: "error", completed: 4, mutations: null });
   expect(Object.keys(badMutation.state().phylogenyHeatmap.cnByCell)).toHaveLength(4);
+});
+
+test("showing hidden phylogenies starts independent overview tasks and does not restart running or loaded panels", async () => {
+  const pendingA = deferred(), pendingB = deferred();
+  axios.get.mockImplementation(path => path === "data/a/g.json" ? pendingA.promise : pendingB.promise);
+  const treeA = { ...tree, id: "tree-a", visible: false, data: "(a);" };
+  const treeB = { ...tree, id: "tree-b", visible: false, data: "(b);" };
+  const s = store(app({ plots: [treeA, treeB] }));
+  const task = runSaga(s, rootSaga);
+  s.dispatch(actions.updatePlots([{ ...treeA, visible: true }, treeB]));
+  await tick();
+  expect(axios.get.mock.calls.map(([path]) => path)).toEqual(["data/a/g.json"]);
+  s.dispatch(actions.updatePlots(s.state().plots.map(plot => ({ ...plot, visible: true }))));
+  await tick();
+  expect(axios.get.mock.calls.map(([path]) => path)).toEqual(["data/a/g.json", "data/b/g.json"]);
+  pendingB.resolve({ data: genome });
+  await tick(); await tick();
+  expect(s.state().phylogenyHeatmaps[treeB.id].status).toBe("ready");
+  expect(s.state().phylogenyHeatmaps[treeA.id].status).toBe("loading");
+  pendingA.resolve({ data: genome });
+  await tick(); await tick();
+  expect(s.state().phylogenyHeatmaps[treeA.id].status).toBe("ready");
+  const requests = s.state().phylogenyHeatmapRequests;
+  s.dispatch(actions.updatePlots(s.state().plots));
+  await tick();
+  expect(s.state().phylogenyHeatmapRequests).toEqual(requests);
+  task.cancel(); await task.toPromise();
+});
+
+test("switching a tree cancels its queued overview without cancelling another panel's overview", async () => {
+  const pending = deferred();
+  axios.get.mockImplementation(path => path.includes("/outsider/") ? Promise.resolve({ data: genome }) : pending.promise);
+  const treeA = { ...tree, activeTreeId: "old", treeOptions: [{ id: "new", data: "(b);" }] };
+  const treeB = { ...tree, id: "other-tree", data: "(outsider);" };
+  const s = store(app({ plots: [treeA, treeB] }));
+  const task = runSaga(s, rootSaga);
+  s.dispatch(actions.loadPhylogenyHeatmap(treeA.id));
+  s.dispatch(actions.loadPhylogenyHeatmap(treeB.id));
+  await tick();
+  expect(axios.get).toHaveBeenCalledTimes(3);
+  s.dispatch(actions.selectPhylogenyTree(treeA.id, "new"));
+  pending.resolve({ data: genome });
+  await tick(); await tick();
+  expect(s.state().phylogenyHeatmaps[treeA.id]).toBeNull();
+  expect(s.state().phylogenyHeatmaps[treeB.id]).toMatchObject({ status: "ready", cellIds: ["outsider"] });
+  expect(axios.get.mock.calls.some(([path]) => path === "data/d/g.json")).toBe(false);
+  task.cancel(); await task.toPromise();
+});
+
+test("re-selecting the current tree does not cancel its active overview", async () => {
+  const pending = deferred();
+  axios.get.mockReturnValue(pending.promise);
+  const plot = { ...tree, data: "(a);", activeTreeId: "old", treeOptions: [{ id: "old", data: "(a);" }] };
+  const s = store(app({ plots: [plot] }));
+  const task = runSaga(s, rootSaga);
+  s.dispatch(actions.loadPhylogenyHeatmap(plot.id));
+  await tick();
+  s.dispatch(actions.selectPhylogenyTree(plot.id, "old"));
+  pending.resolve({ data: genome });
+  await tick(); await tick();
+  expect(s.state().phylogenyHeatmaps[plot.id].status).toBe("ready");
+  task.cancel(); await task.toPromise();
+});
+
+test.each(["tree", "other-tree"])("switching %s cancels only cell loading originating in that panel", async changedPlot => {
+  const pending = deferred();
+  axios.get.mockReturnValue(pending.promise);
+  const treeA = { ...tree, activeTreeId: "old", treeOptions: [{ id: "new", data: "(b);" }] };
+  const treeB = { ...treeA, id: "other-tree" };
+  const s = store(app({ plots: [treeA, treeB] }));
+  const task = runSaga(s, rootSaga);
+  s.dispatch(actions.openPhylogenyCells(["a", "b", "c", "d"], true, treeA.id));
+  await tick();
+  expect(axios.get).toHaveBeenCalledTimes(3);
+  s.dispatch(actions.selectPhylogenyTree(changedPlot, "new"));
+  pending.resolve({ data: genome });
+  await tick(); await tick(); await tick();
+  if (changedPlot === treeA.id) {
+    expect(axios.get).toHaveBeenCalledTimes(3);
+    expect(s.state().plots.filter(plot => plot.type === "genome")).toHaveLength(0);
+    expect(s.state().selectedFiles).toEqual([cohortFile]);
+    expect(s.state().cellTrackLoad.status).toBe("cancelled");
+  } else {
+    expect(axios.get).toHaveBeenCalledTimes(4);
+    expect(s.state().plots.filter(plot => plot.type === "genome")).toHaveLength(4);
+    expect(s.state().cellTrackLoad.status).toBe("ready");
+  }
+  task.cancel(); await task.toPromise();
 });
 
 test("root watcher: selection and unconfirmed open never cancel active work; explicit cancel stops queue and stale append", async () => {

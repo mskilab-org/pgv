@@ -8,6 +8,9 @@ const clock = () => typeof performance === "undefined" ? Date.now() : performanc
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
 // Original Plotly CN palette: 0–10 and 11+. Shared with the component legend.
 export const CN_COLORS = ["#168CCB", "#8FD3E8", "#FFFFFF", "#FDBF6F", "#FF8A3D", "#FF5A24", "#EF2B2D", "#D7193F", "#B2184B", "#8C1D40", "#5A2630", "#000000"];
+// Allelic channels use CN 1 as their neutral white baseline. The remainder
+// keeps the established loss/gain progression without changing Total CN.
+export const ALLELIC_CN_COLORS = [CN_COLORS[0], CN_COLORS[2], CN_COLORS[3], CN_COLORS[4], CN_COLORS[5], CN_COLORS[6], CN_COLORS[7], CN_COLORS[8], CN_COLORS[9], CN_COLORS[10], CN_COLORS[11], CN_COLORS[11]];
 
 // Continuous white-to-black interpolation at Canvas RGB precision, not VAF bins.
 // Missing stays a distinct crossed gray; source values retain full precision.
@@ -16,15 +19,55 @@ export function vafColor(value) {
   const channel = Math.round(255 * (1 - clamp(value, 0, 1))).toString(16).padStart(2, "0");
   return `#${channel}${channel}${channel}`;
 }
-export function cnColor(value) {
+// Read counts are strongly right-skewed. A zero-safe logarithmic COLOR scale
+// preserves the full domain without clipping outliers or changing observations.
+const countFraction = (value, maximum) => maximum > 0 ? Math.log1p(clamp(value, 0, maximum)) / Math.log1p(maximum) : 0;
+export function countColor(value, maximum = 1) {
+  if (value == null || !Number.isFinite(value)) return "#adb5bd";
+  const ratio = countFraction(value, maximum);
+  const red = Math.round(255 * ratio).toString(16).padStart(2, "0");
+  const blue = Math.round(255 * (1 - ratio)).toString(16).padStart(2, "0");
+  return `#${red}80${blue}`;
+}
+// Adapters return immutable count arrays. Cache the full-cohort domain so
+// scrolling/hover never rescans a million entries or changes a count's color.
+const countScales = new WeakMap();
+export function mutationCountScale(matrix, metric) {
+  const counts = matrix && matrix[metric === "ref" ? "refCounts" : "altCounts"];
+  if (counts && countScales.has(counts)) return countScales.get(counts);
+  let maximum = 1;
+  if (counts) for (const value of counts) if (Number.isFinite(value)) maximum = Math.max(maximum, value);
+  const values = [...new Set([0, 1 / 3, 2 / 3, 1].map(fraction => fraction === 1 ? maximum : Math.round(Math.expm1(Math.log1p(maximum) * fraction))))];
+  const scale = { maximum, ticks: values.map(value => ({ value, position: countFraction(value, maximum) })) };
+  if (counts) countScales.set(counts, scale);
+  return scale;
+}
+export function cnColor(value, mode = "total") {
   if (value == null || !Number.isFinite(value)) return "#eeeeee";
-  return CN_COLORS[clamp(Math.floor(value), 0, 11)];
+  const colors = mode === "total" ? CN_COLORS : ALLELIC_CN_COLORS;
+  return colors[clamp(Math.floor(value), 0, 11)];
 }
 
 // Shared by drawing and tooltips: missingness, not numeric truthiness, is authoritative.
 function mutationValue(matrix, row, column) {
   const index = row * matrix.variants.length + column;
-  return matrix.missing[index] || !Number.isFinite(matrix.values[index]) ? null : matrix.values[index];
+  return (matrix.missing && matrix.missing[index]) || !Number.isFinite(matrix.values[index]) ? null : matrix.values[index];
+}
+
+function mutationMetricValue(matrix, row, column, metric) {
+  const index = row * matrix.variants.length + column;
+  if (metric === "ref" || metric === "alt") {
+    const counts = metric === "ref" ? matrix.refCounts : matrix.altCounts;
+    return counts && Number.isFinite(counts[index]) ? counts[index] : matrix.format === "plotly" ? null : 0;
+  }
+  const value = mutationValue(matrix, row, column);
+  return value == null && matrix.format !== "plotly" ? 0 : value;
+}
+
+function intervalValue(interval, mode) {
+  if (mode === "major") return interval.majorCn;
+  if (mode === "minor") return interval.minorCn;
+  return interval.cn;
 }
 
 // Full 92,000-position browser readback measurements favor 16-circle paths
@@ -82,7 +125,9 @@ function drawMutationCircles(ctx, batches, radius, plus = false) {
 /** Preserve the source matrix and ID map; only the row/window projection changes. */
 export function prepareHeatmap(options) {
   const { data, width, gutterWidth = 240, domains = [], nodes = [], selectedRowsOnly = false, aggregate = true } = options;
-  const mutationMode = ["hidden", "overlay", "paired"].includes(options.mutationMode) ? options.mutationMode : "hidden";
+  const mutationMode = ["hidden", "overlay", "paired", "side"].includes(options.mutationMode) ? options.mutationMode : "hidden";
+  const cnMode = ["total", "major", "minor"].includes(options.cnMode) ? options.cnMode : "total";
+  const mutationMetric = ["vaf", "ref", "alt"].includes(options.mutationMetric) ? options.mutationMetric : "vaf";
   const rowHeight = Number.isFinite(options.rowHeight) && options.rowHeight > 0 ? options.rowHeight : mutationMode === "paired" ? 32 : 22;
   const cellIds = data.cellIds || [];
   const cells = new Set(cellIds);
@@ -93,6 +138,8 @@ export function prepareHeatmap(options) {
   const display = data.mutations && data.mutations.displayCellIds;
   const order = [...new Set([...(Array.isArray(display) ? display : []), ...traversal, ...cellIds])].filter(id => cells.has(id));
   const matrixRows = new Map((data.mutations ? data.mutations.cellIds : []).map((id, index) => [id, index]));
+  const sideMatrix = options.matrixKind === "junctions" ? data.junctions : data.mutations;
+  const sideMatrixRows = new Map((sideMatrix ? sideMatrix.cellIds : []).map((id, index) => [id, index]));
   const rows = order.filter(id => !selectedRowsOnly || selected.has(id)).map((id, index) => ({
     id, index, y: (index + 0.5) * rowHeight, matrixRow: matrixRows.has(id) ? matrixRows.get(id) : -1,
   }));
@@ -127,10 +174,10 @@ export function prepareHeatmap(options) {
   }
   const windows = layoutDomains(domains, width, gutterWidth).map(window => ({
     ...window,
-    groups: data.mutations && mutationMode !== "hidden" ? groupMutations(data.mutations.variants, window.domain, window.width, 6, aggregate) : [],
+    groups: data.mutations && ["overlay", "paired"].includes(mutationMode) ? groupMutations(data.mutations.variants, window.domain, window.width, 6, aggregate) : [],
   }));
-  return { data, width, gutterWidth, domains, mutationMode, rows, rowHeight, totalHeight: rows.length * rowHeight,
-    hiddenCount: cellIds.length - rows.length, tree, windows, matrixRows, rowById, aggregate };
+  return { data, width, gutterWidth, domains, chromoBins: options.chromoBins || {}, mutationMode, cnMode, mutationMetric, rows, rowHeight, totalHeight: rows.length * rowHeight,
+    hiddenCount: cellIds.length - rows.length, tree, windows, matrixRows, rowById, aggregate, sideMatrix, sideMatrixRows };
 }
 
 /** Paint one viewport. The benchmark calls this same path with culling disabled. */
@@ -182,10 +229,10 @@ export function drawHeatmap(ctx, scene, view = {}) {
             if (interval.end < window.domain[0]) continue;
             const left = window.x + window.scale(Math.max(interval.start, window.domain[0]));
             const right = window.x + window.scale(Math.min(interval.end, window.domain[1]));
-            addToBatch(cnBatches, cnColor(interval.cn), [left, top, Math.max(0.5, right - left), cnHeight]);
+            addToBatch(cnBatches, cnColor(intervalValue(interval, scene.cnMode), scene.cnMode), [left, top, Math.max(0.5, right - left), cnHeight]);
             frame.cnDrawn++;
           }
-          if (scene.mutationMode === "hidden" || row.matrixRow < 0 || !scene.data.mutations) continue;
+          if (scene.mutationMode === "hidden" || scene.mutationMode === "side" || row.matrixRow < 0 || !scene.data.mutations) continue;
           const centerY = top + scene.rowHeight * (scene.mutationMode === "paired" ? 0.75 : 0.5);
           for (const group of window.groups) {
             frame.visited += group.indices.length;
@@ -214,6 +261,19 @@ export function drawHeatmap(ctx, scene, view = {}) {
         drawMutationCircles(ctx, groupBatches, radius, true);
       } finally { ctx.restore(); }
     }
+    // Separators follow chromosome boundaries, not CN segmentation or mutation
+    // columns, and therefore remain stable while a genomic window is panned.
+    ctx.save();
+    try {
+      for (const window of scene.windows) {
+        for (const bin of Object.values(scene.chromoBins || {})) {
+          if (!Number.isFinite(bin.startPlace) || bin.startPlace <= window.domain[0] || bin.startPlace >= window.domain[1]) continue;
+          const x = window.x + window.scale(bin.startPlace);
+          ctx.strokeStyle = "#555555"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+        }
+      }
+    } finally { ctx.restore(); }
     if (scene.gutterWidth > 0) {
       ctx.save();
       try {
@@ -221,6 +281,9 @@ export function drawHeatmap(ctx, scene, view = {}) {
         ctx.strokeStyle = "#777777"; ctx.lineWidth = 1;
         for (const node of scene.tree) {
           const children = node.children.filter(child => child.y != null);
+          const hovered = view.hover && view.hover.nodeId === node.id;
+          ctx.strokeStyle = hovered ? "#1677ff" : "#777777";
+          ctx.lineWidth = hovered ? 2 : 1;
           ctx.beginPath();
           if (children.length) {
             ctx.moveTo(node.x, Math.min(...children.map(child => child.y)) - scrollTop);
@@ -229,8 +292,9 @@ export function drawHeatmap(ctx, scene, view = {}) {
           if (node.parent) { ctx.moveTo(node.parent.x, node.y - scrollTop); ctx.lineTo(node.x, node.y - scrollTop); }
           ctx.stroke();
           if (node.y < scrollTop || node.y >= scrollTop + height) continue;
-          ctx.fillStyle = selected.has(node.id) ? "#1677ff" : "#444444";
+          ctx.fillStyle = hovered || selected.has(node.id) ? "#1677ff" : "#444444";
           ctx.fillRect(node.x - 2, node.y - scrollTop - 2, 4, 4);
+          if (hovered) ctx.strokeRect(node.x - 5, node.y - scrollTop - 5, 10, 10);
           // Filtering can collapse many ancestors onto one row. Counts remain
           // in geometry/tooltips/footer, never overlapping inline annotations.
           if (scene.rowHeight >= 12 && !node.children.length && scene.gutterWidth > node.x + 9) {
@@ -263,6 +327,55 @@ export function drawHeatmap(ctx, scene, view = {}) {
   } finally { ctx.restore(); }
   frame.ms = clock() - started;
   return frame;
+}
+
+/** Shared right-hand matrix renderer for mutations and junction CN. Only the
+ * visible columns are rasterized; catalog order and all source values remain intact. */
+export function drawMutationHeatmap(ctx, scene, view = {}, columnWidth = 4) {
+  const matrix = scene.sideMatrix;
+  const width = view.width == null ? Math.max(1, matrix ? matrix.variants.length * columnWidth : 1) : view.width;
+  const scrollLeft = view.scrollLeft || 0;
+  const height = view.height == null ? scene.totalHeight : view.height;
+  const scrollTop = view.scrollTop || 0;
+  const first = view.cull === false ? 0 : clamp(Math.floor(scrollTop / scene.rowHeight), 0, scene.rows.length);
+  const last = view.cull === false ? scene.rows.length : clamp(Math.ceil((scrollTop + height) / scene.rowHeight), first, scene.rows.length);
+  const junctions = matrix && matrix.format === "junction";
+  const metric = junctions ? "jcn" : scene.mutationMetric || "vaf";
+  const isCount = metric === "ref" || metric === "alt";
+  const max = isCount ? mutationCountScale(matrix, metric).maximum : 1;
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, width, height);
+  if (!matrix) return { rowsDrawn: 0, columns: 0, cellsDrawn: 0, metric };
+  const firstColumn = Math.max(0, Math.floor(scrollLeft / columnWidth));
+  const lastColumn = Math.min(matrix.variants.length, Math.ceil((scrollLeft + width) / columnWidth));
+  const selected = new Set((view.nodes || []).filter(node => node.selected).map(node => node.id));
+  for (let r = first; r < last; r++) {
+    const row = scene.rows[r];
+    const top = r * scene.rowHeight - scrollTop;
+    const rowIndex = scene.sideMatrixRows.get(row.id);
+    for (let column = firstColumn; column < lastColumn; column++) {
+      const value = rowIndex == null ? (junctions || matrix.format === "plotly" ? null : 0) : junctions ? mutationValue(matrix, rowIndex, column) : mutationMetricValue(matrix, rowIndex, column, metric);
+      ctx.fillStyle = junctions ? cnColor(value) : metric === "vaf" ? vafColor(value) : countColor(value, max);
+      ctx.fillRect(column * columnWidth - scrollLeft, top, Math.max(1, columnWidth), scene.rowHeight);
+    }
+    if (selected.has(row.id) || (view.hover && view.hover.rowId === row.id)) {
+      ctx.strokeStyle = "#1677ff"; ctx.lineWidth = 1;
+      ctx.strokeRect(0.5, top + 0.5, width - 1, Math.max(0, scene.rowHeight - 1));
+    }
+  }
+  return { rowsDrawn: last - first, columns: matrix.variants.length, firstColumn, columnsDrawn: lastColumn - firstColumn,
+    cellsDrawn: (last - first) * (lastColumn - firstColumn), metric, maximum: max, scale: isCount ? "log1p" : junctions ? "categorical" : "linear" };
+}
+
+export function hitTestMutationHeatmap(scene, x, y, scrollTop = 0, columnWidth = 4) {
+  const matrix = scene.sideMatrix;
+  const absoluteY = y + scrollTop;
+  if (!matrix || x < 0 || y < 0 || absoluteY < 0 || absoluteY >= scene.totalHeight) return null;
+  const row = scene.rows[Math.floor(absoluteY / scene.rowHeight)];
+  if (!row) return null;
+  const column = Math.floor(x / columnWidth);
+  if (column < 0 || column >= matrix.variants.length) return null;
+  return { type: "sideMutation", row, column, ids: [row.id] };
 }
 
 export function hitTestHeatmap(scene, x, y, scrollTop = 0) {
@@ -304,6 +417,21 @@ export function selectionNodes(scene, ids, nodes = [], additive = false) {
 
 export function describeHit(scene, hit) {
   if (!hit) return [];
+  if (hit.type === "sideMutation") {
+    const matrix = scene.sideMatrix;
+    const variant = matrix.variants[hit.column];
+    const row = scene.sideMatrixRows.get(hit.row.id);
+    if (matrix.format === "junction") {
+      const value = row == null ? null : mutationValue(matrix, row, hit.column);
+      return [`Cell: ${hit.row.id}`, `Junction: ${variant.id}`, `Junction CN: ${value == null ? "missing" : value}`];
+    }
+    const display = metric => {
+      const value = row == null ? matrix.format === "plotly" ? null : 0 : mutationMetricValue(matrix, row, hit.column, metric);
+      return value == null ? "missing" : value;
+    };
+    return [`Cell: ${hit.row.id}`, `Site: ${variant.id}`, `${variant.chromosome}:${variant.position} ${variant.ref} → ${variant.alt}`,
+      `VAF: ${display("vaf")}`, `ref count: ${display("ref")}`, `alt count: ${display("alt")}`];
+  }
   if (hit.type === "branch") return [`Branch: ${hit.node.name || hit.node.id}`, `${hit.ids.length} cells (${hit.node.hiddenCount} hidden)`, "Click to select descendants; no tracks opened"];
   const lines = [`Cell: ${hit.row.id}`];
   const intervals = (scene.data.cnByCell || {})[hit.row.id] || [];
@@ -313,7 +441,9 @@ export function describeHit(scene, hit) {
     const column = hit.group.indices[0];
     const variant = scene.data.mutations.variants[column];
     const value = mutationValue(scene.data.mutations, hit.row.matrixRow, column);
-    lines.push(`Site: ${variant.id}`, `${variant.chromosome}:${variant.position} ${variant.ref} → ${variant.alt}`, `VAF: ${value == null || !Number.isFinite(value) ? "missing" : String(value)}`);
+    const ref = mutationMetricValue(scene.data.mutations, hit.row.matrixRow, column, "ref");
+    const alt = mutationMetricValue(scene.data.mutations, hit.row.matrixRow, column, "alt");
+    lines.push(`Site: ${variant.id}`, `${variant.chromosome}:${variant.position} ${variant.ref} → ${variant.alt}`, `VAF: ${value == null || !Number.isFinite(value) ? "missing" : String(value)}`, `ref count: ${ref == null ? "missing" : ref}`, `alt count: ${alt == null ? "missing" : alt}`);
   } else if (hit.type === "group") {
     let positive = 0; let zero = 0; let missing = 0;
     const matrix = scene.data.mutations;
@@ -327,7 +457,10 @@ export function describeHit(scene, hit) {
     const last = matrix.variants[hit.group.indices[hit.group.indices.length - 1]];
     lines.push(`${hit.group.indices.length} sites: ${positive} positive, ${zero} zero, ${missing} missing`, `${first.chromosome}:${first.position}–${last.position}`, "Display overlap group — no mean VAF", "Click to zoom to these sites");
   }
-  lines.push(`CN: ${!interval || interval.cn == null || !Number.isFinite(interval.cn) ? "missing" : String(interval.cn)}`);
+  const cnMode = scene.cnMode || "total";
+  const cnLabel = cnMode === "major" ? "Major CN" : cnMode === "minor" ? "Minor CN" : "CN";
+  const cn = interval && intervalValue(interval, cnMode);
+  lines.push(`${cnLabel}: ${cn == null || !Number.isFinite(cn) ? "missing" : String(cn)}`);
   if (interval) lines.push(`${interval.chromosome}:${interval.startPoint == null ? interval.start : interval.startPoint}–${interval.endPoint == null ? interval.end : interval.endPoint}`);
   return lines;
 }

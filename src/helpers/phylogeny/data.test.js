@@ -1,10 +1,15 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
+import { spawnSync } from "child_process";
 import {
   parseNewick,
   leafIds,
   normalizeCopyNumber,
+  normalizeAllelicCopyNumber,
   parsePlotlyMutations,
+  parseSparseMutations,
+  parseJunctionCopyNumber,
 } from "./data";
 
 const bins = {
@@ -105,6 +110,213 @@ describe("copy number normalization", () => {
   });
 });
 
+describe("allelic copy-number and sparse mutation adapters", () => {
+  test("normalizes major/minor intervals with the same genomic placement", () => {
+    const result = normalizeAllelicCopyNumber({ intervals: [
+      { iid: 2, chromosome: "2", startPoint: 3, endPoint: 8, majorCn: 2, minorCn: 0 },
+      { iid: 1, chromosome: "1", startPoint: 1, endPoint: 2, majorCn: null, minorCn: 1 },
+    ] }, bins);
+    expect(result).toEqual([
+      { iid: 1, chromosome: "1", startPoint: 1, endPoint: 2, start: 2, end: 3, majorCn: null, minorCn: 1 },
+      { iid: 2, chromosome: "2", startPoint: 3, endPoint: 8, start: 1004, end: 1009, majorCn: 2, minorCn: 0 },
+    ]);
+    expect(() => normalizeAllelicCopyNumber({ intervals: [{ chromosome: "1", startPoint: 1, endPoint: 2, majorCn: -1 }] }, bins)).toThrow();
+  });
+
+  test("pairs legacy y by locus, not source adjacency, color or IID", () => {
+    const locus = { chromosome: "1", startPoint: 1, endPoint: 20 };
+    const intervals = [
+      { ...locus, iid: 101, y: 0, metadata: { color: "red" } },
+      { ...locus, startPoint: 21, endPoint: 40, iid: 102, y: 4, metadata: { color: "blue" } },
+      { ...locus, chromosome: "chr1", iid: 201, y: 3, metadata: { color: "blue" } },
+      { ...locus, startPoint: 21, endPoint: 40, iid: 202, y: 1, metadata: { color: "red" } },
+      { ...locus, chromosome: "2", iid: 101, y: 2 },
+      { ...locus, chromosome: "2", iid: 101, y: 2 },
+    ];
+    const original = JSON.stringify(intervals);
+    const result = normalizeAllelicCopyNumber({ intervals }, bins);
+    expect(result.map(({ chromosome, startPoint, endPoint, majorCn, minorCn }) => [chromosome, startPoint, endPoint, majorCn, minorCn])).toEqual([
+      ["1", 1, 20, 3, 0], ["1", 21, 40, 4, 1], ["2", 1, 20, 2, 2],
+    ]);
+    result.forEach(interval => expect(Object.prototype.hasOwnProperty.call(interval, "iid")).toBe(false));
+    expect(JSON.stringify(intervals)).toBe(original);
+  });
+
+  test.each([null, undefined])("a missing legacy allele (%p) cannot establish either rank", missing => {
+    const locus = { chromosome: "1", startPoint: 1, endPoint: 20 };
+    expect(normalizeAllelicCopyNumber({ intervals: [{ ...locus, y: missing }, { ...locus, y: 3 }] }, bins)[0]).toMatchObject({ majorCn: null, minorCn: null });
+  });
+
+  test.each([[2], [2, 1, 0], [2, -1], [2, "1"], [2, NaN], [2, Infinity]].map(values => [values]))("rejects malformed legacy pair %p", values => {
+    const intervals = values.map(y => ({ chromosome: "1", startPoint: 1, endPoint: 20, y }));
+    expect(() => normalizeAllelicCopyNumber({ intervals }, bins)).toThrow(/observations|value/);
+  });
+
+  test("reference/alternate read counts default omitted/null fields and absent observations to zero", () => {
+    const source = { schemaVersion: 1, variants: [{ id: "chr1_10_C_T" }, { id: "chr2_20_G_A" }], countFields: ["refCount", "altCount"], cells: {
+      b: [{ variantId: "chr2_20_G_A", vaf: 0, refCount: 12, altCount: 0 }],
+      a: [{ variantId: "chr1_10_C_T", vaf: 9 / 13, refCount: 4, altCount: 9 }, { variantId: "chr2_20_G_A", vaf: 1, refCount: null }],
+    } };
+    const result = parseSparseMutations(source, bins);
+    expect(result.cellIds).toEqual(["b", "a"]);
+    expect(result.variants.map(variant => variant.id)).toEqual(["chr1_10_C_T", "chr2_20_G_A"]);
+    expect(result.refCounts).toEqual(new Float64Array([0, 12, 4, 0]));
+    expect(result.altCounts).toEqual(new Float64Array([0, 0, 9, 0]));
+    expect(result.countFields).toEqual(["refCount", "altCount"]);
+    expect(result).not.toHaveProperty("majorCounts");
+    expect(result).not.toHaveProperty("minorCounts");
+    expect(result.values[2]).toBe(9 / 13);
+    expect(() => parseSparseMutations({ ...source, countFields: ["majorCount"] }, bins)).toThrow(/countFields/);
+    expect(() => parseSparseMutations({ ...source, cells: { b: [{ variantId: "chr2_20_G_A", refCount: -1 }] } }, bins)).toThrow(/refCount/);
+    expect(() => parseSparseMutations({ ...source, cells: { b: [{ variantId: "chr2_20_G_A", altCount: "1" }] } }, bins)).toThrow(/altCount/);
+  });
+
+  test("keeps catalog order and stable readable IDs while defaulting absent data to zero", () => {
+    const source = {
+      schemaVersion: 1,
+      variants: [
+        { id: "chr2_20_G_A", chromosome: "2", position: 20, ref: "G", alt: "A" },
+        { id: "chr1_10_C_T", chromosome: "1", position: 10, ref: "C", alt: "T" },
+        { id: "chr1_30_A_G", chromosome: "1", position: 30, ref: "A", alt: "G" },
+      ],
+      cells: {
+        "cell-b": [{ variantId: "chr2_20_G_A", vaf: null, refCount: 2 }],
+        "cell-a": [{ variantId: "chr1_10_C_T", vaf: 0.75, altCount: 1 }],
+      },
+    };
+    const result = parseSparseMutations(source, bins);
+    expect(result.variants.map(variant => variant.id)).toEqual(["chr2_20_G_A", "chr1_10_C_T"]);
+    expect(result.cellIds).toEqual(["cell-b", "cell-a"]);
+    expect(result.values).toEqual(new Float64Array([0, 0, 0, 0.75]));
+    expect(result.refCounts).toEqual(new Float64Array([2, 0, 0, 0]));
+    expect(result.altCounts).toEqual(new Float64Array([0, 0, 0, 1]));
+    expect(result.missing).toEqual(new Uint8Array(4));
+    expect(result.stats).toEqual({ cells: 2, variants: 2, entries: 4, observations: 2, missing: 0, zero: 3, positive: 1 });
+    expect(() => parseSparseMutations({ ...source, cells: { "cell-a": [{ variantId: "unknown" }] } }, bins)).toThrow(/Unknown/);
+    expect(() => parseSparseMutations({ ...source, variants: source.variants, cells: { "cell-a": [{ variantId: "chr1_10_C_T" }, { variantId: "chr1_10_C_T" }] } }, bins)).toThrow(/Duplicate/);
+    const active = parseSparseMutations({ ...source, cells: { ...source.cells, outsider: [{ variantId: "chr1_30_A_G", vaf: 1 }] } }, bins, ["cell-a"]);
+    expect(active.cellIds).toEqual(["cell-a"]);
+    expect(active.variants.map(variant => variant.id)).toEqual(["chr1_10_C_T"]);
+    expect(Array.from(active.values)).toEqual([0.75]);
+  });
+});
+
+describe("sparse read-count contract", () => {
+  test.each([undefined, [], ["refCount"], ["altCount"], ["refCount", "altCount"]].map(fields => [fields]))("always returns both typed count buffers with countFields %p", countFields => {
+    const source = { schemaVersion: 1, variants: [{ id: "chr1_10_C_T" }], cells: {
+      a: [{ variantId: "chr1_10_C_T", vaf: 0.25 }],
+      b: [{ variantId: "chr1_10_C_T", vaf: null, refCount: null, altCount: null }],
+    }, countFields };
+    const original = JSON.stringify(source);
+    const result = parseSparseMutations(source, bins, ["a", "b", "absent"]);
+    expect(result.values).toEqual(new Float64Array([0.25, 0, 0]));
+    expect(result.refCounts).toEqual(new Float64Array(3));
+    expect(result.altCounts).toEqual(new Float64Array(3));
+    expect(result.missing).toEqual(new Uint8Array(3));
+    expect(result.stats).toEqual({ cells: 3, variants: 1, entries: 3, observations: 2, missing: 0, zero: 2, positive: 1 });
+    expect(JSON.stringify(source)).toBe(original);
+
+    const empty = parseSparseMutations({ schemaVersion: 1, variants: [], cells: {}, countFields }, bins);
+    expect(empty.values).toEqual(new Float64Array(0));
+    expect(empty.refCounts).toEqual(new Float64Array(0));
+    expect(empty.altCounts).toEqual(new Float64Array(0));
+    expect(empty.stats).toEqual({ cells: 0, variants: 0, entries: 0, observations: 0, missing: 0, zero: 0, positive: 0 });
+  });
+
+  test("uses only active-tree VAF/ref/alt nonzero observations to form the ordered universe", () => {
+    const ids = ["chr2_20_G_A", "chr1_10_C_T", "chr1_30_A_G", "chr1_40_A_C", "chr1_50_T_C"];
+    const source = { schemaVersion: 1, variants: ids.map(id => ({ id })), cells: {
+      b: [{ variantId: ids[0], refCount: 4 }],
+      a: [{ variantId: ids[2], altCount: 7 }, { variantId: ids[1], vaf: 0.5 }, { variantId: ids[3], vaf: null, refCount: 0, altCount: null }],
+      outsider: [{ variantId: ids[4], vaf: 1, refCount: 2, altCount: 3 }, { variantId: ids[3], altCount: 1 }],
+    } };
+    const result = parseSparseMutations(source, bins, ["a", "b", "absent"]);
+    expect(result.cellIds).toEqual(["a", "b", "absent"]);
+    expect(result.variants.map(variant => variant.id)).toEqual(ids.slice(0, 3));
+    expect(result.values).toEqual(new Float64Array([0, 0.5, 0, 0, 0, 0, 0, 0, 0]));
+    expect(result.refCounts).toEqual(new Float64Array([0, 0, 0, 4, 0, 0, 0, 0, 0]));
+    expect(result.altCounts).toEqual(new Float64Array([0, 0, 7, 0, 0, 0, 0, 0, 0]));
+    expect(result.stats).toEqual({ cells: 3, variants: 3, entries: 9, observations: 3, missing: 0, zero: 8, positive: 1 });
+    expect(parseSparseMutations(source, bins, ["absent"]).variants).toEqual([]);
+    expect(parseSparseMutations(source, bins, []).variants).toEqual([]);
+  });
+
+  test("ignores old mislabeled extra fields instead of validating, retaining sites or deriving counts from them", () => {
+    const source = { schemaVersion: 1, variants: [{ id: "chr1_10_C_T" }, { id: "chr2_20_G_A" }], cells: {
+      a: [{ variantId: "chr1_10_C_T", vaf: 0.5 }, { variantId: "chr2_20_G_A" }],
+    } };
+    const mislabeled = { ...source, majorCounts: [99, 99], minorCounts: [42, 42], cells: {
+      a: [
+        { ...source.cells.a[0], majorCount: "invalid", minorCount: -1 },
+        { ...source.cells.a[1], majorCount: 99, minorCount: 42 },
+      ],
+    } };
+    const result = parseSparseMutations(mislabeled, bins);
+    expect(result).toEqual(parseSparseMutations(source, bins));
+    expect(result.variants.map(variant => variant.id)).toEqual(["chr1_10_C_T"]);
+    expect(result.refCounts).toEqual(new Float64Array([0]));
+    expect(result.altCounts).toEqual(new Float64Array([0]));
+    expect(result).not.toHaveProperty("majorCounts");
+    expect(result).not.toHaveProperty("minorCounts");
+  });
+
+  test.each(["refCount", "altCount"])("validates supplied %s without requiring countFields metadata", field => {
+    [-1, "1", NaN, Infinity, false].forEach(value => {
+      const source = { schemaVersion: 1, variants: [{ id: "chr1_10_C_T" }], cells: {
+        a: [{ variantId: "chr1_10_C_T", [field]: value }],
+      } };
+      expect(() => parseSparseMutations(source, bins)).toThrow(field);
+    });
+  });
+
+  test.each([null, "refCount", ["refCount", "refCount"], ["unknown"]].map(fields => [fields]))("rejects invalid countFields %p", countFields => {
+    expect(() => parseSparseMutations({ schemaVersion: 1, variants: [], cells: {}, countFields }, bins)).toThrow(/countFields/);
+  });
+});
+
+describe("ordered junction copy-number matrix", () => {
+  const source = () => ({ schemaVersion: 1, cellIds: ["cell-z", "cell-a"], junctions: [
+    { id: "10:132180758-132180758+ <-> 11:50354829-50354829+" },
+    { id: "1:1-1- <-> 2:2-2+" },
+  ], values: [[null, 2.1234567890123457], [0, 9]] });
+
+  test("preserves all cell/column order, source values, literal labels and nulls", () => {
+    const raw = source();
+    const original = JSON.stringify(raw);
+    const result = parseJunctionCopyNumber(raw);
+    expect(result.cellIds).toEqual(raw.cellIds);
+    expect(result.variants).toEqual(raw.junctions);
+    expect(result.values).toEqual(new Float64Array([NaN, 2.1234567890123457, 0, 9]));
+    expect(result.missing).toEqual(new Uint8Array([1, 0, 0, 0]));
+    expect(result.format).toBe("junction");
+    expect(result.stats).toEqual({ cells: 2, variants: 2, entries: 4, missing: 1, zero: 1, positive: 2 });
+    expect(JSON.stringify(raw)).toBe(original);
+    expect(parseJunctionCopyNumber({ schemaVersion: 1, cellIds: [], junctions: [], values: [] }).values).toEqual(new Float64Array(0));
+  });
+
+  test.each([
+    ["version", raw => { raw.schemaVersion = 2; }],
+    ["missing cell IDs", raw => { delete raw.cellIds; }],
+    ["duplicate cell", raw => { raw.cellIds[1] = raw.cellIds[0]; }],
+    ["unsafe cell", raw => { raw.cellIds[0] = "__proto__"; }],
+    ["row count", raw => { raw.values.pop(); }],
+    ["column count", raw => { raw.values[0].pop(); }],
+    ["missing row", raw => { delete raw.values[0]; }],
+    ["missing value", raw => { delete raw.values[1][1]; }],
+    ["duplicate junction", raw => { raw.junctions[1] = raw.junctions[0]; }],
+    ["empty junction", raw => { raw.junctions[0].id = " "; }],
+    ["control character", raw => { raw.junctions[0].id = "j\u0000"; }],
+    ["negative", raw => { raw.values[0][0] = -1; }],
+    ["nonfinite", raw => { raw.values[0][0] = Infinity; }],
+    ["NaN", raw => { raw.values[0][0] = NaN; }],
+    ["numeric string", raw => { raw.values[0][0] = "1"; }],
+  ])("rejects %s", (_, mutate) => {
+    const raw = source();
+    mutate(raw);
+    expect(() => parseJunctionCopyNumber(raw)).toThrow();
+  });
+});
+
 // Deliberately rounded tooltip numerics: only marker.color is authoritative.
 function figureFrom(rows = ["cell-b", "cell-a"], sites = ["chr2_20_G_A", "chr1_10_C_T"], valueAt = (r, c) => [[0, null], [0.666666666666667, 1]][r][c]) {
   const trace = { type: "bar", orientation: "h", y: [], text: [], x: [], base: [], width: [], marker: { color: [] } };
@@ -148,8 +360,28 @@ describe("lossless Plotly adapter", () => {
     expect(result.missing).toBeInstanceOf(Uint8Array);
     expect(Array.from(result.values)).toEqual([0, NaN, 0.666666666666667, 1]);
     expect(Array.from(result.missing)).toEqual([0, 1, 0, 0]);
+    expect(result.refCounts).toEqual(new Float64Array(4).fill(NaN));
+    expect(result.altCounts).toEqual(new Float64Array(4).fill(NaN));
+    expect(result).not.toHaveProperty("majorCounts");
+    expect(result).not.toHaveProperty("minorCounts");
     expect(result.stats).toEqual({ cells: 2, variants: 2, entries: 4, missing: 1, zero: 1, positive: 2 });
     expect(JSON.stringify(figure)).toBe(original);
+  });
+
+  test("legacy counts are unavailable, never inferred from VAF or unrecognized count fields", () => {
+    const figure = figureFrom();
+    const expected = parsePlotlyMutations(figure, bins);
+    figure.majorCounts = [4, 5, 6, 7];
+    figure.minorCounts = [1, 2, 3, 4];
+    figure.data[0].majorCount = [4, 5, 6, 7];
+    figure.data[0].minorCount = [1, 2, 3, 4];
+    figure.data[0].refCount = [10, 20, 30, 40];
+    figure.data[0].altCount = [5, 10, 15, 20];
+    const result = parsePlotlyMutations(figure, bins);
+    expect(result).toEqual(expected);
+    expect(result.refCounts.every(Number.isNaN)).toBe(true);
+    expect(result.altCounts.every(Number.isNaN)).toBe(true);
+    expect(result.missing).toEqual(new Uint8Array([0, 1, 0, 0]));
   });
 
   // Projection metadata is separate from immutable row-major storage. Sort numeric
@@ -205,6 +437,8 @@ describe("lossless Plotly adapter", () => {
     expect(result.cellIds).toEqual([]);
     expect(result.displayCellIds).toEqual([]);
     expect(result.values.length).toBe(0);
+    expect(result.refCounts).toEqual(new Float64Array(0));
+    expect(result.altCounts).toEqual(new Float64Array(0));
   });
 
   test.each([
@@ -283,7 +517,8 @@ test("portable complete 125-cell / 736-site / 92000-entry matrix", () => {
       const i = r * 736 + c;
       const expected = valueAt(r, c);
       // Fail fast with a useful exact coordinate, without 184000 Jest matcher allocations.
-      if (!Object.is(result.values[i], expected === null ? NaN : expected) || result.missing[i] !== Number(expected === null)) {
+      if (!Object.is(result.values[i], expected === null ? NaN : expected) || result.missing[i] !== Number(expected === null) ||
+          !Number.isNaN(result.refCounts[i]) || !Number.isNaN(result.altCounts[i])) {
         throw new Error(`Generated matrix mismatch at ${rows[r]} / ${sites[c]} (${i})`);
       }
       checked += 1;
@@ -292,7 +527,7 @@ test("portable complete 125-cell / 736-site / 92000-entry matrix", () => {
   expect(checked).toBe(92000);
 });
 
-const fixturePath = path.resolve(process.cwd(), "public/data/BWH70_phylogeny/mutations.plotly.json");
+const fixturePath = path.resolve(process.cwd(), "public/data/BWH70_phylogeny/mutations.json");
 const fixtureTest = fs.existsSync(fixturePath) ? test : test.skip;
 
 fixtureTest("LOCAL FULL FIXTURE (explicitly skipped only when JSON absent): all 92000 pairs, 125 tree IDs and 15834 CN intervals", () => {
@@ -333,7 +568,8 @@ fixtureTest("LOCAL FULL FIXTURE (explicitly skipped only when JSON absent): all 
       }
       const i = row * 736 + col;
       const value = trace.marker.color[j];
-      if (seen[i] || !Object.is(matrix.values[i], value === null ? NaN : value) || matrix.missing[i] !== Number(value === null)) {
+      if (seen[i] || !Object.is(matrix.values[i], value === null ? NaN : value) || matrix.missing[i] !== Number(value === null) ||
+          !Number.isNaN(matrix.refCounts[i]) || !Number.isNaN(matrix.altCounts[i])) {
         throw new Error(`Actual matrix mismatch at ${cell} / ${id} (source ${j}, matrix ${i})`);
       }
       seen[i] = 1;
@@ -379,3 +615,124 @@ fixtureTest("LOCAL FULL FIXTURE (explicitly skipped only when JSON absent): all 
   }
   expect(checkedIntervals).toBe(15834);
 }, 20000);
+
+const convertedPath = path.resolve(process.cwd(), "public/data/BWH70_phylogeny/mutations.sparse.json");
+const junctionPath = path.resolve(process.cwd(), "public/data/BWH70_phylogeny/junctions.json");
+const convertedTest = fs.existsSync(convertedPath) && fs.existsSync(junctionPath) ? test : test.skip;
+
+convertedTest("LOCAL RDS CONVERSION: every SNV value/read count and junction entry retains source JSON order", () => {
+  const source = JSON.parse(fs.readFileSync(convertedPath, "utf8"));
+  const settings = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "public/settings.json"), "utf8"));
+  const localBins = Object.fromEntries(settings.coordinates.sets.hg38.map(chr => [chr.chromosome, { ...chr, startPlace: 0 }]));
+  const result = parseSparseMutations(source, localBins);
+  expect(result.cellIds).toEqual(Object.keys(source.cells));
+  expect(result.cellIds).toHaveLength(130);
+  expect(result.variants.map(variant => variant.id)).toEqual(source.variants.map(variant => variant.id));
+  expect(result.variants).toHaveLength(8878);
+  expect(result.stats.entries).toBe(1154140);
+  expect(result.countFields).toEqual(["refCount", "altCount"]);
+  expect(result.refCounts).toBeInstanceOf(Float64Array);
+  expect(result.altCounts).toBeInstanceOf(Float64Array);
+  expect(result).not.toHaveProperty("majorCounts");
+  expect(result).not.toHaveProperty("minorCounts");
+  const columns = new Map(result.variants.map((variant, index) => [variant.id, index]));
+  let checked = 0;
+  let positive = 0;
+  result.cellIds.forEach((id, row) => {
+    source.cells[id].forEach(observation => {
+      const offset = row * result.variants.length + columns.get(observation.variantId);
+      if (result.values[offset] !== (observation.vaf == null ? 0 : observation.vaf) ||
+          result.refCounts[offset] !== (observation.refCount == null ? 0 : observation.refCount) ||
+          result.altCounts[offset] !== (observation.altCount == null ? 0 : observation.altCount) ||
+          result.missing[offset] !== 0 || "majorCount" in observation || "minorCount" in observation) {
+        throw new Error(`SNV conversion/adapter mismatch: ${id}/${observation.variantId}`);
+      }
+      if (observation.vaf > 0) positive += 1;
+      checked += 1;
+    });
+  });
+  expect(checked).toBe(1154140);
+  expect(result.stats).toEqual({ cells: 130, variants: 8878, entries: 1154140, observations: checked, missing: 0, zero: 1154140 - positive, positive });
+  const junctionSource = JSON.parse(fs.readFileSync(junctionPath, "utf8"));
+  const junctions = parseJunctionCopyNumber(junctionSource);
+  expect(junctions.cellIds).toEqual(junctionSource.cellIds);
+  expect(junctions.variants).toEqual(junctionSource.junctions);
+  expect(junctions.stats).toEqual({ cells: 125, variants: 67, entries: 8375, missing: 0, zero: 6150, positive: 2225 });
+  expect(Array.from(junctions.values)).toEqual(junctionSource.values.flat());
+}, 30000);
+
+const realAllelicPath = path.resolve(process.cwd(), "public/data/BWH70_MR_1_pl1_10a/allelic.json");
+const allelicFixtureTest = fs.existsSync(realAllelicPath) && fs.existsSync(fixturePath) ? test : test.skip;
+allelicFixtureTest("LOCAL REAL ALLELIC: all 125 cells pair by coordinates, regardless of color/IID", () => {
+  const ids = leafIds(parseNewick(fs.readFileSync(path.join(path.dirname(fixturePath), "BWH70_phylogeny_without_normal.newick"), "utf8")));
+  const settings = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "public/settings.json"), "utf8"));
+  const localBins = Object.fromEntries(settings.coordinates.sets.hg38.map(chr => [chr.chromosome, { ...chr, startPlace: 0 }]));
+  let loci = 0;
+  for (const cell of ids) {
+    const raw = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "public/data", cell, "allelic.json"), "utf8"));
+    const groups = new Map();
+    raw.intervals.forEach(interval => {
+      const key = [interval.chromosome, interval.startPoint, interval.endPoint].join(":");
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(interval.y);
+    });
+    const result = normalizeAllelicCopyNumber(raw, localBins);
+    expect(result.length * 2).toBe(raw.intervals.length);
+    result.forEach(interval => {
+      const key = [interval.chromosome, interval.startPoint, interval.endPoint].join(":");
+      const values = groups.get(key);
+      if (values.length !== 2 || interval.majorCn !== Math.max(...values) || interval.minorCn !== Math.min(...values) || "iid" in interval) {
+        throw new Error(`Allelic pairing mismatch: ${cell}/${key}`);
+      }
+    });
+    loci += result.length;
+  }
+  expect(ids).toHaveLength(125);
+  expect(loci).toBe(15834);
+}, 20000);
+
+const rAvailable = spawnSync("Rscript", ["-e", 'quit(status=if (requireNamespace("jsonlite", quietly=TRUE)) 0 else 1)'], { encoding: "utf8" }).status === 0;
+const converterTest = rAvailable ? test : test.skip;
+converterTest("R converter preserves exact doubles, nulls, all zeros and original order/count names, and refuses overwrite", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phylogeny-rds-"));
+  const run = args => {
+    const result = spawnSync("Rscript", args, { encoding: "utf8", timeout: 30000 });
+    if (result.status !== 0) throw new Error(result.stderr || String(result.error));
+    return result;
+  };
+  try {
+    run(["-e", `d <- commandArgs(trailingOnly=TRUE)[1];
+      s <- data.frame(pair=c("z","a","z"),mutation=c("chr2_20_G_A","chr1_10_C_T","chr1_10_C_T"),vaf=c(1/3,NA,0),ref.count.t=c(2,NA,0),alt.count.t=c(1,NA,0));
+      j <- matrix(c(NA,1/3,0,2.1234567890123457),nrow=2,byrow=TRUE,dimnames=list(c("z","a"),c("2:2+ <-> 1:1-","1:1+ <-> 3:3-")));
+      saveRDS(s,file.path(d,"s.rds")); saveRDS(j,file.path(d,"j.rds"));`, dir]);
+    const inputSnvs = path.join(dir, "s.rds"), inputJcn = path.join(dir, "j.rds");
+    const before = [fs.readFileSync(inputSnvs), fs.readFileSync(inputJcn)];
+    const args = [path.resolve(process.cwd(), "scripts/convert-phylogeny-rds.R"), inputSnvs, inputJcn, dir];
+    expect(run(args).stdout).toContain("exactly equal to RDS");
+    const source = JSON.parse(fs.readFileSync(path.join(dir, "mutations.sparse.json"), "utf8"));
+    expect(source.variants).toEqual([{ id: "chr2_20_G_A" }, { id: "chr1_10_C_T" }]);
+    expect(Object.keys(source.cells)).toEqual(["z", "a"]);
+    expect(source.cells.z).toEqual([
+      { variantId: "chr2_20_G_A", vaf: 1 / 3, refCount: 2, altCount: 1 },
+      { variantId: "chr1_10_C_T", vaf: 0, refCount: 0, altCount: 0 },
+    ]);
+    expect(source.cells.a).toEqual([{ variantId: "chr1_10_C_T", vaf: null, refCount: null, altCount: null }]);
+    expect(source.countFields).toEqual(["refCount", "altCount"]);
+    const matrix = parseSparseMutations(source, bins);
+    expect(matrix.variants.map(variant => variant.id)).toEqual(["chr2_20_G_A"]);
+    expect(matrix.values).toEqual(new Float64Array([1 / 3, 0]));
+    expect(matrix.refCounts).toEqual(new Float64Array([2, 0]));
+    expect(matrix.altCounts).toEqual(new Float64Array([1, 0]));
+    expect(matrix.missing).toEqual(new Uint8Array(2));
+    expect(matrix.stats).toEqual({ cells: 2, variants: 1, entries: 2, observations: 1, missing: 0, zero: 1, positive: 1 });
+    const junctions = JSON.parse(fs.readFileSync(path.join(dir, "junctions.json"), "utf8"));
+    expect(junctions).toEqual({ schemaVersion: 1, cellIds: ["z", "a"], junctions: [{ id: "2:2+ <-> 1:1-" }, { id: "1:1+ <-> 3:3-" }], values: [[null, 1 / 3], [0, 2.1234567890123457]] });
+    expect(parseJunctionCopyNumber(junctions).missing).toEqual(new Uint8Array([1, 0, 0, 0]));
+    const rerun = spawnSync("Rscript", args, { encoding: "utf8" });
+    expect(rerun.status).not.toBe(0);
+    expect(rerun.stderr).toContain("Refusing to overwrite");
+    expect([fs.readFileSync(inputSnvs), fs.readFileSync(inputJcn)]).toEqual(before);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}, 60000);

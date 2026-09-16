@@ -177,6 +177,49 @@ export function normalizeCopyNumber(genome, chromoBins) {
   }).sort((a, b) => a.start - b.start);
 }
 
+/**
+ * Accept explicit majorCn/minorCn or two legacy y observations per locus.
+ * Legacy colors and IIDs identify drawing primitives, NOT major/minor alleles.
+ * A partial pair cannot establish rank, so both channels remain missing.
+ */
+export function normalizeAllelicCopyNumber(allelic, chromoBins) {
+  if (!allelic || !Array.isArray(allelic.intervals)) {
+    throw new Error("Allelic copy-number intervals must be an array");
+  }
+  const pairs = new Map();
+  const explicit = [];
+  allelic.intervals.forEach((interval) => {
+    if (!interval) throw new Error("Invalid allelic copy-number interval");
+    const { startPoint, endPoint, iid } = interval;
+    const chromosome = chromosomeKey(interval.chromosome, chromoBins);
+    if (!Number.isSafeInteger(startPoint) || !Number.isSafeInteger(endPoint) || startPoint < 0 || endPoint < startPoint) {
+      throw new Error(`Invalid allelic copy-number boundaries: ${iid}`);
+    }
+    const start = chromoBins[chromosome].startPlace + startPoint;
+    const end = chromoBins[chromosome].startPlace + endPoint;
+    if (!Number.isFinite(start) || !Number.isFinite(end)) throw new Error("Invalid projected allelic interval");
+    const locus = { chromosome, start, end, startPoint, endPoint };
+    const validate = (value) => {
+      if (value != null && (!Number.isFinite(value) || value < 0)) throw new Error(`Invalid allelic copy-number value: ${iid}`);
+      return value == null ? null : value;
+    };
+    if (Object.prototype.hasOwnProperty.call(interval, "majorCn") || Object.prototype.hasOwnProperty.call(interval, "minorCn")) {
+      explicit.push({ ...locus, iid, majorCn: validate(interval.majorCn), minorCn: validate(interval.minorCn) });
+    } else {
+      const key = JSON.stringify([chromosome, startPoint, endPoint]);
+      if (!pairs.has(key)) pairs.set(key, { locus, values: [] });
+      pairs.get(key).values.push(validate(interval.y));
+    }
+  });
+  const paired = Array.from(pairs.values(), ({ locus, values }) => {
+    if (values.length !== 2) throw new Error(`Allelic copy-number locus requires exactly two observations: ${locus.chromosome}:${locus.startPoint}-${locus.endPoint}`);
+    const missing = values.some(value => value === null);
+    // Omit legacy IID deliberately: join paired observations to Total by locus.
+    return { ...locus, majorCn: missing ? null : Math.max(...values), minorCn: missing ? null : Math.min(...values) };
+  });
+  return [...explicit, ...paired].sort((a, b) => a.start - b.start);
+}
+
 function validCellId(id) {
   return typeof id === "string" && id.trim().length > 0 &&
     !/[<>]/.test(id) && !hasControlCharacters(id) &&
@@ -192,6 +235,161 @@ function parseVariant(id, chromoBins) {
   const place = chromoBins[chromosome].startPlace + position;
   if (!Number.isFinite(place)) throw new Error(`Invalid projected variant: ${id}`);
   return { id, chromosome, position, ref: match[3], alt: match[4], place };
+}
+
+function safeRecord(value, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be an object`);
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) throw new Error(`${label} must be a plain object`);
+  return value;
+}
+
+function mutationNumber(value, label) {
+  if (value == null) return 0;
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) throw new Error(`Invalid ${label}`);
+  return value;
+}
+
+/**
+ * Adapt the compact ordered mutation contract. Variant array order is a
+ * presentation contract supplied by data preparation; IDs are the readable
+ * stable join key and are never replaced by array indexes.
+ *
+ * Omitted/null vaf/refCount/altCount fields and absent observations become
+ * display zeros. Both read-count Float64Array channels are always returned;
+ * optional countFields metadata records the supplied count fields.
+ * When activeCellIds is supplied, only those tree cells contribute to the
+ * mutation universe: nonzero VAF or either read count retains a variant while
+ * the relative order of every retained variant is preserved.
+ */
+export function parseSparseMutations(source, chromoBins, activeCellIds) {
+  if (!source || source.schemaVersion !== 1 || !Array.isArray(source.variants)) {
+    throw new Error("Sparse mutations require schemaVersion 1 and variants");
+  }
+  const variantById = new Map();
+  const catalog = source.variants.map((entry, index) => {
+    if (!entry || typeof entry.id !== "string" || !validCellId(entry.id)) throw new Error(`Invalid mutation ID at variant ${index}`);
+    if (variantById.has(entry.id)) throw new Error(`Duplicate mutation ID: ${entry.id}`);
+    const parsed = parseVariant(entry.id, chromoBins);
+    ["chromosome", "position", "ref", "alt"].forEach((key) => {
+      if (entry[key] !== undefined && String(entry[key]) !== String(parsed[key])) throw new Error(`Mutation metadata disagrees with ID: ${entry.id}`);
+    });
+    variantById.set(entry.id, index);
+    return parsed;
+  });
+  const cellsRecord = safeRecord(source.cells, "Sparse mutation cells");
+  const sourceCellIds = Object.keys(cellsRecord);
+  sourceCellIds.forEach((id) => { if (!validCellId(id)) throw new Error("Invalid or unsafe sparse mutation cell ID"); });
+  const cellIds = Array.isArray(activeCellIds) ? [...new Set(activeCellIds)] : sourceCellIds;
+  cellIds.forEach((id) => { if (!validCellId(id)) throw new Error("Invalid or unsafe active mutation cell ID"); });
+  const active = new Set(cellIds);
+  const referenced = new Set();
+  const countFields = new Set();
+  if (source.countFields !== undefined) {
+    if (!Array.isArray(source.countFields) || source.countFields.some(field => !["refCount", "altCount"].includes(field)) || new Set(source.countFields).size !== source.countFields.length) {
+      throw new Error("Invalid sparse mutation countFields");
+    }
+    source.countFields.forEach(field => countFields.add(field));
+  }
+  const observations = new Map();
+  sourceCellIds.forEach((cellId) => {
+    const entries = cellsRecord[cellId];
+    if (!Array.isArray(entries)) throw new Error(`Sparse mutations for ${cellId} must be an array`);
+    const byVariant = new Map();
+    entries.forEach((observation, index) => {
+      if (!observation || typeof observation !== "object" || Array.isArray(observation) || typeof observation.variantId !== "string") {
+        throw new Error(`Invalid sparse mutation observation at ${cellId}[${index}]`);
+      }
+      if (!variantById.has(observation.variantId)) throw new Error(`Unknown mutation ID: ${observation.variantId}`);
+      if (byVariant.has(observation.variantId)) throw new Error(`Duplicate mutation observation: ${cellId}/${observation.variantId}`);
+      const normalized = {
+        vaf: mutationNumber(observation.vaf, "VAF"),
+        refCount: mutationNumber(observation.refCount, "refCount"),
+        altCount: mutationNumber(observation.altCount, "altCount"),
+      };
+      ["refCount", "altCount"].forEach(field => {
+        if (Object.prototype.hasOwnProperty.call(observation, field)) countFields.add(field);
+      });
+      if (normalized.vaf > 1) throw new Error(`Invalid VAF at ${cellId}/${observation.variantId}`);
+      byVariant.set(observation.variantId, normalized);
+      if (active.has(cellId) && (normalized.vaf || normalized.refCount || normalized.altCount)) referenced.add(observation.variantId);
+    });
+    if (active.has(cellId)) observations.set(cellId, byVariant);
+  });
+  cellIds.forEach((cellId) => { if (!observations.has(cellId)) observations.set(cellId, new Map()); });
+  const variants = catalog.filter((variant) => referenced.has(variant.id));
+  const columns = new Map(variants.map((variant, index) => [variant.id, index]));
+  const entries = cellIds.length * variants.length;
+  const values = new Float64Array(entries);
+  const refCounts = new Float64Array(entries);
+  const altCounts = new Float64Array(entries);
+  const stats = { cells: cellIds.length, variants: variants.length, entries, observations: 0, missing: 0, zero: 0, positive: 0 };
+  cellIds.forEach((cellId, row) => {
+    observations.get(cellId).forEach((observation, id) => {
+      const column = columns.get(id);
+      if (column === undefined) return;
+      const offset = row * variants.length + column;
+      values[offset] = observation.vaf;
+      refCounts[offset] = observation.refCount;
+      altCounts[offset] = observation.altCount;
+      stats.observations += 1;
+      if (observation.vaf > 0) stats.positive += 1;
+    });
+  });
+  stats.zero = entries - stats.positive;
+  return { cellIds, variants, values, missing: new Uint8Array(entries), refCounts, altCounts, stats, format: "sparse",
+    ...(countFields.size ? { countFields: ["refCount", "altCount"].filter(field => countFields.has(field)) } : {}),
+  };
+}
+
+/**
+ * Ordered row-major junction CN. IDs are plain text labels (often containing
+ * '<->'), not cell IDs, genomic variant IDs, or HTML. Null is missing, not zero.
+ */
+export function parseJunctionCopyNumber(source) {
+  if (!source || source.schemaVersion !== 1 || !Array.isArray(source.cellIds) ||
+      !Array.isArray(source.junctions) || !Array.isArray(source.values)) {
+    throw new Error("Junction copy number requires schemaVersion 1, cellIds, junctions and values");
+  }
+  const cellIds = Array.from(source.cellIds);
+  const cells = new Set();
+  cellIds.forEach(id => {
+    if (!validCellId(id)) throw new Error("Invalid junction cell ID");
+    if (cells.has(id)) throw new Error(`Duplicate junction cell ID: ${id}`);
+    cells.add(id);
+  });
+  const ids = new Set();
+  const variants = Array.from(source.junctions, (entry) => {
+    if (!entry || typeof entry.id !== "string" || !entry.id.trim() || hasControlCharacters(entry.id)) throw new Error("Invalid junction ID");
+    if (ids.has(entry.id)) throw new Error(`Duplicate junction ID: ${entry.id}`);
+    ids.add(entry.id);
+    return { id: entry.id };
+  });
+  if (source.values.length !== cellIds.length) throw new Error("Junction matrix row dimensions do not match cellIds");
+  const entries = cellIds.length * variants.length;
+  if (!Number.isSafeInteger(entries)) throw new Error("Junction matrix is too large");
+  const values = new Float64Array(entries);
+  const missing = new Uint8Array(entries);
+  const stats = { cells: cellIds.length, variants: variants.length, entries, missing: 0, zero: 0, positive: 0 };
+  for (let row = 0; row < cellIds.length; row += 1) {
+    const sourceRow = source.values[row];
+    if (!Array.isArray(sourceRow) || sourceRow.length !== variants.length) throw new Error(`Junction matrix column dimensions do not match junctions at row ${row}`);
+    for (let column = 0; column < variants.length; column += 1) {
+      const offset = row * variants.length + column;
+      const value = sourceRow[column];
+      if (value === null) {
+        values[offset] = NaN;
+        missing[offset] = 1;
+        stats.missing += 1;
+      } else {
+        if (!Number.isFinite(value) || value < 0) throw new Error(`Invalid junction copy number at ${row}/${column}`);
+        values[offset] = value;
+        if (value === 0) stats.zero += 1;
+        else stats.positive += 1;
+      }
+    }
+  }
+  return { cellIds, variants, values, missing, format: "junction", stats };
 }
 
 /**
@@ -295,6 +493,10 @@ export function parsePlotlyMutations(figure, chromoBins) {
   }
   const values = new Float64Array(entries);
   const missing = new Uint8Array(entries);
+  // Legacy Plotly exports carry no read counts. NaN means unavailable; never
+  // infer counts from VAF or unrecognized extra fields in the figure.
+  const refCounts = new Float64Array(entries).fill(NaN);
+  const altCounts = new Float64Array(entries).fill(NaN);
   const seen = new Uint8Array(entries);
   const stats = { cells: cellIds.length, variants: variants.length, entries, missing: 0, zero: 0, positive: 0 };
   offset = 0;
@@ -321,7 +523,7 @@ export function parsePlotlyMutations(figure, chromoBins) {
   }
   // Numeric Plotly y increases upwards unless the range/axis is reversed.
   // Sort metadata indices only: never permute the source IDs or matrix buffers.
-  const result = { cellIds, variants, values, missing, stats };
+  const result = { cellIds, variants, values, missing, refCounts, altCounts, stats, format: "plotly" };
   if (!["category", "multicategory"].includes(axis.type) && axis.tickvals.every(Number.isFinite)) {
     const reversed = ["reversed", "min reversed", "max reversed"].includes(axis.autorange) ||
       (Array.isArray(axis.range) && axis.range.length === 2 && axis.range.every(Number.isFinite) && axis.range[0] > axis.range[1]);

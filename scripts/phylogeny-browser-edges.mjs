@@ -38,7 +38,7 @@ try{
  assert.equal(await page.locator('.phylogeny-heatmap').count(),0);
  result.checks.push({name:'Legacy single-cell view still loads without tree or new gutter'});
 
- await page.route('**/data/BWH70_phylogeny/mutations.plotly.json',route=>route.fulfill({status:404,body:'Fixture intentionally unavailable'}));
+ await page.route('**/data/BWH70_phylogeny/mutations.json',route=>route.fulfill({status:404,body:'Fixture intentionally unavailable'}));
  await page.goto(`${base}/?file=BWH70_phylogeny&location=18:68000000-18:74000000`);
  await page.waitForSelector('.phylogeny-warnings',{timeout:60000});
  assert.equal(await canvas().getAttribute('data-cell-count'),'125');
@@ -46,7 +46,7 @@ try{
  await page.locator('.phylogeny-warnings summary').click();
  assert.match(await page.locator('.phylogeny-warnings').innerText(),/Mutations/);
  assert.ok(Number(await canvas().getAttribute('data-frame-cn-drawn'))>0);
- await page.unroute('**/data/BWH70_phylogeny/mutations.plotly.json');
+ await page.unroute('**/data/BWH70_phylogeny/mutations.json');
  await page.getByRole('button',{name:'Retry overview',exact:true}).click();
  await page.waitForSelector('canvas[data-matrix-entries="92000"]',{timeout:60000});
  result.checks.push({name:'Missing mutation input leaves CN usable, warning explicit, retry restores all92000values'});

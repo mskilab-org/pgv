@@ -12,7 +12,7 @@ jest.mock("axios", () => ({ get: jest.fn(), CancelToken: { source: () => ({ toke
 jest.mock("../../helpers/utility", () => ({ ...jest.requireActual("../../helpers/utility"), loadArrowTable: jest.fn() }));
 
 const root = path.resolve(process.cwd(), "public");
-const mutationSource = "data/BWH70_phylogeny/mutations.plotly.json";
+const mutationSource = "data/BWH70_phylogeny/mutations.json";
 const fixtureTest = fs.existsSync(path.join(root, mutationSource)) ? test : test.skip;
 
 fixtureTest("LOCAL FULL FIXTURE: saga retains all 92000 hidden entries/15834 CN intervals, then opens all 125 cells from raw cache", async () => {
@@ -26,7 +26,7 @@ fixtureTest("LOCAL FULL FIXTURE: saga retains all 92000 hidden entries/15834 CN 
   const cohort = datafiles.find((file) => file.file === "BWH70_phylogeny");
   const tree = { ...cohort.plots[0],
     data: fs.readFileSync(path.join(root, cohort.plots[0].path), "utf8"),
-    heatmap: { mutationSource: "mutations.plotly.json", mutationFormat: "plotly" },
+    heatmap: { mutationSource: "mutations.json", mutationFormat: "plotly" },
   };
   const { chromoBins, genomeLength } = updateChromoBins(settings.coordinates.sets[cohort.reference]);
   let state = { ...reducer(undefined, {}), datafiles, selectedFiles: [cohort], plots: [tree], selectedCoordinate: cohort.reference,
@@ -96,14 +96,25 @@ fixtureTest("LOCAL FULL FIXTURE: saga retains all 92000 hidden entries/15834 CN 
   const open = actions.openPhylogenyCells(state.phylogenyHeatmap.cellIds, true);
   dispatch(open);
   await runSaga(options, openPhylogenyCells, open).toPromise();
-  expect(state.cellTrackLoad).toEqual({ status: "ready", completed: 125, total: 125, errors: [] });
+  expect(state.cellTrackLoad).toEqual({ status: "ready", plotId: tree.id, completed: 125, total: 125, errors: [] });
   expect(state.plots.filter((plot) => plot.type === "genome")).toHaveLength(125);
   state.plots.filter((plot) => plot.type === "genome").forEach((plot) => expect(plot.data).toBe(rawByPath.get(plot.path)));
   expect(state.plots[0]).toBe(tree);
   expect(state.domains).toBe(before.domains);
   expect(state.nodes).toBe(before.nodes);
   expect(state.phylogenyHeatmap.mutations).toBe(matrix);
-  expect(axios.get).toHaveBeenCalledTimes(126);
+  const alleleFiles = datafiles.filter(file => state.phylogenyHeatmap.cellIds.includes(file.file) && file.plots.some(plot => plot.type === "genome" && plot.allelicSource));
+  expect(axios.get).toHaveBeenCalledTimes(126 + alleleFiles.length);
+  for (const file of alleleFiles) {
+    const descriptor = file.plots.find(plot => plot.type === "genome");
+    const source = rawByPath.get(`data/${file.file}/${descriptor.allelicSource}`);
+    for (const interval of state.phylogenyHeatmap.cnByCell[file.file]) {
+      const pair = source.intervals.filter(item => item.chromosome === interval.chromosome && item.startPoint === interval.startPoint && item.endPoint === interval.endPoint);
+      expect(pair).toHaveLength(2);
+      expect(interval.majorCn).toBe(Math.max(...pair.map(item => item.y)));
+      expect(interval.minorCn).toBe(Math.min(...pair.map(item => item.y)));
+    }
+  }
   expect(loadArrowTable).not.toHaveBeenCalled();
   expect(state.selectedFiles).toHaveLength(126);
   expect(new Set(state.phylogenyAddedFiles).size).toBe(125);

@@ -1,5 +1,6 @@
 const actions = {
   PHYLOGENY_VIEW_UPDATED: "PHYLOGENY_VIEW_UPDATED",
+  PHYLOGENY_TREE_SELECTED: "PHYLOGENY_TREE_SELECTED",
   LOAD_PHYLOGENY_HEATMAP: "LOAD_PHYLOGENY_HEATMAP",
   PHYLOGENY_HEATMAP_UPDATED: "PHYLOGENY_HEATMAP_UPDATED",
   OPEN_PHYLOGENY_CELLS: "OPEN_PHYLOGENY_CELLS",
@@ -9,9 +10,10 @@ const actions = {
   PHYLOGENY_CELL_PLOTS_REQUESTED: "PHYLOGENY_CELL_PLOTS_REQUESTED",
   PHYLOGENY_CELL_PLOTS_LOADED: "PHYLOGENY_CELL_PLOTS_LOADED",
   PLOT_DATA_UPDATED: "PLOT_DATA_UPDATED",
-  updatePhylogenyView: (changes) => ({ type: actions.PHYLOGENY_VIEW_UPDATED, changes }),
+  updatePhylogenyView: (changes, plotId) => ({ type: actions.PHYLOGENY_VIEW_UPDATED, changes, plotId }),
+  selectPhylogenyTree: (plotId, treeId) => ({ type: actions.PHYLOGENY_TREE_SELECTED, plotId, treeId }),
   loadPhylogenyHeatmap: (plotId) => ({ type: actions.LOAD_PHYLOGENY_HEATMAP, plotId }),
-  openPhylogenyCells: (cellIds, confirmed = false) => ({ type: actions.OPEN_PHYLOGENY_CELLS, cellIds, confirmed }),
+  openPhylogenyCells: (cellIds, confirmed = false, plotId) => ({ type: actions.OPEN_PHYLOGENY_CELLS, cellIds, confirmed, plotId }),
   cancelPhylogenyCellLoad: () => ({ type: actions.CANCEL_PHYLOGENY_CELL_LOAD }),
   clearPhylogenyTracks: () => ({ type: actions.CLEAR_PHYLOGENY_TRACKS }),
   DOMAINS_UPDATED: "DOMAINS_UPDATED",
@@ -69,9 +71,10 @@ const actions = {
     type: actions.RENDER_OUTSIDE_VIEWPORT_UPDATED,
     renderOutsideViewPort,
   }),
-  selectPhylogenyNodes: (nodes) => ({
+  selectPhylogenyNodes: (nodes, plotId) => ({
     type: actions.PHYLOGENY_NODES_SELECTED,
     nodes,
+    plotId,
   }),
   highlightPhylogenyNodes: (nodes) => ({
     type: actions.PHYLOGENY_NODES_HIGHLIGHTED,

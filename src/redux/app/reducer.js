@@ -4,7 +4,7 @@ import { domainsToLocation, cluster } from "../../helpers/utility";
 import { plotIdentity, isDetailPlot } from "../../helpers/phylogeny/loaders";
 
 const defaultPhylogenyView = {
-  gutterWidth: 240, gutterHidden: false, mutationMode: "hidden",
+  gutterWidth: 240, gutterHidden: false, mutationMode: "hidden", cnMode: "total", mutationMetric: "vaf", fitRows: false,
   selectedRowsOnly: false, selectedTracksOnly: false,
 };
 const idleCellTrackLoad = { status: "idle", total: 0, completed: 0, errors: [] };
@@ -71,7 +71,11 @@ const initState = {
   genesOptionsList: [],
   nodes: [],
   phylogenyHeatmap: null,
+  phylogenyHeatmaps: {},
+  phylogenyHeatmapRequests: {},
   phylogenyView: defaultPhylogenyView,
+  phylogenyViews: {},
+  phylogenyNodes: {},
   cellTrackLoad: idleCellTrackLoad,
   datasetEpoch: 0,
   phylogenyHeatmapRequest: 0,
@@ -97,18 +101,45 @@ export default function appReducer(state = initState, action) {
   // Legacy synchronous callers may omit an epoch; all new async workers supply it.
   if (action.epoch !== undefined && action.epoch !== state.datasetEpoch) return state;
   switch (action.type) {
-    case actions.PHYLOGENY_VIEW_UPDATED:
-      return { ...state, phylogenyView: { ...state.phylogenyView, ...action.changes } };
-    case actions.LOAD_PHYLOGENY_HEATMAP:
-      return { ...state, phylogenyHeatmapRequest: state.phylogenyHeatmapRequest + 1 };
-    case actions.PHYLOGENY_HEATMAP_UPDATED:
-      if (action.requestId !== state.phylogenyHeatmapRequest) return state;
-      return { ...state, phylogenyHeatmap: action.data };
+    case actions.PHYLOGENY_VIEW_UPDATED: {
+      const plotId = action.plotId || (state.phylogenyHeatmap && state.phylogenyHeatmap.plotId);
+      const nextView = { ...state.phylogenyView, ...action.changes };
+      if (!plotId) return { ...state, phylogenyView: nextView };
+      return { ...state, phylogenyView: nextView, phylogenyViews: { ...state.phylogenyViews, [plotId]: { ...(state.phylogenyViews[plotId] || defaultPhylogenyView), ...action.changes } } };
+    }
+    case actions.PHYLOGENY_TREE_SELECTED: {
+      const plot = state.plots.find((item) => item.type === "phylogeny" && item.id === action.plotId);
+      const option = plot && (plot.treeOptions || []).find((item) => item.id === action.treeId);
+      if (!plot || !option || plot.activeTreeId === option.id) return state;
+      const plots = state.plots.map((item) => item.id === action.plotId ? { ...item, activeTreeId: option.id, source: option.source, path: option.path, title: option.title, data: option.data, heatmap: option.heatmap } : item);
+      const requests = { ...state.phylogenyHeatmapRequests, [action.plotId]: (state.phylogenyHeatmapRequests[action.plotId] || 0) + 1 };
+      const heatmaps = { ...state.phylogenyHeatmaps, [action.plotId]: null };
+      const clearedSelection = appReducer(state, actions.selectPhylogenyNodes([], action.plotId));
+      const sameCellOrigin = state.cellTrackLoad.plotId === action.plotId;
+      return { ...clearedSelection, plots, phylogenyHeatmaps: heatmaps, phylogenyHeatmap: state.phylogenyHeatmap && state.phylogenyHeatmap.plotId === action.plotId ? null : state.phylogenyHeatmap, phylogenyHeatmapRequests: requests, phylogenyHeatmapRequest: state.phylogenyHeatmapRequest + 1,
+        ...(sameCellOrigin ? { cellTrackRequest: state.cellTrackRequest + 1,
+          cellTrackLoad: state.cellTrackLoad.status === "loading" ? { ...state.cellTrackLoad, status: "cancelled" } : state.cellTrackLoad,
+        } : {}),
+      };
+    }
+    case actions.LOAD_PHYLOGENY_HEATMAP: {
+      const plotId = action.plotId || (state.phylogenyHeatmap && state.phylogenyHeatmap.plotId) || ((state.plots.find((item) => item.type === "phylogeny") || {}).id) || "__default";
+      const requestId = (state.phylogenyHeatmapRequests[plotId] || 0) + 1;
+      return { ...state, phylogenyHeatmapRequest: state.phylogenyHeatmapRequest + 1, phylogenyHeatmapRequests: { ...state.phylogenyHeatmapRequests, [plotId]: requestId } };
+    }
+    case actions.PHYLOGENY_HEATMAP_UPDATED: {
+      const plotId = action.plotId || (action.data && action.data.plotId) || ((state.plots.find((item) => item.type === "phylogeny") || {}).id) || "__default";
+      if (action.requestId !== (state.phylogenyHeatmapRequests[plotId] || state.phylogenyHeatmapRequest)) return state;
+      const heatmaps = { ...state.phylogenyHeatmaps, [plotId]: action.data };
+      return { ...state, phylogenyHeatmaps: heatmaps, phylogenyHeatmap: action.data };
+    }
     case actions.OPEN_PHYLOGENY_CELLS:
       if (action.confirmed !== true || state.loading) return state;
       return {
         ...state, cellTrackRequest: state.cellTrackRequest + 1,
-        cellTrackLoad: { status: "loading", total: 0, completed: 0, errors: [] },
+        cellTrackLoad: { status: "loading", total: 0, completed: 0, errors: [],
+          plotId: action.plotId || (state.phylogenyHeatmap && state.phylogenyHeatmap.plotId) || (state.plots.find(plot => plot.type === "phylogeny") || {}).id,
+        },
       };
     case actions.CANCEL_PHYLOGENY_CELL_LOAD:
       return {
@@ -177,6 +208,7 @@ export default function appReducer(state = initState, action) {
         phylogenyHeatmapRequest: state.phylogenyHeatmapRequest + 1,
         cellTrackRequest: state.cellTrackRequest + 1,
         phylogenyHeatmap: null,
+        phylogenyHeatmaps: {}, phylogenyHeatmapRequests: {}, phylogenyViews: {}, phylogenyNodes: {},
         phylogenyView: { ...defaultPhylogenyView },
         cellTrackLoad: { ...idleCellTrackLoad },
         nodes: [],
@@ -269,7 +301,34 @@ export default function appReducer(state = initState, action) {
         ? { ...state, phylogenyPanelHeight: Math.max(140, Math.min(1600, action.phylogenyPanelHeight)) }
         : state;
     case actions.PHYLOGENY_NODES_SELECTED:
-      let matchedConnectionIds = action.nodes
+      // Global track highlighting is the union of panel selections, not the
+      // selection of whichever cohort happened to dispatch most recently.
+      const phylogenyNodes = { ...state.phylogenyNodes };
+      if (action.plotId) phylogenyNodes[action.plotId] = action.nodes;
+      else {
+        // Genome/anatomy controls still send a complete global selection. Mirror
+        // it into each cohort by identity so panel filters/opening stay in sync.
+        state.plots.filter(plot => plot.type === "phylogeny" && !plot.deleted).forEach(plot => {
+          const data = state.phylogenyHeatmaps[plot.id] ||
+            (state.phylogenyHeatmap && state.phylogenyHeatmap.plotId === plot.id ? state.phylogenyHeatmap : null);
+          const ids = data && Array.isArray(data.cellIds) ? new Set(data.cellIds) : null;
+          phylogenyNodes[plot.id] = ids ? action.nodes.filter(node => ids.has(node.id)) : action.nodes;
+        });
+      }
+      let nodes = action.nodes;
+      if (action.plotId) {
+        const legacyNodes = !state.phylogenyNodes[action.plotId] &&
+          ((state.phylogenyHeatmap && state.phylogenyHeatmap.plotId === action.plotId) || state.plots.filter(plot => plot.type === "phylogeny").length === 1)
+          ? state.nodes : [];
+        const managedIds = new Set([...Object.values(state.phylogenyNodes).flat(), ...legacyNodes, ...action.nodes].map(node => node.id));
+        const merged = new Map();
+        [...state.nodes.filter(node => !managedIds.has(node.id)), ...Object.values(phylogenyNodes).flat()].forEach(node => {
+          const previous = merged.get(node.id);
+          merged.set(node.id, previous && previous.selected ? previous : node);
+        });
+        nodes = [...merged.values()];
+      }
+      let matchedConnectionIds = nodes
         .filter((node) => node.selected)
         .map((node) =>
           state.connectionsAssociations
@@ -284,7 +343,7 @@ export default function appReducer(state = initState, action) {
               p.filter((e) => c.includes(e))
             )
           : [];
-      let unmatchedConnectionIds = action.nodes
+      let unmatchedConnectionIds = nodes
         .filter((node) => !node.selected)
         .map((node) =>
           state.connectionsAssociations
@@ -299,7 +358,7 @@ export default function appReducer(state = initState, action) {
               (x) => !unmatchedConnectionIds.flat().includes(x)
             )
           : selectedConnectionIds;
-      let selectedNodes = action.nodes.filter((node) => node.selected);
+      let selectedNodes = nodes.filter((node) => node.selected);
       let selectedConnectionsRange = [];
       if (selectedNodes.length > 0 && selectedConnectionIds.length > 0) {
         let selectedNode = selectedNodes[0];
@@ -334,7 +393,8 @@ export default function appReducer(state = initState, action) {
       }
       return {
         ...state,
-        nodes: action.nodes,
+        nodes,
+        phylogenyNodes,
         selectedConnectionIds,
         selectedConnectionsRange,
       };

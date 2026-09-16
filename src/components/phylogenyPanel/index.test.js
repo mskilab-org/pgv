@@ -1,7 +1,7 @@
 import React from "react";
-import { render, fireEvent, screen, cleanup, within } from "@testing-library/react";
+import { render, fireEvent, screen, cleanup, within, act } from "@testing-library/react";
 import { Modal } from "antd";
-import { PhylogenyPanel } from "./index";
+import { PhylogenyPanel, mapDispatchToProps } from "./index";
 
 jest.mock("../../helpers/utility", () => ({ downloadCanvasAsPng: jest.fn() }));
 jest.mock("react-container-dimensions", () => ({ children }) => children({ width: 1000, height: 320 }));
@@ -74,18 +74,21 @@ test.each(["plot change", "unmount"])("%s invalidates an outstanding confirmatio
 
 test("initial mutation mode is Hidden and full matrix count is visible", () => {
   render(<PhylogenyPanel {...props()} />);
-  expect(screen.getByText("Hidden")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Show mutations" }).getAttribute("aria-pressed")).toBe("false");
+  expect(screen.queryByRole("combobox", { name: "Mutation display" })).toBeNull();
   expect(screen.getByText(/92,000 values/)).toBeTruthy();
 });
 
 test("two compact groups retain filters, actions and singular/plural counts; Display owns Reset zoom", () => {
   const p = props(); p.plots = [{ type: "genome", id: "g" }];
   const ui = render(<PhylogenyPanel {...p} />);
-  expect(screen.getAllByRole("group")).toHaveLength(2);
-  const display = within(screen.getByRole("group", { name: "Display controls" }));
-  const selection = within(screen.getByRole("group", { name: "Selection and tracks controls" }));
+  const displayGroup = screen.getByRole("group", { name: "Display controls" });
+  const selectionGroup = screen.getByRole("group", { name: "Selection and tracks controls" });
+  expect(Array.from(displayGroup.parentElement.children)).toEqual([displayGroup, selectionGroup]);
+  const display = within(displayGroup);
+  const selection = within(selectionGroup);
   expect(display.getByRole("button", { name: "Hide tree / labels" })).toBeTruthy();
-  expect(display.getByRole("combobox", { name: "Mutation display" })).toBeTruthy();
+  expect(display.getByRole("button", { name: "Show mutations" })).toBeTruthy();
   expect(display.getByRole("spinbutton", { name: "Heatmap height" })).toBeTruthy();
   fireEvent.click(display.getByRole("button", { name: "Reset zoom" }));
   expect(p.updateDomains).toHaveBeenCalledWith([[1, 1000]]);
@@ -104,6 +107,58 @@ test("two compact groups retain filters, actions and singular/plural counts; Dis
   expect(selection.getByText("2 cells selected · 2 panels")).toBeTruthy();
   ui.rerender(<PhylogenyPanel {...p} heatmap={{ ...data, cellIds: ["a"] }} />);
   expect(screen.getByText("1 cell")).toBeTruthy();
+});
+
+test("Display keeps a single tree selector with its labels toggle and four aligned control rows", () => {
+  const p = { ...props(), activeTreeId: "real", treeOptions: [{ id: "real", title: "Real tree" }, { id: "demo", title: "Demo tree" }] };
+  render(<PhylogenyPanel {...p} />);
+  const display = within(screen.getByRole("group", { name: "Display controls" }));
+  expect(display.getAllByRole("group").map(group => group.getAttribute("aria-label"))).toEqual(["Tree", "Copy number", "Right heatmap", "Layout"]);
+  const tree = within(display.getByRole("group", { name: "Tree" }));
+  expect(tree.getByRole("combobox", { name: "Phylogeny tree" })).toBeTruthy();
+  expect(tree.getByRole("button", { name: "Hide tree / labels" })).toBeTruthy();
+  expect(screen.getAllByRole("combobox", { name: "Phylogeny tree" })).toHaveLength(1);
+  expect(within(display.getByRole("group", { name: "Copy number" })).getByRole("combobox", { name: "Copy-number view" })).toBeTruthy();
+  const right = within(display.getByRole("group", { name: "Right heatmap" }));
+  expect(right.getByRole("button", { name: "Show mutations" })).toBeTruthy();
+  expect(right.queryByRole("combobox")).toBeNull();
+  const layout = within(display.getByRole("group", { name: "Layout" }));
+  expect(layout.getByRole("button", { name: "Fit rows" })).toBeTruthy();
+  expect(layout.getByRole("spinbutton", { name: "Heatmap height" })).toBeTruthy();
+  expect(layout.getByRole("button", { name: "Reset zoom" })).toBeTruthy();
+  const selection = within(screen.getByRole("group", { name: "Selection and tracks controls" }));
+  expect(selection.queryByRole("combobox")).toBeNull();
+  expect(selection.getAllByRole("button").map(button => button.textContent)).toEqual(["Open selected (1)…", "Clear selection"]);
+  expect(selection.getAllByRole("checkbox")).toHaveLength(2);
+});
+
+test("Right heatmap groups only the visible dataset and coloring controls without changing other display state", async () => {
+  const p = props();
+  const view = { ...p.view, mutationMode: "side", cnMode: "minor", mutationMetric: "alt", fitRows: true };
+  const ui = render(<PhylogenyPanel {...p} view={view} />);
+  const right = within(screen.getByRole("group", { name: "Right heatmap" }));
+  expect(right.getByRole("button", { name: "Hide mutations" })).toBeTruthy();
+  expect(right.getByRole("combobox", { name: "Right heatmap data" })).toBeTruthy();
+  expect(right.getByRole("combobox", { name: "Mutation color" })).toBeTruthy();
+  expect(right.getByText("Alt count")).toBeTruthy();
+  expect(within(screen.getByRole("group", { name: "Copy number" })).getByText("Minor")).toBeTruthy();
+  await act(async () => { fireEvent.mouseDown(right.getByRole("combobox", { name: "Mutation color" })); });
+  await act(async () => { fireEvent.click(screen.getByText("Ref count")); });
+  expect(p.updatePhylogenyView).toHaveBeenLastCalledWith({ mutationMetric: "ref" });
+  await act(async () => { fireEvent.mouseDown(right.getByRole("combobox", { name: "Right heatmap data" })); });
+  await act(async () => { fireEvent.click(screen.getByText("Junction CN")); });
+  expect(p.updatePhylogenyView).toHaveBeenLastCalledWith({ matrixKind: "junctions" });
+  fireEvent.click(screen.getByRole("button", { name: "Readable rows" }));
+  expect(p.updatePhylogenyView).toHaveBeenLastCalledWith({ fitRows: false });
+  ui.rerender(<PhylogenyPanel {...p} view={{ ...view, matrixKind: "junctions" }} />);
+  expect(right.getByRole("button", { name: "Hide junctions" })).toBeTruthy();
+  expect(right.getByRole("combobox", { name: "Right heatmap data" })).toBeTruthy();
+  expect(right.queryByRole("combobox", { name: "Mutation color" })).toBeNull();
+  fireEvent.click(right.getByRole("button", { name: "Hide junctions" }));
+  expect(p.updatePhylogenyView).toHaveBeenLastCalledWith({ mutationMode: "hidden" });
+  ui.rerender(<PhylogenyPanel {...p} view={{ ...view, mutationMode: "hidden", matrixKind: "junctions" }} />);
+  expect(right.getByRole("button", { name: "Show junctions" })).toBeTruthy();
+  expect(right.queryByRole("combobox")).toBeNull();
 });
 
 test("clearSelection changes only selection and leaves tracks and confirmation independent", () => {
@@ -206,6 +261,48 @@ test("deleted details and overview panels do not keep the clear button enabled",
   ]} />);
   expect(screen.getByRole("button", { name: "Clear selection" }).disabled).toBe(true);
   expect(screen.getByText("0 cells selected · 0 panels")).toBeTruthy();
+});
+
+test("connected dispatchers preserve panel identity rather than overwriting Home's scoped selection", () => {
+  const dispatch = jest.fn();
+  const bound = mapDispatchToProps(dispatch, { plotId: "second-cohort" });
+  bound.selectPhylogenyNodes([{ id: "b", selected: true }]);
+  bound.openPhylogenyCells(["b"], true);
+  bound.updatePhylogenyView({ cnMode: "major" });
+  expect(dispatch.mock.calls.every(([action]) => action.plotId === "second-cohort")).toBe(true);
+});
+
+test.each([null, { ...data, tree: null, cellIds: [], status: "error", errors: ["bad tree"] }])("tree selector survives fallback and errors (%j)", heatmap => {
+  const p = { ...props(), heatmap, activeTreeId: "demo", treeOptions: [{ id: "real", title: "Real tree" }, { id: "demo", title: "Demo tree" }], selectPhylogenyTree: jest.fn() };
+  const ref = React.createRef();
+  const ui = render(<PhylogenyPanel {...p} ref={ref} />);
+  expect(screen.getByRole("combobox", { name: "Phylogeny tree" })).toBeTruthy();
+  ref.current.onTreeChange("real");
+  expect(p.selectPhylogenyTree).toHaveBeenCalledWith("tree", "real");
+  expect(p.loadPhylogenyHeatmap).toHaveBeenCalledWith("tree");
+  ui.rerender(<PhylogenyPanel {...p} phylogeny={null} />);
+  expect(screen.getByRole("combobox", { name: "Phylogeny tree" })).toBeTruthy();
+});
+
+test("mutation button toggles only hidden/side and dataset switch leaves CN unchanged", () => {
+  const p = props(); const ui = render(<PhylogenyPanel {...p} />);
+  fireEvent.click(screen.getByRole("button", { name: "Show mutations" }));
+  expect(p.updatePhylogenyView).toHaveBeenLastCalledWith({ mutationMode: "side" });
+  ui.rerender(<PhylogenyPanel {...p} view={{ ...p.view, mutationMode: "side", matrixKind: "junctions" }} />);
+  expect(screen.getByRole("combobox", { name: "Right heatmap data" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Hide junctions" }));
+  expect(p.updatePhylogenyView).toHaveBeenLastCalledWith({ mutationMode: "hidden" });
+  expect(screen.queryByText("Overlay")).toBeNull();
+  expect(screen.queryByText("Paired")).toBeNull();
+});
+
+test("tree switch invalidates the prior tree's outstanding confirmation", () => {
+  const p = props(); const ui = render(<PhylogenyPanel {...p} activeTreeId="one" />);
+  fireEvent.click(screen.getByRole("button", { name: /Open selected/ }));
+  const onOk = confirm.mock.calls[0][0].onOk;
+  ui.rerender(<PhylogenyPanel {...p} activeTreeId="two" />);
+  onOk();
+  expect(p.openPhylogenyCells).not.toHaveBeenCalled();
 });
 
 test("gutter hides without losing stored width and legacy tree remains supported", () => {

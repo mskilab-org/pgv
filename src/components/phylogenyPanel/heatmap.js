@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import Wrapper from "./heatmap.style";
-import { prepareHeatmap, drawHeatmap, drawHeatmapAxis, hitTestHeatmap, describeHit, changeDomain, benchmarkFullMatrix, CN_COLORS, cnColor, vafColor } from "./heatmapRenderer";
+import { prepareHeatmap, drawHeatmap, drawMutationHeatmap, drawHeatmapAxis, hitTestHeatmap, hitTestMutationHeatmap, describeHit, changeDomain, benchmarkFullMatrix, CN_COLORS, ALLELIC_CN_COLORS, cnColor, vafColor, mutationCountScale } from "./heatmapRenderer";
 
 import { allowPlotNavigation } from "../../helpers/plotNavigation";
 import { selectCellRange } from "../../helpers/phylogeny/selection";
@@ -12,14 +12,17 @@ const AXIS_HEIGHT = 36;
 /** Controlled PGV child: callbacks are the only selection/domain effects; no I/O. */
 export default class PhylogenyHeatmap extends Component {
   static defaultProps = {
-    width: 600, height: 640, gutterWidth: 240, mutationMode: "hidden", nodes: EMPTY,
+    width: 600, height: 640, gutterWidth: 240, mutationMode: "hidden", cnMode: "total", mutationMetric: "vaf", nodes: EMPTY,
     highlightedNodes: EMPTY, domains: EMPTY, chromoBins: {}, selectedRowsOnly: false, zoomedByCmd: false,
+    fitRows: undefined, showFitControl: true, matrixKind: "mutations", availableCnModes: ["total", "major", "minor"],
   };
 
   state = { tooltip: null, fitRows: false };
   canvas = null;
   axis = null;
+  mutationCanvas = null;
   scroller = null;
+  mutationScroller = null;
   scene = null;
   scrollTop = 0;
   raf = null;
@@ -30,12 +33,20 @@ export default class PhylogenyHeatmap extends Component {
   selectionAnchor = null;
 
   viewportHeight = () => Math.max(48, this.props.height - AXIS_HEIGHT - 36);
+  sideMatrix = () => (this.props.data || EMPTY_DATA)[this.props.matrixKind === "junctions" ? "junctions" : "mutations"];
+  mutationVisible = () => this.props.mutationMode === "side" && !!this.sideMatrix();
+  mutationWidth = () => Math.min(280, Math.max(80, this.props.width * 0.35));
+  mutationColumnWidth = 4;
+  mainWidth = () => this.mutationVisible() ? Math.max(96, this.props.width - this.mutationWidth() - 12) : this.props.width;
 
   prepare = () => {
-    const { data, width, gutterWidth, domains, mutationMode, nodes, selectedRowsOnly } = this.props;
+    const { data, gutterWidth, domains, mutationMode, cnMode, mutationMetric, nodes, selectedRowsOnly, chromoBins, fitRows } = this.props;
     const visibleCount = selectedRowsOnly ? (data || EMPTY_DATA).cellIds.filter(id => nodes.some(n => n.id === id && n.selected)).length : (data || EMPTY_DATA).cellIds.length;
-    return prepareHeatmap({ data: data || EMPTY_DATA, width, gutterWidth, domains, mutationMode, nodes, selectedRowsOnly,
-      rowHeight: this.state.fitRows ? this.viewportHeight() / Math.max(1, visibleCount) : undefined });
+    const fittedHeight = this.viewportHeight() / Math.max(1, visibleCount);
+    // Both modes fill spare space; readable mode only limits how small rows get.
+    const minimumHeight = (fitRows == null ? this.state.fitRows : fitRows) ? 0 : mutationMode === "paired" ? 32 : 22;
+    return prepareHeatmap({ data: data || EMPTY_DATA, width: this.mainWidth(), gutterWidth, domains, mutationMode, cnMode, mutationMetric, chromoBins, nodes, selectedRowsOnly, matrixKind: this.props.matrixKind,
+      rowHeight: Math.max(minimumHeight, fittedHeight) });
   };
 
   componentDidMount() {
@@ -59,8 +70,10 @@ export default class PhylogenyHeatmap extends Component {
     }
     const changed = previous.data !== this.props.data || previous.width !== this.props.width || previous.height !== this.props.height ||
       previous.gutterWidth !== this.props.gutterWidth || previous.domains !== this.props.domains || previous.mutationMode !== this.props.mutationMode ||
+      previous.cnMode !== this.props.cnMode || previous.mutationMetric !== this.props.mutationMetric || previous.fitRows !== this.props.fitRows || previous.matrixKind !== this.props.matrixKind ||
       previous.selectedRowsOnly !== this.props.selectedRowsOnly || previousState.fitRows !== this.state.fitRows ||
       (this.props.selectedRowsOnly && previous.nodes !== this.props.nodes);
+    if (previous.matrixKind !== this.props.matrixKind && this.mutationScroller) this.mutationScroller.scrollLeft = 0;
     if (changed) {
       this.scrollTop = Math.min(this.scrollTop, Math.max(0, this.scene.totalHeight - this.viewportHeight()));
       if (this.scroller) this.scroller.scrollTop = this.scrollTop;
@@ -88,9 +101,9 @@ export default class PhylogenyHeatmap extends Component {
     this.raf = window.requestAnimationFrame(() => { this.raf = null; if (!this.disposed) this.draw(); });
   };
 
-  canvasContext = (canvas, height) => {
+  canvasContext = (canvas, height, logicalWidth = this.props.width) => {
     const dpr = window.devicePixelRatio || 1;
-    const width = Math.max(1, Math.round(this.props.width * dpr));
+    const width = Math.max(1, Math.round(logicalWidth * dpr));
     const pixels = Math.max(1, Math.round(height * dpr));
     if (canvas.width !== width) canvas.width = width;
     if (canvas.height !== pixels) canvas.height = pixels;
@@ -100,22 +113,32 @@ export default class PhylogenyHeatmap extends Component {
   };
 
   draw = () => {
-    const ctx = this.canvasContext(this.canvas, this.viewportHeight());
+    const ctx = this.canvasContext(this.canvas, this.viewportHeight(), this.mainWidth());
     if (!ctx) return;
     const frame = drawHeatmap(ctx, this.scene, { height: this.viewportHeight(), scrollTop: this.scrollTop,
       nodes: this.props.nodes, highlightedNodes: this.props.highlightedNodes, hover: this.hover, brush: this.brush });
+    if (this.mutationCanvas && this.mutationVisible()) {
+      const mutationContext = this.canvasContext(this.mutationCanvas, this.viewportHeight(), this.mutationWidth());
+      if (mutationContext) {
+        const mutationFrame = drawMutationHeatmap(mutationContext, this.scene, { height: this.viewportHeight(), scrollTop: this.scrollTop,
+          width: this.mutationWidth(), scrollLeft: this.mutationScroller ? this.mutationScroller.scrollLeft : 0,
+          nodes: this.props.nodes, hover: this.hover });
+        Object.entries(mutationFrame).forEach(([key, value]) => this.mutationCanvas.setAttribute(`data-frame-${key.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)}`, String(value)));
+      }
+    }
+    const mainWidth = this.mainWidth();
     Object.entries(frame).forEach(([key, value]) => {
       this.canvas.setAttribute(`data-frame-${key.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)}`, String(value));
     });
-    const axisContext = this.canvasContext(this.axis, AXIS_HEIGHT);
+    const axisContext = this.canvasContext(this.axis, AXIS_HEIGHT, mainWidth);
     if (axisContext) drawHeatmapAxis(axisContext, this.scene, this.props.chromoBins, AXIS_HEIGHT);
   };
 
-  benchmark = (iterations = 12) => benchmarkFullMatrix(this.canvas, { ...this.props, data: this.props.data || EMPTY_DATA, restore: this.draw }, iterations);
+  benchmark = (iterations = 12) => benchmarkFullMatrix(this.canvas, { ...this.props, data: this.props.data || EMPTY_DATA, width: this.mainWidth(), restore: this.draw }, iterations);
 
   point = event => {
     const rect = this.canvas.getBoundingClientRect();
-    return { x: (event.clientX - rect.left) * (rect.width ? this.props.width / rect.width : 1),
+    return { x: (event.clientX - rect.left) * (rect.width ? this.mainWidth() / rect.width : 1),
       y: (event.clientY - rect.top) * (rect.height ? this.viewportHeight() / rect.height : 1) };
   };
   windowAt = x => this.scene.windows.find(window => x >= window.x && x <= window.x + window.width);
@@ -132,6 +155,7 @@ export default class PhylogenyHeatmap extends Component {
   };
 
   onScroll = event => {
+    if (event.target !== event.currentTarget) return; // Horizontal child scroll must not reset vertical row offset.
     this.scrollTop = event.currentTarget.scrollTop;
     this.hover = null;
     if (this.state.tooltip) this.setState({ tooltip: null });
@@ -143,7 +167,7 @@ export default class PhylogenyHeatmap extends Component {
     const { x, y } = this.point(event);
     const window = this.windowAt(x);
     const hit = hitTestHeatmap(this.scene, x, y, this.scrollTop);
-    this.hover = window || hit ? { x, windowIndex: window ? window.index : null, rowId: hit ? hit.row.id : null } : null;
+    this.hover = window || hit ? { x, windowIndex: window ? window.index : null, rowId: hit ? hit.row.id : null, nodeId: hit && hit.node ? hit.node.id : null } : null;
     if (this.props.onHoverLocation) this.props.onHoverLocation(window ? window.invert(x - window.x) : null, window ? window.index : null);
     const lines = describeHit(this.scene, hit);
     this.setState({ tooltip: lines.length ? { x, y, lines } : null });
@@ -155,6 +179,56 @@ export default class PhylogenyHeatmap extends Component {
     this.setState({ tooltip: null });
     if (this.props.onHoverLocation) this.props.onHoverLocation(null, null);
     this.scheduleDraw();
+  };
+
+  mutationPoint = event => {
+    const rect = this.mutationCanvas.getBoundingClientRect();
+    const horizontal = this.mutationScroller ? this.mutationScroller.scrollLeft : 0;
+    return { x: (event.clientX - rect.left) * (rect.width ? this.mutationWidth() / rect.width : 1) + horizontal,
+      y: (event.clientY - rect.top) * (rect.height ? this.viewportHeight() / rect.height : 1) };
+  };
+
+  onMutationHover = event => {
+    if (this.drag || !this.scene) return;
+    const { x, y } = this.mutationPoint(event);
+    const hit = hitTestMutationHeatmap(this.scene, x, y, this.scrollTop, this.mutationColumnWidth);
+    this.hover = hit ? { x: this.mainWidth() + 12 + x, rowId: hit.row.id, windowIndex: null } : null;
+    const lines = describeHit(this.scene, hit);
+    this.setState({ tooltip: lines.length ? { x: this.mainWidth() + 12 + x - (this.mutationScroller ? this.mutationScroller.scrollLeft : 0), y, lines } : null });
+    this.scheduleDraw();
+  };
+
+  onMutationScroll = event => {
+    event.stopPropagation();
+    this.hover = null;
+    if (this.state.tooltip) this.setState({ tooltip: null });
+    this.scheduleDraw();
+  };
+
+  focusHeatmap = event => {
+    const root = event.currentTarget.closest(".phylogeny-heatmap");
+    if (root) root.focus({ preventScroll: true });
+  };
+
+  onMutationClick = event => {
+    if (!this.scene) return;
+    this.focusHeatmap(event);
+    const { x, y } = this.mutationPoint(event);
+    const hit = hitTestMutationHeatmap(this.scene, x, y, this.scrollTop, this.mutationColumnWidth);
+    if (hit) this.select([hit.row.id], event);
+  };
+
+  onKeyDown = event => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    const target = event.target;
+    if (target && ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(target.tagName)) return;
+    if (target && target.closest && target.closest(".heatmap-gutter-resize, [contenteditable=true], [role=combobox]")) return;
+    event.preventDefault();
+    const modes = this.props.availableCnModes;
+    if (!modes.length) return;
+    const current = modes.indexOf(this.props.cnMode || "total");
+    const next = (current + (event.key === "ArrowRight" ? 1 : modes.length - 1)) % modes.length;
+    if (this.props.onCnModeChange) this.props.onCnModeChange(modes[next]);
   };
 
   onWheel = event => {
@@ -179,6 +253,7 @@ export default class PhylogenyHeatmap extends Component {
   onPointerDown = event => {
     // macOS can report Control-primary-click as a secondary button.
     if (event.button && !(event.button === 2 && event.ctrlKey)) return;
+    this.focusHeatmap(event);
     const point = this.point(event);
     const window = this.windowAt(point.x);
     this.drag = { type: window ? event.shiftKey ? "brush" : "pan" : "select",
@@ -191,7 +266,7 @@ export default class PhylogenyHeatmap extends Component {
     const drag = this.drag;
     if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
     if (drag.type === "resize") {
-      if (this.props.onGutterWidthChange) this.props.onGutterWidthChange(Math.max(0, Math.min(Math.max(0, this.props.width - 72), drag.gutter + event.clientX - drag.clientX)));
+      if (this.props.onGutterWidthChange) this.props.onGutterWidthChange(Math.max(0, Math.min(Math.max(0, this.mainWidth() - 72), drag.gutter + event.clientX - drag.clientX)));
       return;
     }
     const point = this.point(event);
@@ -251,56 +326,86 @@ export default class PhylogenyHeatmap extends Component {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
     const width = this.props.gutterWidth + (event.key === "ArrowRight" ? 16 : -16);
-    if (this.props.onGutterWidthChange) this.props.onGutterWidthChange(Math.max(0, Math.min(Math.max(0, this.props.width - 72), width)));
+    if (this.props.onGutterWidthChange) this.props.onGutterWidthChange(Math.max(0, Math.min(Math.max(0, this.mainWidth() - 72), width)));
   };
 
   render() {
-    const { data = EMPTY_DATA, width, gutterWidth, mutationMode, nodes } = this.props;
+    const { data = EMPTY_DATA, width, gutterWidth, mutationMode, cnMode, nodes } = this.props;
     // Cache projection by the exact inputs that affect layout. Selection/hover redraws
     // must not sort/group the full matrix again unless the row filter is active.
-    const inputs = [data, width, this.props.height, gutterWidth, mutationMode, this.props.domains, this.props.selectedRowsOnly,
-      this.props.selectedRowsOnly ? nodes : null, this.state.fitRows];
+    const inputs = [data, width, this.props.height, gutterWidth, mutationMode, this.props.cnMode, this.props.mutationMetric, this.props.domains, this.props.selectedRowsOnly,
+      this.props.selectedRowsOnly ? nodes : null, this.props.fitRows, this.state.fitRows, this.props.chromoBins, this.props.matrixKind];
     if (!this.scene || inputs.some((input, index) => input !== this.sceneInputs[index])) {
       this.scene = this.prepare();
       this.sceneInputs = inputs;
     }
     const matrix = data && data.mutations;
     const selected = new Set(nodes.filter(n => n.selected).map(n => n.id));
+    const mainWidth = this.mainWidth();
+    const side = this.mutationVisible();
+    const sideMatrix = this.sideMatrix();
+    const junctions = this.props.matrixKind === "junctions";
+    const matrixWidth = Math.max(this.mutationWidth(), (sideMatrix ? sideMatrix.variants.length : 0) * this.mutationColumnWidth);
+    const fitRows = this.props.fitRows == null ? this.state.fitRows : this.props.fitRows;
+    const mutationMetricLabel = this.props.mutationMetric === "ref" ? "Ref count" : this.props.mutationMetric === "alt" ? "Alt count" : "VAF";
+    const countMetric = this.props.mutationMetric === "ref" || this.props.mutationMetric === "alt";
+    const countScale = side && !junctions && countMetric ? mutationCountScale(sideMatrix, this.props.mutationMetric) : null;
     const { tooltip } = this.state;
     const swatch = (label, color, circle = false) => <span key={label}><i className={`heatmap-swatch${circle ? " heatmap-swatch-dot" : ""}`} style={{ background: color }} /> {label}</span>;
-    return <Wrapper className="phylogeny-heatmap" data-mutation-mode={mutationMode}>
-      <canvas ref={element => { this.axis = element; }} className="heatmap-axis" aria-hidden="true" style={{ width, height: AXIS_HEIGHT }} />
+    return <Wrapper className="phylogeny-heatmap" data-mutation-mode={mutationMode} tabIndex={0} onKeyDown={this.onKeyDown}>
+      <div className="heatmap-axis-row">
+        <canvas ref={element => { this.axis = element; }} className="heatmap-axis" aria-hidden="true" style={{ width: mainWidth, height: AXIS_HEIGHT }} />
+        {side && <div className="mutation-axis-label" style={{ width: this.mutationWidth() }}>{junctions ? "Junction CN" : "Mutations"} · {sideMatrix.variants.length.toLocaleString()} {junctions ? "junctions" : "sites"}</div>}
+      </div>
       <div ref={element => { this.scroller = element; }} className="heatmap-scroll" style={{ height: this.viewportHeight() }} onScroll={this.onScroll}>
         <div className="heatmap-scroll-content" style={{ height: Math.max(this.viewportHeight(), this.scene.totalHeight) }}>
-          <canvas ref={element => { this.canvas = element; }} className="heatmap-canvas" style={{ width, height: this.viewportHeight() }}
-            role="img" aria-label="Phylogeny, copy number and mutation heatmap. Scroll for cells; drag to pan, Shift-drag to brush, Command-wheel to zoom when enabled. Shift-click selects a range; Control or Command-click toggles cells. Cell selection does not open tracks."
-            data-cell-count={(data || EMPTY_DATA).cellIds.length} data-site-count={matrix ? matrix.variants.length : 0}
-            data-matrix-entries={matrix ? matrix.values.length : 0} data-visible-row-count={this.scene.rows.length}
-            onMouseMove={this.onHover} onMouseLeave={this.onLeave} onPointerDown={this.onPointerDown} onDoubleClick={this.onDoubleClick}
-            onContextMenu={event => { if (event.ctrlKey) event.preventDefault(); }} />
+          <div className="heatmap-columns" style={{ height: this.viewportHeight() }}>
+            <canvas ref={element => { this.canvas = element; }} className="heatmap-canvas" style={{ width: mainWidth, height: this.viewportHeight() }}
+              role="img" aria-label="Phylogeny and copy-number heatmap. Scroll for cells; drag to pan, Shift-drag to brush, Command-wheel to zoom when enabled. Shift-click selects a range; Control or Command-click toggles cells. Cell selection does not open tracks."
+              data-cell-count={(data || EMPTY_DATA).cellIds.length} data-site-count={matrix ? matrix.variants.length : 0}
+              data-matrix-entries={matrix ? matrix.values.length : 0} data-visible-row-count={this.scene.rows.length}
+              onMouseMove={this.onHover} onMouseLeave={this.onLeave} onPointerDown={this.onPointerDown} onDoubleClick={this.onDoubleClick}
+              onContextMenu={event => { if (event.ctrlKey) event.preventDefault(); }} />
+            {side && <div ref={element => { this.mutationScroller = element; }} className="mutation-scroll-x"
+              style={{ width: this.mutationWidth(), height: this.viewportHeight() }} onScroll={this.onMutationScroll}>
+              <div style={{ width: matrixWidth }}>
+                <canvas ref={element => { this.mutationCanvas = element; }} className="mutation-canvas" style={{ width: this.mutationWidth(), height: this.viewportHeight() }}
+                  role="img" aria-label={`${junctions ? "Junction copy-number" : "Mutation"} heatmap colored by ${junctions ? "CN" : mutationMetricLabel}${countScale ? " (log scale)" : ""}. Horizontal scroll preserves source column order.`}
+                  onMouseMove={this.onMutationHover} onMouseLeave={this.onLeave} onClick={this.onMutationClick} />
+              </div>
+            </div>}
+          </div>
         </div>
       </div>
       {/* Focusable separator values are valid ARIA 1.1; this legacy lint uses older role data. */}
       {/* eslint-disable jsx-a11y/role-supports-aria-props */}
       {gutterWidth > 0 && <div className="heatmap-gutter-resize" role="separator" aria-label="Resize tree gutter" aria-orientation="vertical"
-        aria-valuemin={0} aria-valuemax={Math.max(0, width - 72)} aria-valuenow={gutterWidth} tabIndex={0}
+        aria-valuemin={0} aria-valuemax={Math.max(0, mainWidth - 72)} aria-valuenow={gutterWidth} tabIndex={0}
         style={{ left: gutterWidth, height: this.viewportHeight() }} onPointerDown={this.onResizeStart} onKeyDown={this.onResizeKey} />}
       {/* eslint-enable jsx-a11y/role-supports-aria-props */}
       {!this.scene.rows.length && <div className="heatmap-empty">{this.props.selectedRowsOnly ? "No selected cells" : "No cells available"}</div>}
       {this.scene.rows.length > 0 && !this.scene.windows.length && <div className="heatmap-empty">Widen the panel or reduce the tree gutter to view genomic data.</div>}
       <div className="heatmap-legend">
-        <span className="heatmap-legend-group" aria-label="Copy number legend"><strong>CN</strong>
-          {CN_COLORS.map((color, index) => swatch(index === 11 ? "11+" : String(index), color))}{swatch("missing", cnColor(null))}
+        <span className="heatmap-legend-group" aria-label="Copy number legend"><strong>CN {cnMode === "total" ? "Total" : cnMode === "major" ? "Major" : "Minor"}</strong>
+          {(cnMode === "total" ? CN_COLORS : ALLELIC_CN_COLORS).map((color, index) => swatch(index === 11 ? "11+" : String(index), color))}{swatch("missing", cnColor(null, cnMode))}
         </span>
-        <span className="heatmap-legend-group" aria-label="Mutation VAF legend"><strong>VAF</strong>{mutationMode === "hidden" ? "Hidden" : <>
+        <span className="heatmap-legend-group" aria-label="Mutation VAF legend"><strong>{side ? junctions ? "Junction CN" : mutationMetricLabel : "VAF"}</strong>{mutationMode === "hidden" ? "Hidden" : side && junctions ? <>{CN_COLORS.map((color, index) => swatch(index === 11 ? "11+" : String(index), color))}{swatch("missing", cnColor(null))}</> : countScale ? <>
+          <span title="Logarithmic color scale over the full cohort. No counts are clipped; tooltips show the original read counts.">log scale</span>
+          <span className="heatmap-count-scale" role="img" aria-label={`${mutationMetricLabel}: logarithmic color scale from 0 to ${countScale.maximum}; tooltips show raw counts`}>
+            <span className="heatmap-count-gradient" />
+            <span className="heatmap-count-ticks">{countScale.ticks.map(({ value, position }, index) =>
+              <span key={value} style={{ left: `${100 * position}%`, transform: index === 0 ? "none" : index === countScale.ticks.length - 1 ? "translateX(-100%)" : "translateX(-50%)" }}>{value}</span>)}</span>
+          </span>
+          {sideMatrix.format === "plotly" && swatch("missing", vafColor(null))}
+        </> : <>
           <span className="heatmap-vaf-scale" role="img" aria-label="VAF: continuous grayscale from 0 (white) to 1 (black)">
             <span className="heatmap-vaf-gradient" />
             <span className="heatmap-vaf-ticks">{[0, 0.25, 0.5, 0.75, 1].map(value => <span key={value}>{value}</span>)}</span>
           </span>
-          {swatch("× missing", vafColor(null), true)}
-          <span title="Overlapping sites: counts and values on hover; click to zoom. No mean VAF."><i className="heatmap-overlap-symbol" aria-hidden="true">+</i> overlapping sites</span>
+          {(!side || (sideMatrix && sideMatrix.format === "plotly")) && swatch(side ? "missing" : "× missing", vafColor(null), !side)}
+          {!side && <span title="Overlapping sites: counts and values on hover; click to zoom. No mean VAF."><i className="heatmap-overlap-symbol" aria-hidden="true">+</i> overlapping sites</span>}
         </>}</span>
-        <button type="button" className="heatmap-fit" onClick={() => this.setState(state => ({ fitRows: !state.fitRows }))}>{this.state.fitRows ? "Readable rows" : "Fit rows"}</button>
+        {this.props.showFitControl && <button type="button" className="heatmap-fit" onClick={() => this.setState(state => ({ fitRows: !state.fitRows }))}>{fitRows ? "Readable rows" : "Fit rows"}</button>}
         {this.scene.hiddenCount > 0 && <span>{this.scene.hiddenCount} hidden cell{this.scene.hiddenCount === 1 ? "" : "s"} (data retained)</span>}
       </div>
       <div className="heatmap-accessible" aria-label="Cell selection">

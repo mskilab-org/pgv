@@ -17,7 +17,7 @@ import AnatomyPanel from "../../components/anatomyPanel";
 import appActions from "../../redux/app/actions";
 import BigwigPlotPanel from "../../components/bigwigPlotPanel";
 
-const { updatePlots } = appActions;
+const { updatePlots, updatePhylogenyView, selectPhylogenyNodes, selectPhylogenyTree, openPhylogenyCells } = appActions;
 
 export class Home extends Component {
   state = { legendAffixed: false, genesAffixed: false, phyloAffixed: false,
@@ -76,64 +76,62 @@ export class Home extends Component {
       phylogenyPanelHeight,
       plots,
       phylogenyHeatmap,
+      phylogenyHeatmaps = {},
       phylogenyView,
+      phylogenyViews = {},
+      phylogenyNodes = {},
       nodes = [],
     } = this.props;
 
-    let phyloComponent = plots.find((e) => e.type === "phylogeny");
+    const phyloComponents = plots.filter((e) => e.type === "phylogeny" && !e.deleted);
+    let phyloComponent = phyloComponents[0];
     let anatomyComponent = plots.find((e) => e.type === "anatomy");
     let genesComponent = plots.find((e) => e.type === "genes");
-    const linked = !!(phyloComponent && phyloComponent.visible && phylogenyHeatmap &&
-      phylogenyHeatmap.plotId === phyloComponent.id && phylogenyHeatmap.tree && phylogenyHeatmap.cellIds.length);
-    const view = phylogenyView || {};
+    const heatmapFor = plot => phylogenyHeatmaps[plot.id] || (phylogenyHeatmap && phylogenyHeatmap.plotId === plot.id ? phylogenyHeatmap : null);
+    const defaultPanelView = { gutterWidth: 240, gutterHidden: false, mutationMode: "hidden", cnMode: "total", mutationMetric: "vaf", fitRows: false, selectedRowsOnly: false, selectedTracksOnly: false };
+    // Global state mirrors recent actions; it does not acquire a new owner when
+    // another panel is removed. Legacy fallback applies only without scoped state.
+    const legacyPanel = plot => !Object.keys(phylogenyViews).length && !Object.keys(phylogenyNodes).length &&
+      phylogenyHeatmap && phylogenyHeatmap.plotId === plot.id && plots.filter(item => item.type === "phylogeny").length === 1;
+    const viewFor = plot => phylogenyViews[plot.id] || (legacyPanel(plot) ? (phylogenyView || defaultPanelView) : defaultPanelView);
+    const nodesFor = plot => phylogenyNodes[plot.id] || (legacyPanel(plot) ? nodes : []);
+    const linkedPanels = phyloComponents.map(plot => ({ plot, data: heatmapFor(plot), view: viewFor(plot), nodes: nodesFor(plot) }))
+      .filter(panel => panel.plot.visible && panel.data && panel.data.tree && panel.data.cellIds.length);
+    const linked = linkedPanels.length > 0;
+    const view = linkedPanels[0] ? linkedPanels[0].view : (phylogenyView || {});
     const gutter = linked && !view.gutterHidden ? view.gutterWidth || 240 : 0;
-    const selectedCells = new Set(nodes.filter(node => node.selected).map(node => node.id));
-    const cohortCells = new Set(linked ? phylogenyHeatmap.cellIds : []);
+    const sideVisible = linked && view.mutationMode === "side" && !!linkedPanels[0].data[view.matrixKind === "junctions" ? "junctions" : "mutations"];
     const legendOffset = this.state.headerHeight;
     const genesOffset = legendOffset + (legendPinned ? this.state.legendHeight : 0);
     const phylogenyOffset = genesOffset + (genesPinned && genesComponent && genesComponent.visible ? this.state.genesHeight : 0);
     const availableHeight = Math.max(200, this.state.viewportHeight - phylogenyOffset);
     const heatmapMaxHeight = linked && phylogenyPinned ? Math.max(140, Math.floor(availableHeight * 0.4) - 140) : 1600;
     const heatmapHeight = linked ? Math.min(phylogenyPanelHeight || 640, heatmapMaxHeight) : phylogenyPanelHeight;
-    let phyloAnatomy = (
-      <Row className="">
-        {phyloComponent && phyloComponent.visible && (
-          <Col
-            className="gutter-row"
-            span={!linked && anatomyComponent && anatomyComponent.visible ? 18 : 24}
-          >
-            {phyloComponent && (
-              <PhylogenyPanel
-                {...{
-                  loading,
-                  phylogeny: phyloComponent.data,
-                  title: phyloComponent.title,
-                  height: heatmapHeight,
-                  maxHeight: heatmapMaxHeight,
-                  plotId: phyloComponent.id,
-                }}
-              />
-            )}
-          </Col>
-        )}
-        {!linked && anatomyComponent && anatomyComponent.visible && (
-          <Col
-            className="gutter-row"
-            span={phyloComponent && phyloComponent.visible ? 6 : 24}
-          >
-            <AnatomyPanel
-              {...{
-                loading,
-                anatomy: anatomyComponent.data,
-                title: anatomyComponent.title,
-                height: phylogenyPanelHeight + 7,
-                figure: anatomyComponent.figure,
-              }}
-            />
-          </Col>
-        )}
-      </Row>
-    );
+    const phylogenyRows = phyloComponents.filter(plot => plot.visible).map((plot) => {
+      const data = heatmapFor(plot);
+      const panelView = viewFor(plot);
+      const panelNodes = nodesFor(plot);
+      const panelLinked = !!(data && data.tree && data.cellIds.length);
+      return <Row key={plot.id} className="phylogeny-panel-row">
+        <Col className="gutter-row" span={!panelLinked && anatomyComponent && anatomyComponent.visible && plot === phyloComponent ? 18 : 24}>
+          <PhylogenyPanel loading={loading} phylogeny={plot.data} title={plot.title} height={heatmapHeight} maxHeight={heatmapMaxHeight}
+            plotId={plot.id} index={plots.indexOf(plot)} toggleVisibility={this.togglePlotVisibility}
+            heatmap={data} view={panelView} nodes={panelNodes} treeOptions={plot.treeOptions || []} activeTreeId={plot.activeTreeId}
+            onUpdatePhylogenyView={changes => this.props.updatePhylogenyView(changes, plot.id)}
+            onOpenPhylogenyCells={(ids, confirmed) => this.props.openPhylogenyCells(ids, confirmed, plot.id)}
+            selectPhylogenyNodes={selectedNodes => this.props.selectPhylogenyNodes(selectedNodes, plot.id)}
+            selectPhylogenyTree={this.props.selectPhylogenyTree} />
+        </Col>
+        {!linked && plot === phyloComponent && anatomyComponent && anatomyComponent.visible && <Col className="gutter-row" span={6}>
+          <AnatomyPanel loading={loading} anatomy={anatomyComponent.data} title={anatomyComponent.title}
+            height={phylogenyPanelHeight + 7} figure={anatomyComponent.figure} />
+        </Col>}
+      </Row>;
+    });
+    let phyloAnatomy = <>{phylogenyRows}{!phyloComponents.length && anatomyComponent && anatomyComponent.visible && <Row className=""><Col span={24}>
+      <AnatomyPanel loading={loading} anatomy={anatomyComponent.data} title={anatomyComponent.title}
+        height={phylogenyPanelHeight + 7} figure={anatomyComponent.figure} />
+    </Col></Row>}</>;
     let plotPhyloAnatomyComponent = phylogenyPinned ? (
       <Affix
         offsetTop={phylogenyOffset}
@@ -169,7 +167,7 @@ export class Home extends Component {
       plotComponents.push(<div key="genes" ref={this.setGenesRef} className={linked ? "pgv-genes-panel phylogeny-aligned-panel" : "pgv-genes-panel"}>{genesPlotComponent}</div>);
     }
     if (
-      (phyloComponent && phyloComponent.visible) ||
+      phylogenyRows.length > 0 ||
       (anatomyComponent && anatomyComponent.visible)
     ) {
       plotComponents.push(<React.Fragment key="phylogeny">{plotPhyloAnatomyComponent}</React.Fragment>);
@@ -179,7 +177,13 @@ export class Home extends Component {
         anatomy={anatomyComponent.data} title={anatomyComponent.title} height={phylogenyPanelHeight + 7} figure={anatomyComponent.figure} /></Col></Row>);
     }
     plots.forEach((d, index) => {
-      if (d.deleted || (linked && view.selectedTracksOnly && cohortCells.has(d.sample || d.ownerFile) && !selectedCells.has(d.sample || d.ownerFile))) {
+      const cellId = d.sample || d.ownerFile;
+      const panels = linkedPanels.filter(panel => panel.data.cellIds.includes(cellId));
+      // A cohort's filter cannot hide another cohort's tracks. Shared cells
+      // stay available if any owning panel still permits them.
+      const filtered = panels.length > 0 && panels.every(panel => panel.view.selectedTracksOnly &&
+        !panel.nodes.some(node => node.id === cellId && node.selected));
+      if (d.deleted || filtered) {
         return;
       }
       if (["genome", "walk"].includes(d.type) && !d.data) return;
@@ -284,7 +288,7 @@ export class Home extends Component {
     });
 
     return (
-      <HomeWrapper data-phylogeny-linked={linked ? "true" : undefined} style={{ "--phylogeny-gutter": `${gutter}px` }}>
+      <HomeWrapper data-phylogeny-linked={linked ? "true" : undefined} style={{ "--phylogeny-gutter": `${gutter}px`, "--phylogeny-right-inset": sideVisible ? "calc(12px + min(280px, max(80px, calc(35% - 8.4px))))" : "0px" }}>
         <Skeleton active loading={loading}>
           <Affix offsetTop={0} style={{ zIndex: 1100 }}>
             <div className="ant-home-header-container" ref={this.setHeaderRef}>
@@ -328,6 +332,10 @@ Home.propTypes = {};
 Home.defaultProps = {};
 const mapDispatchToProps = (dispatch) => ({
   updatePlots: (plots) => dispatch(updatePlots(plots)),
+  updatePhylogenyView: (changes, plotId) => dispatch(updatePhylogenyView(changes, plotId)),
+  selectPhylogenyNodes: (nodes, plotId) => dispatch(selectPhylogenyNodes(nodes, plotId)),
+  selectPhylogenyTree: (plotId, treeId) => dispatch(selectPhylogenyTree(plotId, treeId)),
+  openPhylogenyCells: (ids, confirmed, plotId) => dispatch(openPhylogenyCells(ids, confirmed, plotId)),
 });
 const mapStateToProps = (state) => ({
   tags: state.App.tags,
@@ -341,7 +349,10 @@ const mapStateToProps = (state) => ({
   phylogenyPanelHeight: state.App.phylogenyPanelHeight,
   loading: state.App.loading,
   phylogenyHeatmap: state.App.phylogenyHeatmap,
+  phylogenyHeatmaps: state.App.phylogenyHeatmaps,
   phylogenyView: state.App.phylogenyView,
+  phylogenyViews: state.App.phylogenyViews,
+  phylogenyNodes: state.App.phylogenyNodes,
   nodes: state.App.nodes,
 });
 export default connect(

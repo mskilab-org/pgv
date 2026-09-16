@@ -11,6 +11,7 @@ const HomeWrapper = styled.div`
   }
   .phylogeny-aligned-panel .ant-card-body {
     padding-left: calc(12px + var(--phylogeny-gutter, 0px));
+    padding-right: calc(12px + var(--phylogeny-right-inset, 0px));
   }
   .phylogeny-track-label {
     position: absolute; left: 16px; top: 64px;

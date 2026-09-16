@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 import {
-  prepareHeatmap, drawHeatmap, hitTestHeatmap, selectionNodes,
-  describeHit, benchmarkFullMatrix, changeDomain, vafColor, cnColor, CN_COLORS, drawHeatmapAxis,
+  prepareHeatmap, drawHeatmap, drawMutationHeatmap, hitTestHeatmap, hitTestMutationHeatmap, selectionNodes,
+  describeHit, benchmarkFullMatrix, changeDomain, vafColor, cnColor, countColor, mutationCountScale, CN_COLORS, drawHeatmapAxis,
 } from "./heatmapRenderer";
 import { parseNewick, parsePlotlyMutations, normalizeCopyNumber } from "../../helpers/phylogeny/data";
 
@@ -637,7 +637,7 @@ test("benchmark restores the live canvas even if painting fails", () => {
   expect(restore).toHaveBeenCalledTimes(1);
 });
 
-const fixturePath = path.join(process.cwd(), "public/data/BWH70_phylogeny/mutations.plotly.json");
+const fixturePath = path.join(process.cwd(), "public/data/BWH70_phylogeny/mutations.json");
 (fs.existsSync(fixturePath) ? test : test.skip).each(["overlay", "paired"])("actual full fixture %s circles paint all 92,000 entries over varying projections (including all 1,081 missing)", mutationMode => {
   const settings = JSON.parse(fs.readFileSync(path.join(process.cwd(), "public/settings.json"), "utf8"));
   let start = 0;
@@ -790,4 +790,67 @@ test.each([false, true])("benchmark restores dimensions and live view/snapshot a
     expect(restore).toHaveBeenCalledTimes(1);
     expect(ctx.putImageData).not.toHaveBeenCalled();
   } else expect(ctx.putImageData).toHaveBeenCalledWith(snapshot, 0, 0);
+});
+
+test("count colors use zero-safe logarithmic contrast, not the outlier-dominated linear scale", () => {
+  expect(countColor(0, 255)).toBe("#0080ff");
+  expect(countColor(1, 255)).toBe("#2080df");
+  expect(countColor(3, 255)).toBe("#4080bf");
+  expect(countColor(15, 255)).toBe("#808080");
+  expect(countColor(255, 255)).toBe("#ff8000");
+  expect(countColor(null, 255)).toBe("#adb5bd");
+  expect(countColor(NaN, 255)).toBe("#adb5bd");
+  expect(countColor(0, 0)).toBe("#0080ff");
+});
+
+test("count scale/legend uses the entire immutable channel and caches it without modifying values", () => {
+  const matrix = { refCounts: new Float64Array([0, 1, 6, NaN, 184]), altCounts: new Float64Array([0, 2, 10, 255]) };
+  const original = Array.from(matrix.refCounts);
+  const ref = mutationCountScale(matrix, "ref"), alt = mutationCountScale(matrix, "alt");
+  expect(ref.maximum).toBe(184); expect(alt.maximum).toBe(255);
+  expect(ref.ticks.map(t => t.value)).toEqual([0, 5, 31, 184]);
+  for (const tick of ref.ticks) expect(tick.position).toBeCloseTo(Math.log1p(tick.value) / Math.log1p(184));
+  expect(mutationCountScale(matrix, "ref")).toBe(ref);
+  expect(mutationCountScale({ ...matrix, refCounts: new Float64Array([0, 10]) }, "ref").maximum).toBe(10);
+  expect(Array.from(matrix.refCounts)).toEqual(original);
+  expect(mutationCountScale({}, "ref").maximum).toBe(1);
+});
+
+test("legacy Plotly missing VAF remains missing in the right matrix, not white zero", () => {
+  const ctx = context();
+  const matrix = { cellIds: ["a"], variants: [{ id: "chr1_1_A_T", chromosome: "1", position: 1, ref: "A", alt: "T" }], values: new Float64Array([NaN]), missing: new Uint8Array([1]), format: "plotly" };
+  const scene = prepareHeatmap({ data: { cellIds: ["a"], cnByCell: {}, mutations: matrix }, width: 400, domains: [[1, 10]], mutationMode: "side" });
+  drawMutationHeatmap(ctx, scene, {}, 4);
+  expect(ctx.filledRects.filter(rect => rect.rect[2] === 4).map(rect => rect.color)).toContain(vafColor(null));
+  expect(describeHit(scene, { type: "sideMutation", column: 0, row: scene.rows[0] })).toContain("VAF: missing");
+});
+
+test("allelic CN channels retain CN 1 as the white baseline", () => {
+  expect(cnColor(1, "major")).toBe("#FFFFFF");
+  expect(cnColor(1, "minor")).toBe("#FFFFFF");
+  expect(cnColor(2, "total")).toBe("#FFFFFF");
+});
+
+test("right mutation matrix preserves catalog order, colors count channels, and defaults missing entries to zero", () => {
+  const ctx = context();
+  const data = { cellIds: ["a", "b"], tree: parseNewick("(a,b);"), cnByCell: {}, mutations: {
+    cellIds: ["a", "b"],
+    variants: [
+      { id: "chr1_10_A_T", chromosome: "1", position: 10, place: 10, ref: "A", alt: "T" },
+      { id: "chr1_20_C_G", chromosome: "1", position: 20, place: 20, ref: "C", alt: "G" },
+    ],
+    values: new Float64Array([0.5, 0, 0, 1]), missing: new Uint8Array(4),
+    refCounts: new Float64Array([2, 0, 0, 4]), altCounts: new Float64Array([1, 0, 0, 2]),
+  } };
+  const scene = prepareHeatmap({ data, width: 400, gutterWidth: 100, domains: [[1, 30]], mutationMode: "side", mutationMetric: "ref", chromoBins: { "1": { startPlace: 0, endPlace: 30 } } });
+  expect(scene.windows[0].groups).toEqual([]);
+  const frame = drawMutationHeatmap(ctx, scene, { height: 44, cull: false }, 4);
+  expect(frame).toMatchObject({ columns: 2, cellsDrawn: 4, metric: "ref", maximum: 4 });
+  expect(ctx.filledRects.filter(rect => rect.rect[2] === 4).map(rect => rect.color)).toEqual([
+    countColor(0, 4), countColor(4, 4), countColor(2, 4), countColor(0, 4),
+  ]);
+  expect(hitTestMutationHeatmap(scene, 5, 11, 0, 4)).toMatchObject({ type: "sideMutation", column: 1, row: { id: "b" } });
+  expect(describeHit(scene, { type: "sideMutation", column: 1, row: scene.rows[0] })).toEqual([
+    "Cell: b", "Site: chr1_20_C_G", "1:20 C → G", "VAF: 1", "ref count: 4", "alt count: 2",
+  ]);
 });

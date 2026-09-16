@@ -26,6 +26,69 @@ function props(extra = {}) {
   };
 }
 
+test("focused heatmap cycles total, major, and minor CN with Left/Right without touching controls", () => {
+  const p = props({ cnMode: "total", onCnModeChange: jest.fn() });
+  const ui = render(<PhylogenyHeatmap {...p} />);
+  fireEvent.keyDown(ui.container.querySelector(".phylogeny-heatmap"), { key: "ArrowRight" });
+  ui.rerender(<PhylogenyHeatmap {...p} cnMode="major" />);
+  fireEvent.keyDown(ui.container.querySelector(".phylogeny-heatmap"), { key: "ArrowRight" });
+  ui.rerender(<PhylogenyHeatmap {...p} cnMode="minor" />);
+  fireEvent.keyDown(ui.container.querySelector(".phylogeny-heatmap"), { key: "ArrowLeft" });
+  expect(p.onCnModeChange.mock.calls.map(call => call[0])).toEqual(["major", "minor", "major"]);
+  fireEvent.keyDown(ui.getByRole("button", { name: /Fit rows/ }), { key: "ArrowRight" });
+  expect(p.onCnModeChange).toHaveBeenCalledTimes(3);
+});
+
+test("read-count legend explicitly labels log scaling and actual raw-count limits for each metric", () => {
+  const p = props({ mutationMode: "side", mutationMetric: "ref" });
+  p.data.mutations.refCounts = new Float64Array([6, 184]);
+  p.data.mutations.altCounts = new Float64Array([2, 255]);
+  const ui = render(<PhylogenyHeatmap {...p} />); flush();
+  expect(ui.getByRole("img", { name: "Ref count: logarithmic color scale from 0 to 184; tooltips show raw counts" })).toBeTruthy();
+  expect(ui.container.querySelector(".mutation-canvas").dataset.frameScale).toBe("log1p");
+  expect(ui.container.querySelector(".heatmap-count-ticks").textContent).toBe("0531184");
+  ui.rerender(<PhylogenyHeatmap {...p} mutationMetric="alt" />); flush();
+  expect(ui.getByRole("img", { name: "Alt count: logarithmic color scale from 0 to 255; tooltips show raw counts" })).toBeTruthy();
+  ui.rerender(<PhylogenyHeatmap {...p} mutationMetric="vaf" />); flush();
+  expect(ui.container.querySelector(".heatmap-count-scale")).toBeNull();
+  expect(ui.container.querySelector(".mutation-canvas").dataset.frameScale).toBe("linear");
+});
+
+test("side matrix uses a viewport-sized canvas and scroll offsets exactly once, even for 10000 columns", () => {
+  const p = props({ mutationMode: "side" });
+  const matrix = { ...p.data.mutations, variants: Array.from({ length: 10000 }, (_, i) => ({ id: `v${i}`, chromosome: "1", position: i + 1, place: i + 1, ref: "A", alt: "T" })), values: new Float64Array(20000), missing: new Uint8Array(20000) };
+  p.data = { ...p.data, mutations: matrix };
+  const ref = React.createRef(); const ui = render(<PhylogenyHeatmap {...p} ref={ref} />); flush();
+  const side = ui.container.querySelector(".mutation-canvas");
+  const scroller = ui.container.querySelector(".mutation-scroll-x");
+  expect(side.width).toBeLessThan(1000);
+  side.getBoundingClientRect = () => ({ left: 400, top: 0, width: ref.current.mutationWidth(), height: ref.current.viewportHeight() });
+  scroller.scrollLeft = 36000;
+  fireEvent.scroll(scroller); flush();
+  expect(side.dataset.frameFirstColumn).toBe("9000");
+  expect(Number(side.dataset.frameColumnsDrawn)).toBeLessThan(80);
+  fireEvent.mouseMove(side, { clientX: 406, clientY: 11 }); flush();
+  expect(ui.getByRole("tooltip").textContent).toContain("Site: v9001");
+  ref.current.scrollTop = 22;
+  fireEvent.scroll(scroller); flush();
+  expect(ref.current.scrollTop).toBe(22);
+  ui.rerender(<PhylogenyHeatmap {...p} data={{ ...p.data, junctions: { cellIds: ["b"], variants: [{ id: "1:10+ <-> 2:20-" }], values: new Float64Array([171]), missing: new Uint8Array(1), format: "junction" } }} matrixKind="junctions" ref={ref} />); flush();
+  expect(ui.container.querySelector(".mutation-canvas")).toBe(side);
+  expect(scroller.scrollLeft).toBe(0);
+  fireEvent.mouseMove(side, { clientX: 401, clientY: 11 }); flush();
+  expect(ui.getByRole("tooltip").textContent).toContain("Junction CN: 171");
+});
+
+test("tree hover carries node identity for a visible highlight without selecting it", () => {
+  const ref = React.createRef(); const p = props();
+  const ui = render(<PhylogenyHeatmap {...p} ref={ref} />); flush();
+  const root = ref.current.scene.tree[0];
+  fireEvent.mouseMove(ui.container.querySelector(".heatmap-canvas"), { clientX: root.x, clientY: root.y }); flush();
+  expect(ref.current.hover.nodeId).toBe(root.id);
+  expect(ctx.strokeRect).toHaveBeenCalledWith(root.x - 5, root.y - 5, 10, 10);
+  expect(p.onSelectNodes).not.toHaveBeenCalled();
+});
+
 test("controlled child defaults mutations Hidden, exposes complete counts and keyboard cell selection without HTML", () => {
   const p = props();
   const ui = render(<PhylogenyHeatmap {...p} />);
@@ -97,7 +160,7 @@ test('hover outlines the pointed row in the gutter and heatmap without selecting
     ctx.strokeRect.mockClear();
     fireEvent.mouseMove(canvas, { clientX: x, clientY: 11 }); flush();
     expect(ref.current.hover.rowId).toBe('b');
-    expect(ctx.strokeRect).toHaveBeenCalledWith(0.5, 0.5, 599, 21);
+    expect(ctx.strokeRect).toHaveBeenCalledWith(0.5, 0.5, 599, ref.current.scene.rowHeight - 1);
   }
   expect(p.onSelectNodes).not.toHaveBeenCalled();
   fireEvent.mouseLeave(canvas); flush();
@@ -165,8 +228,9 @@ test("leaf/trunk hit tests only select; cluster click zooms instead, with scoped
   ui.rerender(<PhylogenyHeatmap ref={ref} {...p} data={next} />);
   flush();
   p.onSelectNodes.mockClear();
-  pointer(canvas, "pointerdown", { clientX: x, clientY: 24 });
-  pointer(window, "pointerup", { clientX: x, clientY: 24 });
+  const mutationY = ref.current.scene.rowHeight * 0.75;
+  pointer(canvas, "pointerdown", { clientX: x, clientY: mutationY });
+  pointer(window, "pointerup", { clientX: x, clientY: mutationY });
   expect(p.onSelectNodes).not.toHaveBeenCalled();
   expect(p.onDomainsChange).toHaveBeenCalledWith([[19, 21.01]]);
 });
@@ -288,6 +352,79 @@ test("hover/selection reuse projection, fit/scroll keep all rows and benchmark r
     flush();
     expect(Number(canvas.dataset.frameRowsDrawn)).toBeLessThan(125);
   } finally { Object.defineProperty(window, "devicePixelRatio", { value: oldDpr, configurable: true }); }
+});
+
+test.each(["hidden", "overlay", "paired", "side"])("%s rows grow with the viewport; readable mode imposes only a minimum", mutationMode => {
+  const cellIds = Array.from({ length: 12 }, (_, i) => `c${i}`);
+  const p = props({ mutationMode, selectedRowsOnly: true, nodes: cellIds.slice(0, 4).map(id => ({ id, selected: true })) });
+  p.data = { ...p.data, cellIds, tree: parseNewick(`(${cellIds.join(",")});`), mutations: {
+    ...p.data.mutations, cellIds, values: new Float64Array(12), missing: new Uint8Array(12),
+  } };
+  const ref = React.createRef();
+  const ui = render(<PhylogenyHeatmap ref={ref} {...p} />);
+  const canvas = ui.container.querySelector(".heatmap-canvas");
+  for (const fitRows of [undefined, false, true]) for (const height of [140, 160, 200, 300, 600, 140]) {
+    ui.rerender(<PhylogenyHeatmap ref={ref} {...p} fitRows={fitRows} height={height} />); flush();
+    const viewport = height - 72;
+    const expected = Math.max(fitRows ? 0 : mutationMode === "paired" ? 32 : 22, viewport / 4);
+    const scene = ref.current.scene;
+    expect(scene.rows).toHaveLength(4);
+    expect(scene.hiddenCount).toBe(8);
+    expect(scene.rowHeight).toBe(expected);
+    expect(scene.totalHeight).toBe(expected * 4);
+    expect(scene.data).toBe(p.data);
+    expect(canvas.height).toBe(viewport);
+    expect(canvas.dataset.matrixEntries).toBe("12");
+    for (const row of scene.rows) expect(scene.tree.find(node => node.id === row.id).y).toBe(row.y);
+    if (mutationMode === "side") {
+      const side = ui.container.querySelector(".mutation-canvas");
+      expect(side.height).toBe(viewport);
+      expect(side.dataset.frameRowsDrawn).toBe(canvas.dataset.frameRowsDrawn);
+    }
+  }
+  expect(p.onSelectNodes).not.toHaveBeenCalled();
+});
+
+test.each(["mutations", "junctions"])("filtering or enlarging readable rows resets obsolete scroll and keeps %s aligned", matrixKind => {
+  const cellIds = Array.from({ length: 12 }, (_, i) => `c${i}`);
+  const p = props({ mutationMode: "side", matrixKind, height: 140, fitRows: false });
+  const matrix = { ...p.data.mutations, cellIds, values: new Float64Array(12), missing: new Uint8Array(12) };
+  p.data = { ...p.data, cellIds, tree: parseNewick(`(${cellIds.join(",")});`), mutations: matrix, junctions: matrix };
+  const ref = React.createRef();
+  const ui = render(<PhylogenyHeatmap ref={ref} {...p} />); flush();
+  const scroller = ui.container.querySelector(".heatmap-scroll");
+  const canvas = ui.container.querySelector(".heatmap-canvas");
+  const side = ui.container.querySelector(".mutation-canvas");
+  const scrollToBottom = () => {
+    fireEvent.scroll(scroller, { target: { scrollTop: 196 } }); flush();
+    expect(ref.current.scrollTop).toBe(196);
+  };
+  const expectFilled = count => {
+    expect(ref.current.scene.rowHeight).toBe(ref.current.viewportHeight() / count);
+    expect(ref.current.scene.totalHeight).toBeCloseTo(ref.current.viewportHeight());
+    expect(ref.current.scrollTop).toBe(0);
+    expect(scroller.scrollTop).toBe(0);
+    expect(canvas.dataset.frameRowsDrawn).toBe(String(count));
+    expect(side.dataset.frameRowsDrawn).toBe(String(count));
+  };
+  scrollToBottom();
+  for (const count of [2, 1]) {
+    ui.rerender(<PhylogenyHeatmap ref={ref} {...p} selectedRowsOnly nodes={cellIds.slice(0, count).map(id => ({ id, selected: true }))} />); flush();
+    expectFilled(count);
+  }
+  ui.rerender(<PhylogenyHeatmap ref={ref} {...p} selectedRowsOnly nodes={[]} />); flush();
+  expect(ui.getByText("No selected cells")).toBeTruthy();
+  expect(Number.isFinite(ref.current.scene.rowHeight)).toBe(true);
+  expect(ref.current.scene.totalHeight).toBe(0);
+  expect(canvas.dataset.frameRowsDrawn).toBe("0");
+  expect(side.dataset.frameRowsDrawn).toBe("0");
+  ui.rerender(<PhylogenyHeatmap ref={ref} {...p} />); flush();
+  expect(ref.current.scene.rowHeight).toBe(22);
+  expect(ref.current.scene.rows).toHaveLength(12);
+  scrollToBottom();
+  ui.rerender(<PhylogenyHeatmap ref={ref} {...p} height={600} />); flush();
+  expectFilled(12);
+  expect(ref.current.scene.data).toBe(p.data);
 });
 
 test("gutter pointer resize is bounded; cancellation/unmount removes native listeners and pending RAF", () => {

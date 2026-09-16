@@ -24,7 +24,7 @@ import {
 } from "../../helpers/utility";
 import { getCurrentState } from "./selectors";
 import { createBoundedLoader, plotIdentity, detailTypes } from "../../helpers/phylogeny/loaders";
-import { parseNewick, leafIds, normalizeCopyNumber, parsePlotlyMutations } from "../../helpers/phylogeny/data";
+import { parseNewick, leafIds, normalizeCopyNumber, normalizeAllelicCopyNumber, parsePlotlyMutations, parseSparseMutations, parseJunctionCopyNumber } from "../../helpers/phylogeny/data";
 
 const ZOOM = 2;
 const HIGLASS_LIMIT = 10000;
@@ -107,16 +107,21 @@ function findCohort(app, plotId) {
       ...p, ownerFile: file.file, reference: file.reference,
       sample: p.sample || id, path: p.path || `data/${file.file}/${p.source}`,
     });
+    const describedGenome = describe(genome);
+    const allelePlots = file.plots.filter((p) => p.type === "allelic" && (!p.reference || p.reference === reference));
+    const allelePlot = allelePlots.find((p) => p.sample === id || (genome.sample && p.sample === genome.sample)) ||
+      (genome.allelicSource ? { ...genome, type: "allelic", source: genome.allelicSource, path: undefined, data: null } : null) ||
+      (graphs.length === 1 ? allelePlots.find((p) => !p.sample || p.sample === file.file) : null);
     const plots = file.plots.filter((p) => (!p.reference || p.reference === reference) &&
       (p === genome || p.sample === id || (graphs.length === 1 && (!p.sample || p.sample === file.file || p.sample === genome.sample))))
       .map(describe);
-    return { id, file, genome: describe(genome), plots };
+    return { id, file, genome: describedGenome, allelic: allelePlot && describe(allelePlot), plots };
   }).filter(Boolean);
   return { plot, tree, cellIds, cells };
 }
 
-function mutationPath(plot) {
-  const source = plot.heatmap.mutationSource;
+function heatmapSourcePath(plot, sourceKey) {
+  const source = plot.heatmap[sourceKey];
   const base = new URL(".", document.baseURI);
   const folder = plot.ownerFile ? `data/${plot.ownerFile}/` : plot.path.slice(0, plot.path.lastIndexOf("/") + 1);
   const resolved = new URL(source, new URL(folder, base));
@@ -157,6 +162,31 @@ function prepareWalk(raw, tag) {
   const walks = raw.walks.map((walk) => ({ ...walk, iids: walk.iids.map((interval) => ({ ...interval })) }));
   alignWalks(walks);
   return { ...raw, walks, maximumY: d3.max(walks.flatMap((walk) => walk.iids), (interval) => interval.y) };
+}
+
+// A cohort owns one panel even when its manifest offers several Newicks. The
+// options retain their loaded data and identity so switching never duplicates
+// panels or requires a second data-preparation convention.
+function collapsePhylogenyTrees(plots) {
+  const groups = new Map();
+  plots.filter((plot) => plot.type === "phylogeny").forEach((plot) => {
+    const key = plot.ownerFile || plot.id;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(plot);
+  });
+  const firstByGroup = new Map([...groups].map(([key, entries]) => [key, entries[0]]));
+  const emitted = new Set();
+  return plots.flatMap((plot) => {
+    if (plot.type !== "phylogeny") return [plot];
+    const key = plot.ownerFile || plot.id;
+    if (emitted.has(key)) return [];
+    emitted.add(key);
+    const entries = groups.get(key);
+    const first = firstByGroup.get(key);
+    return [{ ...first, activeTreeId: first.id, treeOptions: entries.map((entry) => ({
+      id: entry.id, source: entry.source, path: entry.path, title: entry.title, data: entry.data, heatmap: entry.heatmap,
+    })) }];
+  });
 }
 
 // Descriptors for one cell are sequential, so three scheduler slots mean at most
@@ -235,15 +265,17 @@ function* refreshCurrentBigwigs(result, epoch) {
 export function* loadPhylogenyHeatmap(action) {
   const { App: app } = yield select(getCurrentState);
   if (app.loading) return;
-  const epoch = app.datasetEpoch, requestId = app.phylogenyHeatmapRequest;
-  let data = { status: "loading", plotId: action.plotId, tree: null, cellIds: [], cnByCell: {}, mutations: null, errors: [], completed: 0, total: 0 };
+  const epoch = app.datasetEpoch;
+  const plotId = action.plotId || (app.phylogenyHeatmap && app.phylogenyHeatmap.plotId) || ((app.plots.find((item) => item.type === "phylogeny") || {}).id) || "__default";
+  const requestId = (app.phylogenyHeatmapRequests && app.phylogenyHeatmapRequests[plotId]) || app.phylogenyHeatmapRequest;
+  let data = { status: "loading", plotId, tree: null, cellIds: [], cnByCell: {}, mutations: null, junctions: null, errors: [], completed: 0, total: 0 };
   const publish = function* () {
-    yield put({ type: actions.PHYLOGENY_HEATMAP_UPDATED, epoch, requestId, data: { ...data } });
+    yield put({ type: actions.PHYLOGENY_HEATMAP_UPDATED, epoch, requestId, plotId, data: { ...data } });
   };
   try {
-    const cohort = findCohort(app, action.plotId);
+    const cohort = findCohort(app, action.plotId || plotId);
     if (!cohort.cells.length) {
-      yield put({ type: actions.PHYLOGENY_HEATMAP_UPDATED, epoch, requestId, data: null });
+      yield put({ type: actions.PHYLOGENY_HEATMAP_UPDATED, epoch, requestId, plotId, data: null });
       return;
     }
     data = { ...data, tree: cohort.tree, cellIds: cohort.cellIds, total: cohort.cells.length };
@@ -253,35 +285,78 @@ export function* loadPhylogenyHeatmap(action) {
       const existing = app.plots.find((p) => plotIdentity(p) === plotIdentity(descriptor));
       const raw = await readPlot({ ...descriptor, ...existing }, token);
       if (token.cancelled) return;
+      let totalCn;
       try {
-        return normalizeCopyNumber(raw, app.chromoBins);
+        totalCn = normalizeCopyNumber(raw, app.chromoBins);
       } catch (error) {
         if (!token.cancelled) phylogenyLoader.forget(`json:${descriptor.path}`);
         throw error;
       }
+      let allelic;
+      let allelicError = null;
+      if (cell.allelic) {
+        try {
+          const rawAllelic = await readPlot(cell.allelic, token);
+          allelic = normalizeAllelicCopyNumber(rawAllelic, app.chromoBins);
+        } catch (error) {
+          if (!token.cancelled) phylogenyLoader.forget(`json:${cell.allelic.path}`);
+          allelicError = `Allelic CN: ${errorText(error)}`;
+        }
+      }
+      return { totalCn, allelic, allelicError };
     }, function* ({ item, value, error, completed }) {
+      const intervals = value && value.totalCn ? value.totalCn.map((interval) => {
+        // IIDs may repeat between chromosomes/bins or be absent. Coordinates
+        // must agree, explicit IDs must not conflict, and ambiguity is not data.
+        const matches = (value.allelic || []).filter((candidate) => candidate.chromosome === interval.chromosome &&
+          candidate.startPoint === interval.startPoint && candidate.endPoint === interval.endPoint &&
+          (candidate.iid == null || interval.iid == null || candidate.iid === interval.iid));
+        const allele = matches.length === 1 ? matches[0] : null;
+        return allele ? { ...interval, majorCn: allele.majorCn, minorCn: allele.minorCn } : interval;
+      }) : null;
       data = { ...data, completed,
-        cnByCell: error ? data.cnByCell : { ...data.cnByCell, [item.id]: value },
-        errors: error ? [...data.errors, `${item.id}: ${errorText(error)}`] : data.errors,
+        cnByCell: error ? data.cnByCell : { ...data.cnByCell, [item.id]: intervals },
+        errors: error ? [...data.errors, `${item.id}: ${errorText(error)}`] : value && value.allelicError ? [...data.errors, `${item.id}: ${value.allelicError}`] : data.errors,
       };
       yield call(publish);
     });
     // The full optional matrix loads regardless of the display mode or selection.
     if (cohort.plot.heatmap && cohort.plot.heatmap.mutationSource) {
       yield call(runBatch, [cohort.plot], async (plot, token) => {
-        if (plot.heatmap.mutationFormat && plot.heatmap.mutationFormat !== "plotly") throw new Error("Unsupported mutation format");
-        const path = mutationPath(plot);
+        const format = plot.heatmap.mutationFormat || "plotly";
+        if (! ["plotly", "sparse"].includes(format)) throw new Error("Unsupported mutation format");
+        const path = heatmapSourcePath(plot, "mutationSource");
         const raw = await readJSON(path, token);
         if (token.cancelled) return;
         try {
-          return parsePlotlyMutations(raw, app.chromoBins);
+          return format === "sparse" ? parseSparseMutations(raw, app.chromoBins, cohort.cellIds) : parsePlotlyMutations(raw, app.chromoBins);
         } catch (error) {
           if (!token.cancelled) phylogenyLoader.forget(`json:${path}`);
           throw error;
         }
-      }, ({ value, error }) => {
+      }, function* ({ value, error }) {
         if (error) data = { ...data, errors: [...data.errors, `Mutations: ${errorText(error)}`] };
         else data = { ...data, mutations: value };
+        yield call(publish);
+      });
+    }
+    // Junction failure must never suppress a successfully loaded mutation source
+    // (or vice versa). Both use the same bounded transport/cache/cancel boundary.
+    if (cohort.plot.heatmap && cohort.plot.heatmap.junctionSource) {
+      yield call(runBatch, [cohort.plot], async (plot, token) => {
+        const path = heatmapSourcePath(plot, "junctionSource");
+        const raw = await readJSON(path, token);
+        if (token.cancelled) return;
+        try {
+          return parseJunctionCopyNumber(raw);
+        } catch (error) {
+          if (!token.cancelled) phylogenyLoader.forget(`json:${path}`);
+          throw error;
+        }
+      }, function* ({ value, error }) {
+        if (error) data = { ...data, errors: [...data.errors, `Junctions: ${errorText(error)}`] };
+        else data = { ...data, junctions: value };
+        yield call(publish);
       });
     }
     data = { ...data, status: data.errors.length ? "error" : "ready" };
@@ -298,12 +373,13 @@ export function* openPhylogenyCells(action) {
   const { App: app } = yield select(getCurrentState);
   if (app.loading) return;
   const epoch = app.datasetEpoch, requestId = app.cellTrackRequest;
-  let progress = { status: "loading", completed: 0, total: 0, errors: [] };
+  const plotId = action.plotId || app.cellTrackLoad.plotId || (app.phylogenyHeatmap && app.phylogenyHeatmap.plotId) || (app.plots.find(plot => plot.type === "phylogeny") || {}).id;
+  let progress = { status: "loading", plotId, completed: 0, total: 0, errors: [] };
   const publish = function* () {
     yield put({ type: actions.CELL_TRACK_LOAD_UPDATED, epoch, requestId, properties: { ...progress } });
   };
   try {
-    const cohort = findCohort(app, app.phylogenyHeatmap && app.phylogenyHeatmap.plotId);
+    const cohort = findCohort(app, plotId);
     const selected = new Set(action.cellIds || []);
     const cells = cohort.cells.filter((cell) => selected.has(cell.id)).map((cell) => ({
       ...cell, plots: cell.plots.filter((p) => detailTypes.includes(p.type)),
@@ -589,6 +665,7 @@ export function* launchApplication(action) {
       }
     });
     plots = plots.filter((p) => !["genome", "walk"].includes(p.type) || p.data != null);
+    plots = collapsePhylogenyTrees(plots);
 
     let connectionsAssociations = [];
     let samples = [];
@@ -666,8 +743,9 @@ export function* launchApplication(action) {
       genesPinned: +searchParams.get("genesPinned") === 1,
     };
     yield put({ type: actions.LAUNCH_APP_SUCCESS, epoch, properties });
-    const phylogeny = plots.find((plot) => plot.type === "phylogeny");
-    if (phylogeny) yield put({ ...actions.loadPhylogenyHeatmap(phylogeny.id), epoch });
+    for (const phylogeny of plots.filter((plot) => plot.type === "phylogeny" && plot.visible && !plot.deleted)) {
+      yield put({ ...actions.loadPhylogenyHeatmap(phylogeny.id), epoch });
+    }
   } catch (error) {
     yield put({ type: actions.LAUNCH_APP_FAILED, epoch, error: errorText(error) });
   }
@@ -680,6 +758,7 @@ function* actionWatcher() {
       actions.LAUNCH_APP, actions.ADD_BIGWIG_PLOT, actions.DOMAINS_UPDATED,
       actions.LOAD_PHYLOGENY_HEATMAP, actions.OPEN_PHYLOGENY_CELLS,
       actions.CANCEL_PHYLOGENY_CELL_LOAD, actions.CLEAR_PHYLOGENY_TRACKS, actions.PLOTS_UPDATED, actions.GENES_PIN_UPDATED,
+      actions.PHYLOGENY_TREE_SELECTED, actions.PHYLOGENY_PIN_UPDATED,
     ]);
     // Do not even takeLatest-cancel a confirmed request for an unconfirmed click.
     if (action.type === actions.OPEN_PHYLOGENY_CELLS && action.confirmed !== true) continue;
@@ -703,11 +782,43 @@ function* actionWatcher() {
       if (tasks.cells) yield cancel(tasks.cells);
       continue;
     }
+    if (action.type === actions.PHYLOGENY_TREE_SELECTED) {
+      const { App: app } = yield select(getCurrentState);
+      const plot = app.plots.find(item => item.id === action.plotId && item.type === "phylogeny");
+      // A real switch clears this entry; re-selecting the active option is inert.
+      if (plot && plot.activeTreeId === action.treeId && app.phylogenyHeatmaps[action.plotId] === null) {
+        if (tasks[`overview:${action.plotId}`]) yield cancel(tasks[`overview:${action.plotId}`]);
+        if (tasks.cells && app.cellTrackLoad.plotId === action.plotId && app.cellTrackLoad.status === "cancelled") yield cancel(tasks.cells);
+      }
+      continue;
+    }
+    if ([actions.PLOTS_UPDATED, actions.PHYLOGENY_PIN_UPDATED].includes(action.type)) {
+      const { App: app } = yield select(getCurrentState);
+      if (!app.loading) {
+        for (const plot of app.plots.filter(item => item.type === "phylogeny" && item.visible && !item.deleted)) {
+          const key = `overview:${plot.id}`;
+          if (Object.prototype.hasOwnProperty.call(app.phylogenyHeatmaps, plot.id) || (tasks[key] && tasks[key].isRunning())) continue;
+          const request = actions.loadPhylogenyHeatmap(plot.id);
+          // The watcher cannot consume its own synchronous put while forking;
+          // register the request in Redux, then own its task under this panel.
+          yield put(request);
+          tasks[key] = yield fork(loadPhylogenyHeatmap, request);
+        }
+      }
+      if (action.type === actions.PHYLOGENY_PIN_UPDATED) continue;
+    }
+    if (action.type === actions.LOAD_PHYLOGENY_HEATMAP) {
+      const { App: app } = yield select(getCurrentState);
+      const plotId = action.plotId || (app.phylogenyHeatmap && app.phylogenyHeatmap.plotId) || (app.plots.find(plot => plot.type === "phylogeny") || {}).id || "__default";
+      const key = `overview:${plotId}`;
+      if (tasks[key]) yield cancel(tasks[key]);
+      tasks[key] = yield fork(loadPhylogenyHeatmap, { ...action, plotId });
+      continue;
+    }
     const [key, worker] = {
       [actions.LAUNCH_APP]: ["launch", launchApplication],
       [actions.ADD_BIGWIG_PLOT]: ["bigwig", fetchHiglassPlotData],
       [actions.DOMAINS_UPDATED]: ["zoom", fetchHiglassData],
-      [actions.LOAD_PHYLOGENY_HEATMAP]: ["overview", loadPhylogenyHeatmap],
       [actions.OPEN_PHYLOGENY_CELLS]: ["cells", openPhylogenyCells],
       [actions.PLOTS_UPDATED]: ["visible", loadVisiblePlotData],
       [actions.GENES_PIN_UPDATED]: ["visible", loadVisiblePlotData],

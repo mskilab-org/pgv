@@ -14,12 +14,108 @@ test("public interfaces default to hidden mutations and unconfirmed opening is i
   expect(state.phylogenyHeatmap).toBeNull();
   expect(state.phylogenyAddedFiles).toEqual([]);
   expect(state.phylogenyPanelHeight).toBe(640);
-  expect(state.phylogenyView).toEqual({ gutterWidth: 240, gutterHidden: false, mutationMode: "hidden", selectedRowsOnly: false, selectedTracksOnly: false });
+  expect(state.phylogenyView).toEqual({ gutterWidth: 240, gutterHidden: false, mutationMode: "hidden", cnMode: "total", mutationMetric: "vaf", fitRows: false, selectedRowsOnly: false, selectedTracksOnly: false });
   expect(state.cellTrackLoad).toEqual({ status: "idle", total: 0, completed: 0, errors: [] });
   expect(actions.openPhylogenyCells(["a"])).toEqual({ type: actions.OPEN_PHYLOGENY_CELLS, cellIds: ["a"], confirmed: false });
   expect(reducer(state, actions.openPhylogenyCells(["a"]))).toBe(state);
   expect(reducer(state, actions.openPhylogenyCells(["a", "b"], false))).toBe(state);
   expect(reducer(state, actions.updatePhylogenyView({ mutationMode: "paired" })).phylogenyView).toEqual({ ...state.phylogenyView, mutationMode: "paired" });
+});
+
+test("a cohort tree selector changes one panel's Newick source and invalidates only that panel's heatmap", () => {
+  const first = { id: "tree-one", type: "phylogeny", ownerFile: "cohort", source: "one.nwk", path: "data/cohort/one.nwk", data: "(a);", heatmap: { mutationSource: "one.json" } };
+  const second = { id: "tree-two", type: "phylogeny", ownerFile: "cohort", source: "two.nwk", path: "data/cohort/two.nwk", data: "(b);", heatmap: { mutationSource: "two.json" } };
+  const state = { ...initial(), plots: [{ ...first, treeOptions: [first, second], activeTreeId: first.id }], phylogenyHeatmap: { plotId: first.id, status: "ready" }, phylogenyHeatmaps: { [first.id]: { plotId: first.id, status: "ready" } } };
+  const next = reducer(state, actions.selectPhylogenyTree(first.id, second.id));
+  expect(next.plots[0]).toMatchObject({ activeTreeId: second.id, source: second.source, path: second.path, data: second.data, heatmap: second.heatmap });
+  expect(next.phylogenyHeatmaps[first.id]).toBeNull();
+  expect(next.phylogenyHeatmap).toBeNull();
+});
+
+test("panel selections retain other cohorts and a tree switch clears only its selection and pending cell request", () => {
+  const first = { id: "tree-a", type: "phylogeny", data: "(a);", activeTreeId: "old", treeOptions: [{ id: "new", data: "(new-a);" }] };
+  const second = { id: "tree-b", type: "phylogeny", data: "(b);" };
+  let state = { ...initial(), plots: [first, second] };
+  state = reducer(state, actions.selectPhylogenyNodes([{ id: "a", selected: true }], first.id));
+  state = reducer(state, actions.selectPhylogenyNodes([{ id: "b", selected: true }], second.id));
+  expect(state.nodes).toEqual([{ id: "a", selected: true }, { id: "b", selected: true }]);
+  state = reducer(state, actions.openPhylogenyCells(["a"], true, first.id));
+  expect(state.cellTrackLoad.plotId).toBe(first.id);
+  const requestId = state.cellTrackRequest;
+  const next = reducer(state, actions.selectPhylogenyTree(first.id, "new"));
+  expect(next.phylogenyNodes[first.id]).toEqual([]);
+  expect(next.phylogenyNodes[second.id]).toBe(state.phylogenyNodes[second.id]);
+  expect(next.nodes).toEqual([{ id: "b", selected: true }]);
+  expect(next.cellTrackLoad).toMatchObject({ plotId: first.id, status: "cancelled" });
+  expect(next.cellTrackRequest).toBe(requestId + 1);
+  [
+    { type: actions.CELL_TRACK_LOAD_UPDATED, properties: { status: "ready" } },
+    { type: actions.PHYLOGENY_CELL_PLOTS_REQUESTED, plots: [loadedGenome("a")] },
+    { type: actions.PHYLOGENY_CELL_PLOTS_LOADED, plots: [loadedGenome("a")], loadedFile: "a" },
+  ].forEach(event => expect(reducer(next, { ...event, requestId })).toBe(next));
+  const otherRequest = reducer(state, actions.openPhylogenyCells(["b"], true, second.id));
+  const otherSwitch = reducer(otherRequest, actions.selectPhylogenyTree(first.id, "new"));
+  expect(otherSwitch.cellTrackRequest).toBe(otherRequest.cellTrackRequest);
+  expect(otherSwitch.cellTrackLoad).toBe(otherRequest.cellTrackLoad);
+  const completed = reducer(state, { type: actions.CELL_TRACK_LOAD_UPDATED, requestId, properties: { status: "ready" } });
+  const changedAfterCompletion = reducer(completed, actions.selectPhylogenyTree(first.id, "new"));
+  expect(reducer(changedAfterCompletion, { type: actions.PHYLOGENY_CELL_PLOTS_LOADED, requestId, plots: [loadedGenome("a")] })).toBe(changedAfterCompletion);
+});
+
+test("overlapping stable IDs remain selected in the other panel when one panel clears", () => {
+  let state = reducer(initial(), actions.selectPhylogenyNodes([{ id: "shared", selected: true }], "tree-a"));
+  state = reducer(state, actions.selectPhylogenyNodes([{ id: "shared", selected: false }, { id: "b", selected: true }], "tree-b"));
+  expect(state.nodes).toEqual([{ id: "shared", selected: true }, { id: "b", selected: true }]);
+  state = reducer(state, actions.selectPhylogenyNodes([], "tree-b"));
+  expect(state.nodes).toEqual([{ id: "shared", selected: true }]);
+});
+
+test("legacy global selections synchronize each cohort by cell identity before and after scoped selection", () => {
+  const a = { id: "tree-a", type: "phylogeny" }, b = { id: "tree-b", type: "phylogeny" };
+  let state = { ...initial(), plots: [a, b], phylogenyHeatmaps: {
+    [a.id]: { cellIds: ["a1", "a2"] }, [b.id]: { cellIds: ["b1"] },
+  } };
+  for (const scoped of [false, true]) {
+    if (scoped) state = reducer(state, actions.selectPhylogenyNodes([{ id: "a1", selected: true }], a.id));
+    const nodes = [{ id: "a1", selected: false }, { id: "a2", selected: true }, { id: "b1", selected: true }, { id: "unlinked", selected: true }];
+    state = reducer(state, actions.selectPhylogenyNodes(nodes));
+    expect(state.nodes).toBe(nodes);
+    expect(state.phylogenyNodes[a.id]).toEqual(nodes.slice(0, 2));
+    expect(state.phylogenyNodes[b.id]).toEqual(nodes.slice(2, 3));
+    state = reducer(state, actions.selectPhylogenyNodes([], a.id));
+    expect(state.nodes.filter(node => node.selected).map(node => node.id).sort()).toEqual(["b1", "unlinked"]);
+    expect(state.phylogenyNodes[b.id]).toEqual(nodes.slice(2, 3));
+  }
+  state = reducer(state, actions.selectPhylogenyNodes([]));
+  expect(state.nodes).toEqual([]);
+  expect(state.phylogenyNodes).toEqual({ [a.id]: [], [b.id]: [] });
+});
+
+test("legacy selection remains usable for standalone trees and the old single-overview state", () => {
+  const tree = { id: "tree", type: "phylogeny" };
+  const nodes = [{ id: "a", selected: true }, { id: "outside", selected: true }];
+  const state = { ...initial(), plots: [tree] };
+  expect(reducer(state, actions.selectPhylogenyNodes(nodes)).phylogenyNodes[tree.id]).toBe(nodes);
+  const old = { ...state, phylogenyHeatmap: { plotId: tree.id, cellIds: ["a"] } };
+  expect(reducer(old, actions.selectPhylogenyNodes(nodes)).phylogenyNodes[tree.id]).toEqual([nodes[0]]);
+});
+
+test("legacy cell opening records the resolved panel before its tree changes", () => {
+  const tree = { id: "tree", type: "phylogeny", treeOptions: [{ id: "new", data: "(b);" }] };
+  const state = reducer({ ...initial(), plots: [tree] }, actions.openPhylogenyCells(["a"], true));
+  expect(state.cellTrackLoad.plotId).toBe(tree.id);
+  expect(reducer(state, actions.selectPhylogenyTree(tree.id, "new")).cellTrackLoad.status).toBe("cancelled");
+});
+
+test("a panel tree switch rejects its late overview without invalidating a peer overview", () => {
+  const tree = { id: "tree-a", type: "phylogeny", treeOptions: [{ id: "new", data: "(b);" }] };
+  let state = { ...initial(), plots: [tree] };
+  state = reducer(state, actions.loadPhylogenyHeatmap("tree-a"));
+  state = reducer(state, actions.loadPhylogenyHeatmap("tree-b"));
+  const requests = state.phylogenyHeatmapRequests;
+  state = reducer(state, actions.selectPhylogenyTree("tree-a", "new"));
+  expect(reducer(state, { type: actions.PHYLOGENY_HEATMAP_UPDATED, plotId: "tree-a", requestId: requests["tree-a"], data: { tree: "stale" } })).toBe(state);
+  expect(reducer(state, { type: actions.PHYLOGENY_HEATMAP_UPDATED, plotId: "tree-b", requestId: requests["tree-b"], data: { tree: "current" } }).phylogenyHeatmaps["tree-b"]).toEqual({ tree: "current" });
 });
 
 test('clear tracks removes all detail types including hidden panels, retaining context and rejecting stale work', () => {
