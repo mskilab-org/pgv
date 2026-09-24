@@ -233,10 +233,24 @@ Phylogeny titles use the source title without a sample/file prefix.
   available height, including when **Selected rows only** is enabled. Readable
   rows have a minimum height of 22 px (32 px in legacy paired mode), scrolling
   the tree and matrix together when needed. Fit rows removes that minimum so
-  all visible cells fit without vertical scrolling. Only visible rows/columns are
-  rasterized in a viewport-sized Canvas; horizontal scrolling does not allocate
-  one giant full-width raster. This bounds Canvas raster size, not source data:
-  full matrices remain loaded, with catalog order and all values intact.
+  all visible cells fit without vertical scrolling. For **mutations** it also fits
+  the entire ordered site catalog into the right-hand width: adjacent sites share
+  screen columns when necessary. Each summary column is colored by the fraction
+  of sites with a positive value for the chosen metric (VAF, ref count or alt
+  count), not mean VAF/count. Hover reports its source-ordered range and the
+  positive/zero/missing counts. All-missing columns stay gray. Click a summary
+  column or Shift-drag to zoom to its source sites; drag to pan, use the same
+  wheel/Command-wheel setting as the genomic heatmap, and double-click or use
+  Reset to show the full catalog. Keyboard focus on the matrix supports +/−
+  to zoom, Alt+Left/Right to pan and Home to reset. At sufficient zoom each site shows its exact
+  original value and tooltip. Mutation catalog zoom does not change genomic
+  domains; neither summaries nor gestures cluster or reorder input sites.
+  Readable rows retains the original exact, horizontally scrollable mutation
+  matrix. Junction CN keeps its existing horizontally scrollable view in both
+  row modes. Only visible rows/columns are rasterized in a viewport-sized
+  Canvas; horizontal scrolling does not allocate one giant full-width raster.
+  This bounds Canvas raster size, not source data: full matrices remain loaded,
+  with catalog order and all values intact.
 - **Hide tree / labels:** hide the shared gutter. Show restores its previous
   width. Drag its separator or use left/right arrow keys to resize. Detail plots
   share the corresponding inset; their original panel headers stay accessible.
@@ -299,9 +313,11 @@ settles. Cached bulk opens periodically yield so cancellation remains usable.
 
 ## Display is not biological inference
 
-The current right-hand matrix shows each retained cell/site or cell/junction
-position in catalog order, without aggregation or averaging. Scrolling changes
-only what is rasterized. Legacy genomic marker grouping remains an internal
+The exact right-hand matrix retains each cell/site or cell/junction position in
+catalog order. Fit rows adds a display-only mutation overview: when necessary,
+adjacent sites share a screen column colored by positive-site fraction. Its
+summary never replaces or averages source observations. At detail zoom every
+site is displayed individually; scrolling changes only what is rasterized. Legacy genomic marker grouping remains an internal
 rendering/benchmark path, not an Overlay/Paired UI choice. Its neutral circle-plus
 icons represent overlapping display footprints, never inferred sites or mean VAF.
 

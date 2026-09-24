@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import {
   prepareHeatmap, drawHeatmap, drawMutationHeatmap, hitTestHeatmap, hitTestMutationHeatmap, selectionNodes,
-  describeHit, benchmarkFullMatrix, changeDomain, vafColor, cnColor, countColor, mutationCountScale, CN_COLORS, drawHeatmapAxis,
+  describeHit, benchmarkFullMatrix, changeDomain, vafColor, cnColor, countColor, mutationCountScale, CN_COLORS, drawHeatmapAxis, mutationBins,
 } from "./heatmapRenderer";
 import { parseNewick, parsePlotlyMutations, normalizeCopyNumber } from "../../helpers/phylogeny/data";
 
@@ -814,6 +814,42 @@ test("count scale/legend uses the entire immutable channel and caches it without
   expect(mutationCountScale({ ...matrix, refCounts: new Float64Array([0, 10]) }, "ref").maximum).toBe(10);
   expect(Array.from(matrix.refCounts)).toEqual(original);
   expect(mutationCountScale({}, "ref").maximum).toBe(1);
+});
+
+test("fit-width bins cover every site in source order, and exact detail keeps original colors", () => {
+  const variants = Array.from({ length: 8 }, (_, i) => ({ id: `site-${i}`, chromosome: "1", position: i + 1, ref: "A", alt: "T" }));
+  const matrix = { cellIds: ["a"], variants, values: new Float64Array([1, 0, 0, 0, 0, 1, NaN, 0]), missing: new Uint8Array([0, 0, 0, 0, 0, 0, 1, 0]), format: "plotly" };
+  const scene = prepareHeatmap({ data: { cellIds: ["a"], cnByCell: {}, mutations: matrix }, width: 400, domains: [[1, 10]], mutationMode: "side", rowHeight: 10 });
+  expect(mutationBins(8, 2, [0, 8]).map(({ start, end }) => [start, end])).toEqual([[0, 4], [4, 8]]);
+  const ctx = context();
+  expect(drawMutationHeatmap(ctx, scene, { width: 2, height: 10, range: [0, 8] })).toMatchObject({ columnsDrawn: 2, cellsDrawn: 2, summarized: true });
+  expect(ctx.filledRects.slice(1).map(({ color }) => color)).toEqual([vafColor(0.25)]);
+  const first = hitTestMutationHeatmap(scene, 0, 5, 0, 4, { width: 2, range: [0, 8] });
+  expect(first).toMatchObject({ column: 0, columnEnd: 4 });
+  expect(describeHit(scene, first)).toEqual(expect.arrayContaining([expect.stringContaining("4 sites"), expect.stringContaining("1 positive")]));
+  ctx.filledRects.length = 0;
+  expect(drawMutationHeatmap(ctx, scene, { width: 4, height: 10, range: [5, 8] })).toMatchObject({ columnsDrawn: 3, summarized: false });
+  expect(ctx.filledRects.filter(({ rect }) => rect[2] > 1).slice(1).map(({ color }) => color)).toEqual([vafColor(1), vafColor(null), vafColor(0)]);
+  expect(hitTestMutationHeatmap(scene, 2, 5, 0, 4, { width: 4, range: [5, 8] })).toMatchObject({ column: 6, columnEnd: 7 });
+  expect(mutationBins(0, 200, [0, 0])).toEqual([]);
+});
+
+test("full 125 by 8878 mutation overview renders all rows with bounded paint work and no source edits", () => {
+  const count = 8878;
+  const cellIds = Array.from({ length: 125 }, (_, index) => `cell-${index}`);
+  const values = new Float64Array(count * cellIds.length);
+  values[count + 7] = 1;
+  const matrix = { cellIds, variants: Array.from({ length: count }, (_, i) => ({ id: `site-${i}` })), values, format: "sparse" };
+  const scene = prepareHeatmap({ data: { cellIds, cnByCell: {}, mutations: matrix }, width: 500, gutterWidth: 0, domains: [[1, 10]], mutationMode: "side", rowHeight: 4 });
+  const ctx = context();
+  const frame = drawMutationHeatmap(ctx, scene, { width: 280, height: 500, range: [0, count] });
+  expect(frame).toMatchObject({ rowsDrawn: 125, columns: count, columnsDrawn: 280, cellsDrawn: 35000, summarized: true });
+  expect(ctx.filledRects.length).toBeLessThan(300); // contiguous zero bins coalesce
+  expect(values[count + 7]).toBe(1);
+  expect(matrix.variants[7].id).toBe("site-7");
+  ctx.filledRects.length = 0;
+  drawMutationHeatmap(ctx, scene, { width: 280, height: 500, range: [0, count] }); // cached row summaries
+  expect(ctx.filledRects.length).toBeLessThan(300);
 });
 
 test("legacy Plotly missing VAF remains missing in the right matrix, not white zero", () => {

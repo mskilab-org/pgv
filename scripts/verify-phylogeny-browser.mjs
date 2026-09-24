@@ -351,7 +351,12 @@ async function verifyScrolling(page) {
   assert.deepEqual(j.rows.map(r => r.id), originalRows);
   assert.deepEqual(j.sideCellIds, junctions.cellIds);
   assert.deepEqual(j.sideRows, junctions.cellIds.map((id, index) => [id, index]));
-  assert.deepEqual(jg.main, g.main); assert.deepEqual(jg.side, g.side); assertGeometry(jg, true);
+  // Opening the toolbar dropdown can scroll the document, changing absolute y
+  // without changing canvas alignment within the shared row viewport.
+  for (const key of ['x', 'width', 'height']) {
+    assert.equal(jg.main[key], g.main[key]); assert.equal(jg.side[key], g.side[key]);
+  }
+  assertGeometry(jg, true);
   const junctionHit = await tooltipAtScrolledCell(page, 'junctions');
   check('JCN reuses identical canvas/geometry/rows and source-ordered ID mapping with exact JCN tooltip', junctionHit);
   await screenshot(page, 'junctions-scrolled-tooltip');
@@ -681,7 +686,72 @@ async function verifyLegacy(page, context) {
   for (const item of report.edgeCases.checks) check(`Legacy: ${item.name}`, item.geometry || item.bounds || true);
 }
 
+async function verifyFitOverview(page) {
+  await goto(page); await ready(page);
+  await page.getByRole('button', { name: 'Show mutations', exact: true }).click();
+  await page.getByRole('button', { name: 'Fit rows', exact: true }).click();
+  await tick(page);
+  const initial = await side(page).evaluate(c => {
+    const h = window.__pgvComponent(c);
+    const scroll = c.closest('.mutation-scroll-x');
+    return { rows: Number(c.dataset.frameRowsDrawn), sites: Number(c.dataset.frameColumns), bins: Number(c.dataset.frameColumnsDrawn),
+      entries: h.scene.sideMatrix.values.length, width: c.getBoundingClientRect().width, scrollWidth: scroll.scrollWidth, clientWidth: scroll.clientWidth,
+      genomic: h.props.domains, range: h.state.mutationRange, scale: c.dataset.frameScale };
+  });
+  assert.equal(initial.rows, 125); assert.equal(initial.sites, 8878); assert.equal(initial.entries, 1109750);
+  assert.ok(initial.bins <= 280 && initial.bins === Math.floor(initial.width));
+  assert.equal(initial.scrollWidth, initial.clientWidth);
+  assert.equal(initial.scale, 'positive-fraction'); assert.equal(initial.range, null);
+  check('Real 125 × 8878 catalog fits the right panel without horizontal scrolling or source reduction', initial);
+  await screenshot(page, 'mutations-fit-overview');
+  const box = await side(page).boundingBox();
+  await page.mouse.move(box.x + 20, box.y + 2);
+  await page.getByRole('tooltip').getByText(/sites:/).waitFor();
+  await page.mouse.click(box.x + 20, box.y + 2); await tick(page);
+  const detail = await side(page).evaluate(c => {
+    const h = window.__pgvComponent(c);
+    return { range: h.state.mutationRange, summarized: c.dataset.frameSummarized, genomic: h.props.domains };
+  });
+  assert.ok(detail.range && detail.range[1] - detail.range[0] > 1);
+  assert.equal(detail.summarized, 'false'); assert.deepEqual(detail.genomic, initial.genomic);
+  await page.mouse.wheel(0, -120); await tick(page);
+  const afterPlainWheel = await side(page).evaluate(c => window.__pgvComponent(c).state.mutationRange);
+  const commandWheel = await side(page).evaluate(c => window.__pgvComponent(c).props.zoomedByCmd);
+  if (commandWheel) assert.deepEqual(afterPlainWheel, detail.range);
+  await page.keyboard.down('Meta'); await page.mouse.wheel(0, -120); await page.keyboard.up('Meta'); await tick(page);
+  const afterWheel = await side(page).evaluate(c => window.__pgvComponent(c).state.mutationRange);
+  assert.ok(afterWheel[1] - afterWheel[0] <= afterPlainWheel[1] - afterPlainWheel[0]);
+  await side(page).focus(); await page.keyboard.press('='); await tick(page);
+  const afterKey = await side(page).evaluate(c => window.__pgvComponent(c).state.mutationRange);
+  assert.ok(afterKey[1] - afterKey[0] < afterWheel[1] - afterWheel[0]);
+  await page.keyboard.press('Home'); await tick(page);
+  assert.equal(await side(page).evaluate(c => window.__pgvComponent(c).state.mutationRange), null);
+  await page.mouse.click(box.x + 80, box.y + 2); await tick(page);
+  const beforePan = await side(page).evaluate(c => window.__pgvComponent(c).state.mutationRange);
+  await page.mouse.move(box.x + 180, box.y + 2); await page.mouse.down();
+  await page.mouse.move(box.x + 160, box.y + 2, { steps: 3 }); await page.mouse.up(); await tick(page);
+  const afterPan = await side(page).evaluate(c => window.__pgvComponent(c).state.mutationRange);
+  assert.ok(afterPan[0] > beforePan[0] && afterPan[1] - afterPan[0] === beforePan[1] - beforePan[0]);
+  await page.getByRole('button', { name: 'Reset mutation zoom' }).click(); await tick(page);
+  await page.keyboard.down('Shift');
+  await page.mouse.move(box.x + 40, box.y + 2); await page.mouse.down();
+  await page.mouse.move(box.x + 90, box.y + 2, { steps: 5 }); await page.mouse.up();
+  await page.keyboard.up('Shift'); await tick(page);
+  const brushed = await side(page).evaluate(c => {
+    const h = window.__pgvComponent(c);
+    return { range: h.state.mutationRange, genomic: h.props.domains };
+  });
+  assert.ok(brushed.range && brushed.range[0] > 0 && brushed.range[1] < initial.sites);
+  assert.deepEqual(brushed.genomic, initial.genomic);
+  await screenshot(page, 'mutations-fit-brushed');
+  await page.mouse.dblclick(box.x + 20, box.y + 2); await tick(page);
+  assert.equal(await side(page).evaluate(c => window.__pgvComponent(c).state.mutationRange), null);
+  check('Real overview click/Shift-brush/detail/reset gestures keep mutation zoom separate from genomic domains', { detail: detail.range, brushed: brushed.range });
+}
+
 try {
+  const overviewContext = await newContext();
+  await suite('mutation-fit-overview', verifyFitOverview, overviewContext);
   const context = await newContext();
   await suite('real-source-scrolling', verifyScrolling, context);
   await suite('controls-selection-trees', verifyControlsAndTrees, context);
@@ -694,7 +764,7 @@ try {
   }
   await legacyContext.route('**/datafiles.json', route => route.fulfill({ json: legacyManifest }));
   await suite('legacy-plotly', page => verifyLegacy(page, legacyContext), legacyContext);
-  report.ok = report.suites.length === 5 && report.suites.every(s => s.ok);
+  report.ok = report.suites.length === 6 && report.suites.every(s => s.ok);
   if (!report.ok) process.exitCode = 1;
 } catch (error) {
   report.ok = false; report.error = error.stack; process.exitCode = 1; console.error(error);

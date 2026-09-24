@@ -329,6 +329,56 @@ export function drawHeatmap(ctx, scene, view = {}) {
   return frame;
 }
 
+/** Pixel bins in catalog order. When there is room, every site gets its own
+ * full-width rectangle; otherwise each screen column covers adjacent sites. */
+export function mutationBins(count, width, range = [0, count]) {
+  if (!count || !Number.isFinite(width) || width <= 0) return [];
+  const start = clamp(Math.floor(range[0]), 0, count);
+  const end = clamp(Math.ceil(range[1]), start, count);
+  const span = end - start;
+  if (!span) return [];
+  const columns = Math.min(span, Math.max(1, Math.floor(width)));
+  return Array.from({ length: columns }, (_, index) => ({
+    start: start + Math.floor(index * span / columns), end: start + Math.floor((index + 1) * span / columns),
+    x: index * width / columns, width: (index + 1) * width / columns - index * width / columns,
+  }));
+}
+
+// The overview communicates positive-site density, not a mean VAF/read count.
+// All-missing bins retain the missing color; mixed bins include missing sites in
+// the denominator and expose their counts on hover.
+const overviewColorCache = new WeakMap();
+function overviewColors(scene, bins, metric, max, width, range, row, rowIndex) {
+  const key = `${metric}:${range[0]}:${range[1]}:${width}`;
+  let cached = overviewColorCache.get(scene);
+  if (!cached || cached.key !== key) {
+    cached = { key, rows: new Map() };
+    overviewColorCache.set(scene, cached);
+  }
+  if (!cached.rows.has(rowIndex)) cached.rows.set(rowIndex, bins.map(bin => {
+    if (bin.end - bin.start > 1) {
+      const summary = mutationBinSummary(scene.sideMatrix, row, bin, metric);
+      return summary.missing === bin.end - bin.start ? vafColor(null) : vafColor(summary.positive / (bin.end - bin.start));
+    }
+    const matrix = scene.sideMatrix;
+    const value = row == null ? matrix.format === "plotly" ? null : 0 : mutationMetricValue(matrix, row, bin.start, metric);
+    return metric === "vaf" ? vafColor(value) : countColor(value, max);
+  }));
+  return cached.rows.get(rowIndex);
+}
+
+function mutationBinSummary(matrix, row, bin, metric) {
+  let positive = 0, zero = 0, missing = 0;
+  for (let column = bin.start; column < bin.end; column++) {
+    const value = row == null ? matrix.format === "plotly" || matrix.format === "junction" ? null : 0 :
+      matrix.format === "junction" ? mutationValue(matrix, row, column) : mutationMetricValue(matrix, row, column, metric);
+    if (value == null) missing++;
+    else if (value > 0) positive++;
+    else zero++;
+  }
+  return { positive, zero, missing };
+}
+
 /** Shared right-hand matrix renderer for mutations and junction CN. Only the
  * visible columns are rasterized; catalog order and all source values remain intact. */
 export function drawMutationHeatmap(ctx, scene, view = {}, columnWidth = 4) {
@@ -346,14 +396,27 @@ export function drawMutationHeatmap(ctx, scene, view = {}, columnWidth = 4) {
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, width, height);
   if (!matrix) return { rowsDrawn: 0, columns: 0, cellsDrawn: 0, metric };
-  const firstColumn = Math.max(0, Math.floor(scrollLeft / columnWidth));
-  const lastColumn = Math.min(matrix.variants.length, Math.ceil((scrollLeft + width) / columnWidth));
+  const fit = !!view.range && !junctions;
+  const bins = fit ? mutationBins(matrix.variants.length, width, view.range) : null;
+  const firstColumn = fit ? (bins.length ? bins[0].start : 0) : Math.max(0, Math.floor(scrollLeft / columnWidth));
+  const lastColumn = fit ? (bins.length ? bins[bins.length - 1].end : 0) : Math.min(matrix.variants.length, Math.ceil((scrollLeft + width) / columnWidth));
+  const summarized = fit && bins.some(bin => bin.end - bin.start > 1);
   const selected = new Set((view.nodes || []).filter(node => node.selected).map(node => node.id));
   for (let r = first; r < last; r++) {
     const row = scene.rows[r];
     const top = r * scene.rowHeight - scrollTop;
     const rowIndex = scene.sideMatrixRows.get(row.id);
-    for (let column = firstColumn; column < lastColumn; column++) {
+    if (fit) {
+      const colors = overviewColors(scene, bins, metric, max, width, view.range, rowIndex, r);
+      // Adjacent identical colors form one run; large zero blocks paint once.
+      for (let i = 0; i < bins.length;) {
+        let end = i + 1;
+        while (end < bins.length && colors[end] === colors[i]) end++;
+        ctx.fillStyle = colors[i];
+        ctx.fillRect(bins[i].x, top, bins[end - 1].x + bins[end - 1].width - bins[i].x, scene.rowHeight);
+        i = end;
+      }
+    } else for (let column = firstColumn; column < lastColumn; column++) {
       const value = rowIndex == null ? (junctions || matrix.format === "plotly" ? null : 0) : junctions ? mutationValue(matrix, rowIndex, column) : mutationMetricValue(matrix, rowIndex, column, metric);
       ctx.fillStyle = junctions ? cnColor(value) : metric === "vaf" ? vafColor(value) : countColor(value, max);
       ctx.fillRect(column * columnWidth - scrollLeft, top, Math.max(1, columnWidth), scene.rowHeight);
@@ -363,19 +426,22 @@ export function drawMutationHeatmap(ctx, scene, view = {}, columnWidth = 4) {
       ctx.strokeRect(0.5, top + 0.5, width - 1, Math.max(0, scene.rowHeight - 1));
     }
   }
-  return { rowsDrawn: last - first, columns: matrix.variants.length, firstColumn, columnsDrawn: lastColumn - firstColumn,
-    cellsDrawn: (last - first) * (lastColumn - firstColumn), metric, maximum: max, scale: isCount ? "log1p" : junctions ? "categorical" : "linear" };
+  const columnsDrawn = fit ? bins.length : lastColumn - firstColumn;
+  return { rowsDrawn: last - first, columns: matrix.variants.length, firstColumn, columnsDrawn, summarized,
+    cellsDrawn: (last - first) * columnsDrawn, metric, maximum: max, scale: summarized ? "positive-fraction" : isCount ? "log1p" : junctions ? "categorical" : "linear" };
 }
 
-export function hitTestMutationHeatmap(scene, x, y, scrollTop = 0, columnWidth = 4) {
+export function hitTestMutationHeatmap(scene, x, y, scrollTop = 0, columnWidth = 4, view = {}) {
   const matrix = scene.sideMatrix;
   const absoluteY = y + scrollTop;
   if (!matrix || x < 0 || y < 0 || absoluteY < 0 || absoluteY >= scene.totalHeight) return null;
   const row = scene.rows[Math.floor(absoluteY / scene.rowHeight)];
   if (!row) return null;
-  const column = Math.floor(x / columnWidth);
-  if (column < 0 || column >= matrix.variants.length) return null;
-  return { type: "sideMutation", row, column, ids: [row.id] };
+  const bins = view.range && matrix.format !== "junction" ? mutationBins(matrix.variants.length, view.width, view.range) : null;
+  const bin = bins && x < view.width && bins[Math.min(bins.length - 1, Math.floor(x * bins.length / view.width))];
+  const column = bin ? bin.start : Math.floor(x / columnWidth);
+  if (column < 0 || column >= matrix.variants.length || (bins && !bin)) return null;
+  return { type: "sideMutation", row, column, columnEnd: bin ? bin.end : column + 1, ids: [row.id] };
 }
 
 export function hitTestHeatmap(scene, x, y, scrollTop = 0) {
@@ -421,6 +487,13 @@ export function describeHit(scene, hit) {
     const matrix = scene.sideMatrix;
     const variant = matrix.variants[hit.column];
     const row = scene.sideMatrixRows.get(hit.row.id);
+    if (hit.columnEnd > hit.column + 1) {
+      const metric = scene.mutationMetric || "vaf";
+      const { positive, zero, missing } = mutationBinSummary(matrix, row, { start: hit.column, end: hit.columnEnd }, metric);
+      const last = matrix.variants[hit.columnEnd - 1];
+      return [`Cell: ${hit.row.id}`, `${hit.columnEnd - hit.column} sites: ${variant.id}–${last.id}`,
+        `${metric === "vaf" ? "VAF" : metric === "ref" ? "Ref count" : "Alt count"}: ${positive} positive, ${zero} zero, ${missing} missing`, "Display summary — click or Shift-drag to zoom; no mean VAF"];
+    }
     if (matrix.format === "junction") {
       const value = row == null ? null : mutationValue(matrix, row, hit.column);
       return [`Cell: ${hit.row.id}`, `Junction: ${variant.id}`, `Junction CN: ${value == null ? "missing" : value}`];

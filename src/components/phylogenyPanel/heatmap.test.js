@@ -79,6 +79,72 @@ test("side matrix uses a viewport-sized canvas and scroll offsets exactly once, 
   expect(ui.getByRole("tooltip").textContent).toContain("Junction CN: 171");
 });
 
+test("Fit rows shows all 10000 mutation sites and supports click, brush, gated wheel and reset without moving genomic domains", () => {
+  const p = props({ mutationMode: "side", fitRows: true, zoomedByCmd: true });
+  p.data = { ...p.data, mutations: { ...p.data.mutations,
+    variants: Array.from({ length: 10000 }, (_, i) => ({ id: `site-${i}`, chromosome: "1", position: i, ref: "A", alt: "T" })),
+    values: new Float64Array(20000), missing: new Uint8Array(20000), format: "sparse" } };
+  const ref = React.createRef();
+  const ui = render(<PhylogenyHeatmap {...p} ref={ref} />); flush();
+  const side = ui.container.querySelector(".mutation-canvas"), scroller = ui.container.querySelector(".mutation-scroll-x");
+  const width = ref.current.mutationWidth();
+  side.getBoundingClientRect = () => ({ left: 400, top: 0, width, height: ref.current.viewportHeight() });
+  expect(side.dataset.frameColumns).toBe("10000");
+  expect(side.dataset.frameColumnsDrawn).toBe(String(Math.floor(width)));
+  expect(side.dataset.frameCellsDrawn).toBe(String(Math.floor(width) * 2));
+  expect(side.dataset.frameScale).toBe("positive-fraction");
+  expect(scroller.style.overflowX).toBe("hidden");
+  expect(side.tabIndex).toBe(0);
+  fireEvent.keyDown(side, { key: "+" }); flush();
+  expect(ref.current.mutationRange()[1]).toBeLessThan(10000);
+  const keyRange = ref.current.mutationRange().slice();
+  fireEvent.keyDown(side, { key: "ArrowRight", altKey: true }); flush();
+  expect(ref.current.mutationRange()[0]).toBeGreaterThan(keyRange[0]);
+  fireEvent.keyDown(side, { key: "Home" }); flush();
+  expect(ref.current.state.mutationRange).toBeNull();
+  fireEvent.mouseMove(side, { clientX: 400, clientY: 10 }); flush();
+  expect(ui.getByRole("tooltip").textContent).toContain("sites:");
+  fireEvent.click(side, { clientX: 400, clientY: 10 }); flush();
+  expect(ref.current.state.mutationRange[0]).toBe(0);
+  expect(ref.current.state.mutationRange[1]).toBeGreaterThan(1);
+  expect(side.dataset.frameSummarized).toBe("false");
+  expect(ui.getByRole("button", { name: "Reset mutation zoom" })).toBeTruthy();
+  const afterClick = ref.current.mutationRange().slice();
+  fireEvent.wheel(side, { clientX: 420, clientY: 10, deltaY: -100 }); flush();
+  expect(ref.current.mutationRange()).toEqual(afterClick);
+  fireEvent.wheel(side, { clientX: 420, clientY: 10, deltaY: -100, metaKey: true }); flush();
+  expect(ref.current.mutationRange()[1] - ref.current.mutationRange()[0]).toBeLessThan(afterClick[1] - afterClick[0]);
+  const beforePan = ref.current.mutationRange().slice();
+  pointer(side, "pointerdown", { clientX: 460, clientY: 10 });
+  pointer(window, "pointermove", { clientX: 430, clientY: 10 });
+  pointer(window, "pointerup", { clientX: 430, clientY: 10 }); flush();
+  expect(ref.current.mutationRange()[0]).toBeGreaterThan(beforePan[0]);
+  expect(ref.current.mutationRange()[1] - ref.current.mutationRange()[0]).toBe(beforePan[1] - beforePan[0]);
+  fireEvent.click(ui.getByRole("button", { name: "Reset mutation zoom" })); flush();
+  expect(ref.current.state.mutationRange).toBeNull();
+  pointer(side, "pointerdown", { clientX: 440, clientY: 10, shiftKey: true });
+  pointer(window, "pointermove", { clientX: 480, clientY: 10, shiftKey: true }); flush();
+  expect(ctx.fillRect).toHaveBeenCalledWith(40, 0, 40, ref.current.viewportHeight());
+  pointer(window, "pointerup", { clientX: 480, clientY: 10, shiftKey: true }); flush();
+  expect(ref.current.mutationRange()[0]).toBeGreaterThan(0);
+  expect(ref.current.mutationRange()[1]).toBeLessThan(10000);
+  expect(p.onDomainsChange).not.toHaveBeenCalled();
+  expect(p.onSelectNodes).not.toHaveBeenCalled();
+  fireEvent.doubleClick(side, { clientX: 420, clientY: 10 }); flush();
+  expect(ref.current.state.mutationRange).toBeNull();
+  ui.rerender(<PhylogenyHeatmap {...p} fitRows={false} ref={ref} />); flush();
+  expect(scroller.style.overflowX).toBe("auto");
+  expect(side.tabIndex).toBe(-1);
+  expect(side.dataset.frameColumnsDrawn).toBe(String(Math.ceil(width / 4)));
+  const junctions = { format: "junction", cellIds: ["b"], variants: Array.from({ length: 1000 }, (_, i) => ({ id: `j${i}` })),
+    values: new Float64Array(1000), missing: new Uint8Array(1000) };
+  ui.rerender(<PhylogenyHeatmap {...p} data={{ ...p.data, junctions }} matrixKind="junctions" ref={ref} />); flush();
+  expect(scroller.style.overflowX).toBe("auto");
+  expect(side.dataset.frameColumnsDrawn).toBe(String(Math.ceil(width / 4)));
+  fireEvent.click(side, { clientX: 400, clientY: 10 });
+  expect(p.onSelectNodes).toHaveBeenCalledTimes(1);
+});
+
 test("tree hover carries node identity for a visible highlight without selecting it", () => {
   const ref = React.createRef(); const p = props();
   const ui = render(<PhylogenyHeatmap {...p} ref={ref} />); flush();

@@ -227,7 +227,7 @@ export class PhylogenyPanel extends Component {
           </div>
           {data.status !== "loading" && availableCnModes.length === 1 && <Text type="secondary" role="status">Allelic CN unavailable: no major/minor values were supplied for this tree.</Text>}
           {mutationMode === "side" && !(matrixKind === "junctions" ? data.junctions : data.mutations) && <Text type="secondary" role="status">{matrixKind === "junctions" ? "Junction CN" : "Mutation"} data unavailable for this tree.</Text>}
-          <Text type="secondary" className="phylogeny-gesture-help">Drag: pan · Shift-drag: brush · {this.props.zoomedByCmd ? "⌘ + scroll" : "Scroll"}: zoom · Shift-click: range · Ctrl / ⌘-click: toggle cells</Text>
+          <Text type="secondary" className="phylogeny-gesture-help">Drag: pan · Shift-drag: brush · {this.props.zoomedByCmd ? "⌘ + scroll" : "Scroll"}: zoom · Shift-click: range · Ctrl / ⌘-click: toggle cells{view.fitRows && mutationMode === "side" && matrixKind === "mutations" ? " · Mutation overview: click to inspect, Shift-drag to zoom, double-click to reset" : ""}</Text>
         </div>}
         {data && data.status === "loading" && <div className="phylogeny-load-status" role="status">
           Loading full cohort: {data.completed}/{data.total} genomes{data.completed === data.total ? "; loading mutations…" : ""}
