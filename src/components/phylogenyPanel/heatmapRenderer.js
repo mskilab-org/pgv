@@ -491,8 +491,8 @@ export function describeHit(scene, hit) {
       const metric = scene.mutationMetric || "vaf";
       const { positive, zero, missing } = mutationBinSummary(matrix, row, { start: hit.column, end: hit.columnEnd }, metric);
       const last = matrix.variants[hit.columnEnd - 1];
-      return [`Cell: ${hit.row.id}`, `${hit.columnEnd - hit.column} sites: ${variant.id}–${last.id}`,
-        `${metric === "vaf" ? "VAF" : metric === "ref" ? "Ref count" : "Alt count"}: ${positive} positive, ${zero} zero, ${missing} missing`, "Display summary — click or Shift-drag to zoom; no mean VAF"];
+      return [`Cell: ${hit.row.id}`, `Range: ${variant.id}–${last.id}`, `${hit.columnEnd - hit.column} sites`,
+        `${metric === "vaf" ? "VAF" : metric === "ref" ? "Ref count" : "Alt count"}: ${positive} positive, ${zero} zero, ${missing} missing`];
     }
     if (matrix.format === "junction") {
       const value = row == null ? null : mutationValue(matrix, row, hit.column);

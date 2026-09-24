@@ -826,7 +826,13 @@ test("fit-width bins cover every site in source order, and exact detail keeps or
   expect(ctx.filledRects.slice(1).map(({ color }) => color)).toEqual([vafColor(0.25)]);
   const first = hitTestMutationHeatmap(scene, 0, 5, 0, 4, { width: 2, range: [0, 8] });
   expect(first).toMatchObject({ column: 0, columnEnd: 4 });
-  expect(describeHit(scene, first)).toEqual(expect.arrayContaining([expect.stringContaining("4 sites"), expect.stringContaining("1 positive")]));
+  expect(describeHit(scene, first)).toEqual([
+    "Cell: a", "Range: site-0–site-3", "4 sites", "VAF: 1 positive, 3 zero, 0 missing",
+  ]);
+  const second = hitTestMutationHeatmap(scene, 1, 5, 0, 4, { width: 2, range: [0, 8] });
+  expect(describeHit(scene, second)).toEqual([
+    "Cell: a", "Range: site-4–site-7", "4 sites", "VAF: 1 positive, 2 zero, 1 missing",
+  ]);
   ctx.filledRects.length = 0;
   expect(drawMutationHeatmap(ctx, scene, { width: 4, height: 10, range: [5, 8] })).toMatchObject({ columnsDrawn: 3, summarized: false });
   expect(ctx.filledRects.filter(({ rect }) => rect[2] > 1).slice(1).map(({ color }) => color)).toEqual([vafColor(1), vafColor(null), vafColor(0)]);

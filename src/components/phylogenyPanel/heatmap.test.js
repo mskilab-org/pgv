@@ -103,7 +103,12 @@ test("Fit rows shows all 10000 mutation sites and supports click, brush, gated w
   fireEvent.keyDown(side, { key: "Home" }); flush();
   expect(ref.current.state.mutationRange).toBeNull();
   fireEvent.mouseMove(side, { clientX: 400, clientY: 10 }); flush();
-  expect(ui.getByRole("tooltip").textContent).toContain("sites:");
+  const tooltipLines = Array.from(ui.getByRole("tooltip").children, line => line.textContent);
+  expect(tooltipLines).toHaveLength(4);
+  expect(tooltipLines[0]).toMatch(/^Cell: /);
+  expect(tooltipLines[1]).toMatch(/^Range: site-0–site-\d+$/);
+  expect(tooltipLines[2]).toMatch(/^\d+ sites$/);
+  expect(tooltipLines[3]).toMatch(/^VAF: 0 positive, \d+ zero, 0 missing$/);
   fireEvent.click(side, { clientX: 400, clientY: 10 }); flush();
   expect(ref.current.state.mutationRange[0]).toBe(0);
   expect(ref.current.state.mutationRange[1]).toBeGreaterThan(1);
